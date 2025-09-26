@@ -868,16 +868,32 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           {isMobile ? (
             // Mobile Accordion View
             <Accordion type="single" collapsible className="w-full space-y-4">
-              {sections.map((section) => (
-                <AccordionItem key={section.id} value={section.id} className="modern-card border-none">
-                  <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-foreground hover:no-underline">
-                    {section.label} ({calculateSectionCompletion(formData, section.id as keyof typeof sectionFields)}%)
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6 pt-2">
-                    {renderSectionContent(section.id)}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
+              {sections.map((section) => {
+                const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
+                const IconComponent = FileText; // Default icon, replace with actual icons if available
+                
+                return (
+                  <AccordionItem key={section.id} value={section.id} className="modern-card border-none">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-foreground hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <IconComponent className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="text-white text-lg">{section.label}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Progress value={completion} className="w-20 h-2" />
+                            <span className="text-xs text-slate-400">{completion}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6 pt-2">
+                      {renderSectionContent(section.id)}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
             </Accordion>
           ) : (
             // Desktop Tabs View

@@ -7,6 +7,7 @@ import { UserPagePermissionsTab } from "@/components/admin/UserPagePermissionsTa
 import { UserApprovalTab } from "@/components/admin/UserApprovalTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils"; // Import cn for conditional classNames
 
 export const SettingsPage = () => {
   const { profile, loading: authLoading } = useAuth();
@@ -65,24 +66,24 @@ export const SettingsPage = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="border-b mb-8">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-0 bg-transparent"> {/* Adjusted grid-cols to 3 */}
+          <TabsList className="flex w-full h-auto p-0 bg-transparent overflow-x-auto custom-scrollbar flex-nowrap"> {/* Adjusted for responsiveness */}
             <TabsTrigger
               value="role-permissions"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
+              className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
             >
               <ShieldCheck className="mr-2 h-4 w-4" />
               Permissões de Perfil
             </TabsTrigger>
             <TabsTrigger
               value="user-page-permissions" 
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
+              className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
             >
               <FileKey className="mr-2 h-4 w-4" />
               Permissões de Página
             </TabsTrigger>
             <TabsTrigger
               value="user-approval"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
+              className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
             >
               <UserCheck className="mr-2 h-4 w-4" />
               Aprovação de Usuários
