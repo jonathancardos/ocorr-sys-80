@@ -167,7 +167,19 @@ export default {
           "50%": {
             backgroundPosition: "100% 50%"
           }
-        }
+        },
+        "twinkle": { // Nova animação para as estrelas
+          "0%, 100%": {
+            opacity: "0",
+            transform: "scale(0.5)",
+            filter: "blur(1px)",
+          },
+          "50%": {
+            opacity: "1",
+            transform: "scale(1)",
+            filter: "blur(0px)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -178,7 +190,8 @@ export default {
         "shimmer": "shimmer 2s infinite",
         "float": "float 3s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "gradient-x": "gradient-x 3s ease infinite"
+        "gradient-x": "gradient-x 3s ease infinite",
+        "twinkle": "twinkle ease-in-out infinite", // Adicionado
       },
     },
   },

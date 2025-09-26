@@ -15,6 +15,7 @@ import { Dashboard } from "./components/dashboard/Dashboard"; // Import Dashboar
 import { NewIncidentForm as ModernNewIncidentForm } from "./components/incidents/ModernNewIncidentForm"; // Import NewIncidentForm
 import { IncidentHistory } from "./pages/IncidentHistory"; // Import IncidentHistory
 import { BarChart3 } from "lucide-react"; // Import BarChart3
+import AnimatedStars from "./components/AnimatedStars"; // Import AnimatedStars
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,9 @@ const App = () => (
           className="toast-container" // Classe para estilização adicional se necessário
         />
         <BrowserRouter>
+          {/* Animated Stars Background */}
+          <AnimatedStars />
+          
           <Routes>
             <Route path="/login" element={<Login />} />
             
