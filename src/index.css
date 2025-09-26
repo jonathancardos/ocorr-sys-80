@@ -1,0 +1,307 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Karne & Keijo Corporate Design System - Modernizado */
+
+@layer base {
+  :root {
+    /* Paleta de Cores Corporativa Modernizada */
+    --background: 0 0% 98%;
+    --foreground: 220 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
+
+    /* Azul Corporativo Moderno - Mais vibrante */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 217 91% 70%;
+    --primary-dark: 217 91% 50%;
+
+    /* Cinza Corporativo Moderno - Mais suave */
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 220 25% 20%;
+
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Destaque Moderno - Teal mais vibrante */
+    --accent: 192 85% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 192 85% 60%;
+
+    /* Cores de Status Modernizadas */
+    --success: 142 72% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Cores de Nível de Risco Modernizadas - Mais distintas */
+    --risk-low: 142 72% 45%;
+    --risk-moderate: 38 92% 50%;
+    --risk-grave: 27 96% 55%;
+    --risk-critical: 0 84% 60%;
+
+    --border: 220 20% 85%;
+    --input: 220 20% 85%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gradientes Modernos */
+    --gradient-corporate: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 20%, 98%));
+    --gradient-header: linear-gradient(90deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%));
+
+    /* Sombras Modernas - Mais suaves e difusas */
+    --shadow-card: 0 4px 20px -6px hsl(220, 25%, 10%, 0.08);
+    --shadow-elevated: 0 8px 30px -8px hsl(220, 25%, 10%, 0.12);
+    --shadow-corporate: 0 10px 40px -10px hsl(217, 91%, 60%, 0.2);
+
+  /* Animações Modernas */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease-out;
+  --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Gradientes Radiais para Efeitos Modernos */
+  --gradient-radial: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  --gradient-glow: radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 50%);
+  }
+
+  .dark {
+    /* Modo Escuro Moderno - Cores mais claras e menos intensas */
+    --background: 220 25% 15%; /* Aumentado de 10% para 15% */
+    --foreground: 220 15% 90%; /* Ajustado para ser mais claro */
+
+    --card: 220 25% 20%; /* Aumentado de 15% para 20% */
+    --card-foreground: 220 15% 90%;
+
+    --popover: 220 25% 20%; /* Aumentado de 15% para 20% */
+    --popover-foreground: 220 15% 90%;
+
+    /* Azul Corporativo no Escuro - Mais vibrante */
+    --primary: 217 91% 65%;
+    --primary-foreground: 220 25% 15%; /* Ajustado para combinar com o novo background */
+    --primary-light: 217 91% 75%;
+    --primary-dark: 217 91% 55%;
+
+    /* Cinza Corporativo no Escuro - Mais claro */
+    --secondary: 220 25% 25%; /* Aumentado de 20% para 25% */
+    --secondary-foreground: 220 15% 85%; /* Ajustado para ser mais claro */
+
+    --muted: 220 25% 22%; /* Aumentado de 18% para 22% */
+    --muted-foreground: 220 15% 75%; /* Ajustado para ser mais claro */
+
+    /* Destaque no Escuro - Teal mais brilhante */
+    --accent: 192 85% 55%;
+    --accent-foreground: 220 25% 15%; /* Ajustado para combinar com o novo background */
+
+    /* Cores de Status no Escuro - Mais vibrantes */
+    --success: 142 72% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Cores de Nível de Risco no Escuro - Mais intensas */
+    --risk-low: 142 72% 45%;
+    --risk-moderate: 38 92% 50%;
+    --risk-grave: 27 96% 55%;
+    --risk-critical: 0 84% 60%;
+
+    --border: 220 25% 30%; /* Aumentado de 25% para 30% */
+    --input: 220 25% 30%; /* Aumentado de 25% para 30% */
+    --ring: 217 91% 65%;
+
+    /* Gradientes no Escuro - Ajustados para cores mais claras */
+    --gradient-corporate: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(192, 85%, 50%));
+    --gradient-card: linear-gradient(145deg, hsl(220, 25%, 20%), hsl(220, 25%, 23%)); /* Ajustado */
+    --gradient-header: linear-gradient(90deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%)); /* Ajustado para ser mais vibrante */
+
+    /* Sombras no Escuro - Mais sutis */
+    --shadow-card: 0 4px 20px -6px hsl(220, 25%, 15%, 0.15);
+    --shadow-elevated: 0 8px 30px -8px hsl(220, 25%, 15%, 0.2);
+    --shadow-corporate: 0 10px 40px -10px hsl(217, 91%, 65%, 0.25);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans; /* Adicionado: font-sans para usar a nova fonte */
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Aprimoramentos de estilo corporativo moderno */
+  .corporate-gradient {
+    @apply bg-gradient-corporate;
+  }
+
+  .corporate-shadow {
+    @apply shadow-corporate;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-card;
+  }
+
+  /* Transições suaves modernas */
+  button, input, select, textarea, a {
+    transition: var(--transition-smooth);
+  }
+
+  /* Estados de foco aprimorados modernos */
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Scrollbar personalizado moderno */
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none; /* Oculta a barra de rolagem para navegadores Webkit */
+  }
+
+  .custom-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /* Melhorias de tipografia moderna */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .bg-risk-low {
+    background-color: hsl(var(--risk-low));
+  }
+  
+  .bg-risk-moderate {
+    background-color: hsl(var(--risk-moderate));
+  }
+  
+  .bg-risk-grave {
+    background-color: hsl(var(--risk-grave));
+  }
+  
+  .bg-risk-critical {
+    background-color: hsl(var(--risk-critical));
+  }
+  
+  .text-risk-low {
+    color: hsl(var(--risk-low));
+  }
+  
+  .text-risk-moderate {
+    color: hsl(var(--risk-moderate));
+  }
+  
+  .text-risk-grave {
+    color: hsl(var(--risk-grave));
+  }
+  
+  .text-risk-critical {
+    color: hsl(var(--risk-critical));
+  }
+  
+  .border-risk-low {
+    border-color: hsl(var(--risk-low));
+  }
+  
+.border-risk-moderate {
+    border-color: hsl(var(--risk-moderate));
+  }
+  
+  .border-risk-grave {
+    border-color: hsl(var(--risk-grave));
+  }
+  
+  .border-risk-critical {
+    border-color: hsl(var(--risk-critical));
+  }
+
+  /* Novos componentes modernos */
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+
+  .modern-card {
+    @apply rounded-xl border bg-card shadow-card hover:shadow-elevated transition-shadow;
+  }
+
+  .modern-button {
+    @apply rounded-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Novos efeitos visuais futuristas */
+  .futuristic-glow {
+    @apply relative before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-r before:from-primary/20 before:via-accent/20 before:to-primary/20 before:blur-xl before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500;
+  }
+
+  .holographic-border {
+    @apply relative before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-r before:from-transparent before:via-primary/50 before:to-transparent before:p-[1px] before:animate-pulse;
+  }
+
+  .data-card {
+    @apply bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl border border-border/50 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10;
+  }
+
+  /* Animações CSS personalizadas */
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.1); }
+    50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.3); }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-gradient {
+    background: linear-gradient(-45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)), hsl(var(--accent)));
+    background-size: 400% 400%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animate-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 2s infinite;
+  }
+}
