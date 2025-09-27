@@ -29,7 +29,7 @@ export const ModernWelcomeSection = ({ onNewIncident }: ModernWelcomeSectionProp
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-primary-foreground">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-4 text-primary-foreground">
       {/* Background Pattern */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 h-64 w-64 opacity-20">
@@ -59,22 +59,19 @@ export const ModernWelcomeSection = ({ onNewIncident }: ModernWelcomeSectionProp
       </div>
 
       <div className="relative z-10">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-full bg-white/20 p-3 backdrop-blur-sm">
-            <Sparkles className="h-6 w-6 text-white" />
+        <div className="mb-4 flex items-center gap-2">
+          <div className="rounded-full bg-white/20 p-2 backdrop-blur-sm">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-xl font-bold tracking-tight">
               {getGreeting()}, {profile?.full_name || profile?.username || "Usuário"}!
             </h1>
-            <p className="text-lg text-primary-foreground/80">
+            <p className="text-sm text-primary-foreground/80">
               {getMotivationalMessage()}
             </p>
           </div>
         </div>
-
-        {/* O botão "Nova Ocorrência" foi removido daqui */}
-        
       </div>
 
       {/* Animated Border */}
