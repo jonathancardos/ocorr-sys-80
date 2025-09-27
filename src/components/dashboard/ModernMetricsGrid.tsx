@@ -130,28 +130,7 @@ export const ModernMetricsGrid = () => {
       onClick: () => navigate("/driver-omnilink-status"), // Navigate to the new details page
       isUnifiedOmnilinkCard: true, // Custom flag to identify this entry
     },
-    {
-      title: "Motoristas Indicados",
-      value: indicados,
-      change: {
-        value: Math.floor((indicados / (indicados + naoIndicados)) * 100) || 0,
-        label: "taxa de indicação",
-        isPositive: true,
-      },
-      icon: UserCheck,
-      onClick: () => navigate("/drivers"),
-    },
-    {
-      title: "Não Indicados",
-      value: naoIndicados,
-      change: {
-        value: Math.floor((naoIndicados / (indicados + naoIndicados)) * 100) || 0,
-        label: "pendentes",
-        isPositive: false,
-      },
-      icon: UserX,
-      onClick: () => navigate("/drivers"),
-    },
+    // REMOVED: "Motoristas Indicados" and "Não Indicados" cards
     {
       title: "Índice de Segurança",
       value: `${Math.floor(((omnilinkEmDiaCount + indicados) / (activeDrivers * 2)) * 100) || 95}%`,
