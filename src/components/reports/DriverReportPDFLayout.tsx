@@ -30,16 +30,6 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
   const formattedEndDate = endDate ? format(endDate, 'dd/MM/yyyy', { locale: ptBR }) : 'N/A';
   const generationDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR });
 
-  const getOmnilinkStatusLabel = (registrationDate: string | null) => {
-    const status = getDetailedOmnilinkStatus(registrationDate);
-    switch (status.status) {
-      case 'em_dia': return 'Em Dia';
-      case 'prest_vencer': return 'Prestes a Vencer';
-      case 'vencido': return 'Vencido';
-      default: return 'Não Informado';
-    }
-  };
-
   const getIndicacaoStatusLabel = (status: 'indicado' | 'retificado' | 'nao_indicado' | null) => {
     switch (status) {
       case 'indicado': return 'Indicado';
@@ -47,11 +37,6 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
       case 'nao_indicado': return 'Não Indicado';
       default: return 'N/A';
     }
-  };
-
-  const getCnhStatusLabel = (cnhExpiry: string | null) => {
-    const status = getCnhStatus(cnhExpiry);
-    return status.message;
   };
 
   return (
@@ -93,19 +78,13 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
                     CPF
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CNH / Validade
+                    Tipo
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data de Cadastro
-                  </th> {/* NEW COLUMN */}
+                    Reg. Omnilink
+                  </th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status Indicação
-                  </th> {/* NEW COLUMN */}
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Omnilink Status
-                  </th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Telefone
                   </th>
                 </tr>
               </thead>
@@ -119,19 +98,13 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
                       {driver.cpf}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                      {driver.cnh || 'N/A'} / {getCnhStatusLabel(driver.cnh_expiry)}
+                      {driver.type || 'N/A'}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                      {driver.created_at ? format(parseISO(driver.created_at), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
-                    </td> {/* NEW CELL */}
+                      {driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                       {getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null)}
-                    </td> {/* NEW CELL */}
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                      {getOmnilinkStatusLabel(driver.omnilink_score_registration_date)}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                      {driver.phone || 'N/A'}
                     </td>
                   </tr>
                 ))}
