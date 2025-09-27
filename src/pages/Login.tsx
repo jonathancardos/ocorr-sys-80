@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Shield, Eye, EyeOff, UserPlus } from 'lucide-react'; // Adicionado UserPlus
 import { toast } from 'sonner';
 import ParticlesBackground from '@/components/ParticlesBackground'; // Import the new component
+import AnimatedStars from '@/components/AnimatedStars'; // NOVO: Import AnimatedStars
 
 const backgroundImages = [
   'https://images.unsplash.com/photo-1587385789092-070703cca005?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDBMHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -145,6 +146,8 @@ const Login = () => {
 
       {/* NEW: Particles Background, behind the card but above the blurred image/overlay */}
       <ParticlesBackground /> 
+      {/* NOVO: Animated Stars Background, também na tela de login */}
+      <AnimatedStars />
 
       <Card className="w-full max-w-md modern-card relative z-10">
         <CardHeader className="text-center space-y-4">

@@ -17,7 +17,7 @@ import { IncidentHistory } from "./pages/IncidentHistory"; // Import IncidentHis
 import { DriverOmnilinkStatusDetails } from "./pages/DriverOmnilinkStatusDetails"; // Import new details page
 import { ReportsPage } from "./pages/ReportsPage"; // NEW: Import ReportsPage
 import { BarChart3 } from "lucide-react"; // Import BarChart3
-import AnimatedStars from "./components/AnimatedStars"; // Import AnimatedStars
+// import AnimatedStars from "./components/AnimatedStars"; // REMOVIDO: Import AnimatedStars
 
 const queryClient = new QueryClient();
 
@@ -43,8 +43,7 @@ const App = () => (
           className="toast-container" // Classe para estilização adicional se necessário
         />
         <BrowserRouter>
-          {/* Animated Stars Background */}
-          <AnimatedStars />
+          {/* Animated Stars Background - REMOVIDO DAQUI */}
           
           <Routes>
             <Route path="/login" element={<Login />} />
