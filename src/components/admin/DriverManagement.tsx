@@ -331,7 +331,7 @@ const DriverManagement = () => {
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         }
         if (typeof valA === 'number' && typeof valB === 'number') {
-          return sortDirection === 'asc' ? valA - valB : valB - valA;
+          return sortDirection === 'asc' ? valA - valB : valB - a.value;
         }
         return 0;
       });
@@ -1045,7 +1045,7 @@ const DriverManagement = () => {
                 Upload em Massa
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[600px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
               <DialogHeader>
                 <DialogTitle>Upload em Massa de Motoristas</DialogTitle>
                 <DialogDescription>
@@ -1069,7 +1069,7 @@ const DriverManagement = () => {
                 Novo Motorista
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
               <DialogHeader>
                 <DialogTitle>
                   {editingDriver ? 'Editar Motorista' : 'Cadastrar Novo Motorista'}

@@ -253,7 +253,7 @@ export const VehicleManagement = () => {
               Novo Veículo
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
             <DialogHeader>
               <DialogTitle>
                 {editingVehicle ? 'Editar Veículo' : 'Cadastrar Novo Veículo'}

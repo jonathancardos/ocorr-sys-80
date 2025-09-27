@@ -283,7 +283,7 @@ const UserManagement = () => {
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
             <DialogHeader>
               <DialogTitle>
                 {editingUser ? 'Editar Usuário' : 'Informação do Usuário'}

@@ -845,7 +845,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             // Desktop Tabs View
             <Tabs defaultValue="identification" className="w-full">
               <div className="border-b mb-8">
-                <TabsList className="flex w-full h-auto px-4 sm:px-8 bg-card/50 backdrop-blur-sm border-b border-border/50 rounded-t-lg overflow-x-auto custom-scrollbar flex-nowrap shadow-sm gap-x-4">
+                <TabsList className="flex w-full h-auto px-4 sm:px-8 bg-card/20 backdrop-blur-sm border-b border-border/50 rounded-t-lg overflow-x-auto custom-scrollbar flex-nowrap shadow-sm gap-x-4"> {/* Adjusted transparency */}
                   {sections.map((section) => (
                     <TabsTrigger
                       key={section.id}
@@ -873,7 +873,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
       {/* New Driver Dialog */}
       <Dialog open={isNewDriverDialogOpen} onOpenChange={setIsNewDriverDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Motorista</DialogTitle>
             <DialogDescription>
@@ -889,7 +889,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
       {/* New Vehicle Dialog */}
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Veículo</DialogTitle>
             <DialogDescription>

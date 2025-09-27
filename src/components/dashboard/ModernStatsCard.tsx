@@ -29,7 +29,7 @@ export const ModernStatsCard = ({
   return (
     <div 
       className={cn(
-        "group relative overflow-hidden rounded-3xl border bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-xl transition-all duration-500 cursor-pointer",
+        "group relative overflow-hidden rounded-3xl border bg-gradient-to-br from-card/20 to-card/10 backdrop-blur-xl transition-all duration-500 cursor-pointer", /* Adjusted transparency */
         "hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 hover:scale-[1.02]",
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:to-transparent before:opacity-0",
         "hover:before:opacity-100 before:transition-opacity before:duration-300",

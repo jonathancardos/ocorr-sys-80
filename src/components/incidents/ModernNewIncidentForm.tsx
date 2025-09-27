@@ -363,7 +363,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                 const IconComponent = section.icon;
                 
                 return (
-                  <Card key={section.id} className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+                  <Card key={section.id} className="bg-card/20 border-border/50 backdrop-blur-sm"> {/* Adjusted transparency */}
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -391,11 +391,12 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             // Desktop Modern Tabs View
             <div className="space-y-6">
               {/* Enhanced Tab Navigation */}
-              <div className="bg-slate-800/30 rounded-2xl p-2 backdrop-blur-xl border border-slate-700/50">
+              <div className="bg-card/20 rounded-2xl p-2 backdrop-blur-xl border border-border/50"> {/* Adjusted transparency */}
                 <div className="flex overflow-x-auto scrollbar-hide gap-2">
                   {sections.map((section) => {
                     const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
                     const IconComponent = section.icon;
+                    const isActive = activeTab === section.id;
                     
                     return (
                       <button
@@ -403,7 +404,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                         onClick={() => setActiveTab(section.id)}
                         className={cn(
                           "flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-xl text-sm font-medium transition-all duration-300",
-                          "hover:bg-slate-700/50",
+                          "hover:bg-card/30", /* Adjusted transparency */
                           isActive
                             ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105"
                             : "text-slate-300 hover:text-white"
@@ -424,7 +425,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
               </div>
 
               {/* Content Area */}
-              <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-xl rounded-2xl overflow-hidden">
+              <Card className="bg-card/20 border-border/50 backdrop-blur-xl rounded-2xl overflow-hidden"> {/* Adjusted transparency */}
                 <CardContent className="p-8">
                   <ScrollArea className="h-[calc(100vh-300px)]">
                     <div className="pr-4">
@@ -440,7 +441,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
       {/* Dialogs */}
       <Dialog open={isNewDriverDialogOpen} onOpenChange={setIsNewDriverDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-[500px] bg-card/20 border-border/50"> {/* Adjusted transparency */}
           <DialogHeader>
             <DialogTitle className="text-white">Cadastrar Novo Motorista</DialogTitle>
             <DialogDescription className="text-slate-300">
@@ -457,7 +458,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       </Dialog>
 
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-[500px] bg-card/20 border-border/50"> {/* Adjusted transparency */}
           <DialogHeader>
             <DialogTitle className="text-white">Cadastrar Novo Veículo</DialogTitle>
             <DialogDescription className="text-slate-300">

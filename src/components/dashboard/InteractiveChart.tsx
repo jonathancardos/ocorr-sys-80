@@ -176,7 +176,7 @@ export const InteractiveChart = ({
 
   return (
     <Card className={cn(
-      "group overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-xl",
+      "group overflow-hidden border-0 bg-gradient-to-br from-card/20 to-card/10 backdrop-blur-xl", /* Adjusted transparency */
       "hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500",
       "before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:to-transparent before:opacity-0",
       "hover:before:opacity-100 before:transition-opacity before:duration-300",

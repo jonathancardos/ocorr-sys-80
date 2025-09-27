@@ -66,7 +66,7 @@ export const SettingsPage = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="border-b mb-8">
-          <TabsList className="flex w-full h-auto p-0 bg-transparent overflow-x-auto custom-scrollbar flex-nowrap"> {/* Adjusted for responsiveness */}
+          <TabsList className="flex w-full h-auto p-0 bg-card/20 backdrop-blur-sm overflow-x-auto custom-scrollbar flex-nowrap"> {/* Adjusted transparency */}
             <TabsTrigger
               value="role-permissions"
               className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"

@@ -136,7 +136,7 @@ const Index = () => {
         {/* Desktop Sidebar Navigation */}
         {!isMobile && (
           <aside className={cn(
-            "min-h-[calc(100vh-4rem)] bg-card/50 backdrop-blur-sm border-r border-border/50 transition-all duration-300 ease-in-out flex flex-col",
+            "min-h-[calc(100vh-4rem)] bg-card/20 backdrop-blur-sm border-r border-border/50 transition-all duration-300 ease-in-out flex flex-col", /* Adjusted transparency */
             isSidebarOpen ? "w-64" : "w-20"
           )}>
             {isSidebarOpen && (
@@ -205,7 +205,7 @@ const Index = () => {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-56 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
                   <DropdownMenuLabel>
                     <div className="text-wrap">
                       <div className="font-medium">@{profile?.username}</div>

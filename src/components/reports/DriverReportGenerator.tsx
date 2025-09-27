@@ -199,7 +199,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
                 {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data de início</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
               <Calendar
                 mode="single"
                 selected={startDate}
@@ -226,7 +226,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
                 {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data de fim</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
               <Calendar
                 mode="single"
                 selected={endDate}

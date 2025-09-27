@@ -86,7 +86,7 @@ export const ModernChartsSection = () => {
           className="lg:col-span-2"
         />
 
-        <Card className="group overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+        <Card className="group overflow-hidden border-0 bg-gradient-to-br from-card/20 to-card/10 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500"> {/* Adjusted transparency */}
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg font-bold">
               <Zap className="h-5 w-5 text-accent" />

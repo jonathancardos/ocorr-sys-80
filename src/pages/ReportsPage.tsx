@@ -78,7 +78,7 @@ export const ReportsPage: React.FC = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="border-b mb-8">
-          <TabsList className="flex w-full h-auto p-0 bg-transparent overflow-x-auto custom-scrollbar flex-nowrap">
+          <TabsList className="flex w-full h-auto p-0 bg-card/20 backdrop-blur-sm overflow-x-auto custom-scrollbar flex-nowrap"> {/* Adjusted transparency */}
             <TabsTrigger
               value="generators"
               className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
@@ -120,7 +120,7 @@ export const ReportsPage: React.FC = () => {
       </Tabs>
 
       <Dialog open={isDriverReportDialogOpen} onOpenChange={setIsDriverReportDialogOpen}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[700px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
           <DialogHeader>
             <DialogTitle>Gerar Relatório de Motoristas</DialogTitle>
             <DialogDescription>

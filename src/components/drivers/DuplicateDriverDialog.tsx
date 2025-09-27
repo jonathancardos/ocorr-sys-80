@@ -89,7 +89,7 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-6 w-6" />
@@ -104,7 +104,7 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
         <ScrollArea className="flex-1 p-4 -mx-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4">
             {/* Motorista Existente */}
-            <Card className="border-2 border-success/50 bg-success/5 shadow-md">
+            <Card className="border-2 border-success/50 bg-success/10 shadow-md"> {/* Adjusted transparency */}
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-success">
                   <UserCheck className="h-5 w-5" /> Motorista Existente
@@ -135,7 +135,7 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
             </Card>
 
             {/* Motorista Pendente (Novo) */}
-            <Card className="border-2 border-primary/50 bg-primary/5 shadow-md">
+            <Card className="border-2 border-primary/50 bg-primary/10 shadow-md"> {/* Adjusted transparency */}
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <User className="h-5 w-5" /> Motorista Pendente (Novo)

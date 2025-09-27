@@ -23,7 +23,7 @@ export const WelcomeCard = () => {
   const firstName = profile?.full_name?.split(' ')[0];
 
   return (
-    <Card className="modern-card p-6 bg-gradient-card shadow-elevated">
+    <Card className="modern-card p-6 bg-gradient-card/50 shadow-elevated"> {/* Adjusted transparency */}
       <CardContent className="p-0">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">

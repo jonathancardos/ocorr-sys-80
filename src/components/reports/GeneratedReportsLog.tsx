@@ -275,7 +275,7 @@ export const GeneratedReportsLog: React.FC = () => {
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filtrar por Tipo" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
               <SelectItem value="all">Todos os Tipos</SelectItem>
               <SelectItem value="driver_report">Relatório de Motoristas</SelectItem>
               <SelectItem value="incident_report">Relatório de Ocorrências</SelectItem>

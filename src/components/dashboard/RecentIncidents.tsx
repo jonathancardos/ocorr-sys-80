@@ -73,7 +73,7 @@ export const RecentIncidents = () => {
           {mockIncidents.map((incident) => (
             <div
               key={incident.id}
-              className="p-4 rounded-lg border bg-gradient-card hover:shadow-card transition-all duration-300"
+              className="p-4 rounded-lg border bg-gradient-card/50 hover:shadow-card transition-all duration-300" /* Adjusted transparency */
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2 sm:gap-0"> {/* Adjust for mobile stacking */}
                 <div className="flex items-center gap-3">

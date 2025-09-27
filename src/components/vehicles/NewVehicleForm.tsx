@@ -71,7 +71,7 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
       if (currentTechnologies.includes(selectedTech)) {
         return { ...prev, technology: currentTechnologies.filter(tech => tech !== selectedTech) };
       } else {
-        return { ...prev, technology: [...currentTechnologies, selectedTech] };
+        return { ...currentTechnologies, selectedTech };
       }
     });
   };
