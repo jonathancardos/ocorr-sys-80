@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { calculateOmnilinkScoreStatus } from '@/lib/driver-utils'; // Import from new utility
 
 interface DriverIndicacaoChartProps {
   indicados: number;

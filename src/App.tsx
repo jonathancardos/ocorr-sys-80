@@ -14,6 +14,7 @@ import { VehicleManagement } from "./components/admin/VehicleManagement";
 import { Dashboard } from "./components/dashboard/Dashboard"; // Import Dashboard
 import { NewIncidentForm as ModernNewIncidentForm } from "./components/incidents/ModernNewIncidentForm"; // Import NewIncidentForm
 import { IncidentHistory } from "./pages/IncidentHistory"; // Import IncidentHistory
+import { DriverOmnilinkStatusDetails } from "./pages/DriverOmnilinkStatusDetails"; // Import new details page
 import { BarChart3 } from "lucide-react"; // Import BarChart3
 import AnimatedStars from "./components/AnimatedStars"; // Import AnimatedStars
 
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="vehicles" element={<VehicleManagement />} />
               <Route path="settings" element={<SettingsPageWrapper />} />
               <Route path="settings/:tab" element={<SettingsPageWrapper />} />
+              <Route path="driver-omnilink-status" element={<DriverOmnilinkStatusDetails />} /> {/* New route */}
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

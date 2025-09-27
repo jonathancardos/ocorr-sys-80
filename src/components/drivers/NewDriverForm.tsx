@@ -9,8 +9,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addMonths, isAfter, format, parseISO } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry } from '@/lib/driver-utils'; // Import from new utility
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
@@ -34,30 +34,6 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
     status_indicacao: 'nao_indicado', // NEW FIELD: Default to 'nao_indicado'
     reason_nao_indicacao: null, // NEW FIELD
   });
-
-  const calculateOmnilinkScoreStatus = (registrationDate: string | null) => {
-    if (!registrationDate) return null;
-    try {
-      const parsedRegDate = parseISO(registrationDate);
-      if (isNaN(parsedRegDate.getTime())) return null;
-      const expiryDate = addMonths(parsedRegDate, 6);
-      return isAfter(expiryDate, new Date()) ? 'em_dia' : 'inapto';
-    } catch {
-      return null;
-    }
-  };
-
-  const calculateOmnilinkScoreExpiry = (registrationDate: string | null) => {
-    if (!registrationDate) return null;
-    try {
-      const parsedRegDate = parseISO(registrationDate);
-      if (isNaN(parsedRegDate.getTime())) return null;
-      const expiryDate = addMonths(parsedRegDate, 6);
-      return format(expiryDate, 'yyyy-MM-dd');
-    } catch {
-      return null;
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { // Updated to handle Textarea
     const { id, value } = e.target;

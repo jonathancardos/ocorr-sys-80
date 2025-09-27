@@ -51,6 +51,10 @@ import ReportCustomizationTab, { PdfConfig } from './ReportCustomizationTab';
 // Import Supabase Storage utilities
 import { uploadFile, uploadFiles, deleteFile } from '@/integrations/supabase/storage';
 
+// Import from new driver-utils
+import { getCnhStatus as getCnhStatusUtil, CnhStatus } from '@/lib/driver-utils';
+
+
 interface NewIncidentFormProps {
   onClose: () => void;
   onSave: (data: any) => void;
@@ -69,80 +73,8 @@ const sections = [
   { id: "pdf-customization", label: "Visualizar PDF" }, // New section for PDF customization
 ];
 
-export interface CnhStatus { // Exported CnhStatus interface
-  status: 'valid' | 'expiring_soon' | 'expired' | 'unknown'; // 'expired' for Gravíssimo, 'expiring_soon' for Atenção, 'valid' for Ok
-  message: string;
-  monthsDifference: number; // Can be positive (to expiry) or negative (expired)
-  daysDifference: number;   // Can be positive (to expiry) or negative (expired)
-}
-
-// Helper function to get CNH status
-export const getCnhStatus = (licenseExpiryDateString: string): CnhStatus => {
-  if (!licenseExpiryDateString) {
-    return { status: 'unknown', message: 'Data de validade da CNH não informada.', monthsDifference: 0, daysDifference: 0 };
-  }
-
-  const [year, month, day] = licenseExpiryDateString.split('-').map(Number);
-  const expiryDate = startOfDay(new Date(year, month - 1, day)); // Local date for expiry
-  const today = startOfDay(new Date()); // Local date for today
-
-  if (isNaN(expiryDate.getTime())) { // Robust check for invalid date
-    return { status: 'unknown', message: 'Data de validade da CNH inválida.', monthsDifference: 0, daysDifference: 0 };
-  }
-
-  // Calculate difference: today - expiryDate
-  const daysDiff = differenceInDays(today, expiryDate); // Positive if expiry is in the past, negative if expiry is in the future
-  const monthsDiff = differenceInMonths(today, expiryDate);
-  const yearsDiff = differenceInYears(today, expiryDate);
-
-  let status: CnhStatus['status'];
-  let message: string;
-
-  if (daysDiff === 0) { // CNH vence hoje
-    status = 'expiring_soon';
-    message = 'CNH válida, mas vence hoje.';
-  } else if (daysDiff < 0) { // CNH ainda válida (expiryDate is in the future relative to today)
-    status = 'valid';
-    const absDaysDiff = Math.abs(daysDiff);
-    const absMonthsDiff = Math.abs(monthsDiff);
-    const absYearsDiff = Math.abs(yearsDiff);
-
-    if (absDaysDiff <= 30) {
-      status = 'expiring_soon'; // Less than or equal to 30 days is 'expiring_soon'
-    }
-
-    message = 'CNH válida. Vence em ';
-    if (absYearsDiff > 0) {
-      message += `${absYearsDiff} ano${absYearsDiff > 1 ? 's' : ''}.`;
-    } else if (absMonthsDiff > 0) {
-      message += `${absMonthsDiff} mês${absMonthsDiff > 1 ? 'es' : ''}.`;
-    } else {
-      message += `${absDaysDiff} dia${absDaysDiff > 1 ? 's' : ''}.`;
-    }
-  } else { // CNH já vencida (daysDiff > 0) (expiryDate is in the past relative to today)
-    status = 'expired';
-    const absDaysDiff = Math.abs(daysDiff);
-    const absMonthsDiff = Math.abs(monthsDiff);
-    const absYearsDiff = Math.abs(yearsDiff);
-
-    message = 'CNH vencida há ';
-    if (absYearsDiff > 0) {
-      message += `${absYearsDiff} ano${absYearsDiff > 1 ? 's' : ''}.`;
-    } else if (absMonthsDiff > 0) {
-      message += `${absMonthsDiff} mês${absMonthsDiff > 1 ? 'es' : ''}.`;
-    } else {
-      message += `${absDaysDiff} dia${absDaysDiff > 1 ? 's' : ''}.`;
-    }
-    message += ' - Gravíssimo';
-  }
-
-  return {
-    status,
-    message,
-    daysDifference: daysDiff,
-    monthsDifference: monthsDiff,
-  };
-};
+// Helper function to get CNH status - NOW IMPORTED FROM UTILS
+export const getCnhStatus = getCnhStatusUtil;
 
 import { Vehicle } from '@/types/vehicles';
 

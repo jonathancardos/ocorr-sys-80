@@ -21,7 +21,8 @@ import {
   Car,
   Activity,
   LogOut,
-  User as UserIcon // Renomeado User para UserIcon
+  User as UserIcon, // Renomeado User para UserIcon
+  ShieldCheck // Added ShieldCheck for the new page
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,7 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useNavigate, Outlet, useLocation } from "react-router-dom"; // Import Outlet and useLocation
 import { ModernWelcomeSection } from "@/components/dashboard/ModernWelcomeSection"; // Import ModernWelcomeSection
 
-type PageView = "dashboard" | "new-incident" | "history" | "reports" | "settings" | "users" | "drivers" | "vehicles";
+type PageView = "dashboard" | "new-incident" | "history" | "reports" | "settings" | "users" | "drivers" | "vehicles" | "driver-omnilink-status"; // Added new page
 
 const defaultNavigationItems = [
   { id: "dashboard", label: "Dashboard", icon: Home, path: "/" },
@@ -40,6 +41,7 @@ const defaultNavigationItems = [
   { id: "users", label: "Gerenciamento de Usuários", icon: Users, path: "/users" },
   { id: "drivers", label: "Gerenciamento de Motoristas", icon: Truck, path: "/drivers" },
   { id: "vehicles", label: "Gerenciamento de Veículos", icon: Car, path: "/vehicles" },
+  { id: "driver-omnilink-status", label: "Status Omnilink", icon: ShieldCheck, path: "/driver-omnilink-status" }, // New navigation item
   { id: "settings", label: "Configurações", icon: Settings, path: "/settings" },
 ];
 

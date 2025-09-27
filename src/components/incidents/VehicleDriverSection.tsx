@@ -8,7 +8,7 @@ import { AlertTriangle, Truck, UserPlus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { Vehicle } from '@/types/vehicles';
-import { CnhStatus } from './NewIncidentForm'; // Import CnhStatus type
+import { CnhStatus } from '@/lib/driver-utils'; // Import CnhStatus type from new utility
 
 type Driver = Tables<'drivers'>;
 

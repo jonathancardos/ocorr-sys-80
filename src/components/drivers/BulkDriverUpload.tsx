@@ -9,13 +9,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload, FileText, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
 import * as XLSX from 'xlsx';
-import { addMonths, isAfter, format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get current user ID
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry } from '@/lib/driver-utils'; // Import from new utility
 
 interface BulkDriverUploadProps {
   onUploadComplete: () => void;
@@ -196,12 +197,8 @@ const BulkDriverUpload: React.FC<BulkDriverUploadProps> = ({ onUploadComplete, o
 
         if (omnilink_score_registration_date) {
           try {
-            const parsedRegDate = parseISO(omnilink_score_registration_date);
-            if (!isNaN(parsedRegDate.getTime())) {
-              const expiryDate = addMonths(parsedRegDate, 6);
-              omnilink_score_expiry_date = format(expiryDate, 'yyyy-MM-dd');
-              omnilink_score_status = isAfter(expiryDate, new Date()) ? 'em_dia' : 'inapto';
-            }
+            omnilink_score_expiry_date = calculateOmnilinkScoreExpiry(omnilink_score_registration_date);
+            omnilink_score_status = calculateOmnilinkScoreStatus(omnilink_score_registration_date);
           } catch (e) {
             console.warn(`Invalid date format for row ${index + 1}, Omnilink Registration Date: ${omnilink_score_registration_date}`);
           }

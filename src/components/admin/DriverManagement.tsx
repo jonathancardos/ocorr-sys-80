@@ -25,6 +25,7 @@ import { DuplicateDriverDialog } from '@/components/drivers/DuplicateDriverDialo
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry } from '@/lib/driver-utils'; // Import from new utility
 
 
 type Driver = Tables<'drivers'>;
@@ -900,30 +901,6 @@ const DriverManagement = () => {
     }
   };
 
-  const calculateOmnilinkScoreStatus = (registrationDate: string | null) => {
-    if (!registrationDate) return null;
-    try {
-      const parsedRegDate = parseISO(registrationDate);
-      if (isNaN(parsedRegDate.getTime())) return null;
-      const expiryDate = addMonths(parsedRegDate, 6);
-      return isAfter(expiryDate, new Date()) ? 'em_dia' : 'inapto';
-    } catch {
-      return null;
-    }
-  };
-
-  const calculateOmnilinkScoreExpiry = (registrationDate: string | null) => {
-    if (!registrationDate) return null;
-    try {
-      const parsedRegDate = parseISO(registrationDate);
-      if (isNaN(parsedRegDate.getTime())) return null;
-      const expiryDate = addMonths(parsedRegDate, 6);
-      return format(expiryDate, 'yyyy-MM-dd');
-    } catch {
-      return null;
-    }
-  };
-
   const getOmnilinkStatusBadgeVariant = (status: string | null) => {
     if (status === 'em_dia') return 'success';
     if (status === 'inapto') return 'destructive';
@@ -1314,7 +1291,7 @@ const DriverManagement = () => {
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Status Indicação" />
               </SelectTrigger>
-              <SelectContent>
+            <SelectContent>
                 <SelectItem value="all">Todos Status Indicação</SelectItem>
                 <SelectItem value="indicado">Indicado</SelectItem>
                 <SelectItem value="retificado">Retificado</SelectItem>

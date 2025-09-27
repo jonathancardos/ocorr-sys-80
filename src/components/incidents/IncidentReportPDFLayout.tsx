@@ -4,13 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils"; // Import cn for conditional classNames
 import { AlertTriangle, Paperclip } from "lucide-react"; // Import icons for better visual
 import { PdfConfig } from './ReportCustomizationTab'; // Import PdfConfig type
-
-interface CnhStatus {
-  status: 'valid' | 'expiring_soon' | 'expired' | 'unknown';
-  message: string;
-  monthsDifference: number;
-  daysDifference: number;
-}
+import { getCnhStatus as getCnhStatusUtil, CnhStatus } from '@/lib/driver-utils'; // Import from new utility
 
 interface AttachmentItem {
   name: string;
@@ -28,73 +22,8 @@ interface IncidentReportPDFLayoutProps {
   onRenderComplete?: () => void; // New prop to signal render completion
 }
 
-// Helper function to get CNH status (duplicated for PDF layout for self-containment)
-const getCnhStatus = (licenseExpiryDateString: string): CnhStatus => {
-  if (!licenseExpiryDateString) {
-    return { status: 'unknown', message: 'Data de validade da CNH não informada.', monthsDifference: 0, daysDifference: 0 };
-  }
-
-  const [year, month, day] = licenseExpiryDateString.split('-').map(Number);
-  const expiryDate = startOfDay(new Date(year, month - 1, day)); // Local date for expiry
-  const today = startOfDay(new Date()); // Local date for today
-
-  if (isNaN(expiryDate.getTime())) { // Robust check for invalid date
-    return { status: 'unknown', message: 'Data de validade da CNH inválida.', monthsDifference: 0, daysDifference: 0 };
-  }
-
-  // Calculate difference: today - expiryDate
-  const daysDiff = differenceInDays(today, expiryDate); // Positive if expiry is in the past, negative if expiry is in the future
-  const monthsDiff = differenceInMonths(today, expiryDate);
-  const yearsDiff = differenceInYears(today, expiryDate);
-
-  let status: CnhStatus['status'];
-  let message: string;
-
-  if (daysDiff === 0) { // CNH vence hoje
-    status = 'expiring_soon';
-    message = 'CNH válida, mas vence hoje.';
-  } else if (daysDiff < 0) { // CNH ainda válida (expiryDate is in the future relative to today)
-    status = 'valid';
-    const absDaysDiff = Math.abs(daysDiff);
-    const absMonthsDiff = Math.abs(monthsDiff);
-    const absYearsDiff = Math.abs(yearsDiff);
-
-    if (absDaysDiff <= 30) {
-      status = 'expiring_soon'; // Less than or equal to 30 days is 'expiring_soon'
-    }
-
-    message = 'CNH válida. Vence em ';
-    if (absYearsDiff > 0) {
-      message += `${absYearsDiff} ano${absYearsDiff > 1 ? 's' : ''}.`;
-    } else if (absMonthsDiff > 0) {
-      message += `${absMonthsDiff} mês${absMonthsDiff > 1 ? 'es' : ''}.`;
-    } else {
-      message += `${absDaysDiff} dia${absDaysDiff > 1 ? 's' : ''}.`;
-    }
-  } else { // CNH já vencida (daysDiff > 0) (expiryDate is in the past relative to today)
-    status = 'expired';
-    const absDaysDiff = Math.abs(daysDiff);
-    const absMonthsDiff = Math.abs(monthsDiff);
-    const absYearsDiff = Math.abs(yearsDiff);
-
-    message = 'CNH vencida há ';
-    if (absYearsDiff > 0) {
-      message += `${absYearsDiff} ano${absYearsDiff > 1 ? 's' : ''}.`;
-    } else if (absMonthsDiff > 0) {
-      message += `${absMonthsDiff} mês${absMonthsDiff > 1 ? 'es' : ''}.`;
-    } else {
-      message += `${absDaysDiff} dia${absDaysDiff > 1 ? 's' : ''}.`;
-    }
-    message += ' - Gravíssimo';
-  }
-
-  return {
-    status,
-    message,
-    daysDifference: daysDiff,
-    monthsDifference: monthsDiff,
-  };
-};
+// Helper function to get CNH status (now imported from driver-utils)
+const getCnhStatus = getCnhStatusUtil;
 
 const fieldLabels: { [key: string]: string } = {
   incidentNumber: "Nº da Ocorrência", incidentDate: "Data da Ocorrência", incidentTime: "Horário da Ocorrência",
@@ -408,7 +337,6 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
             "5. Apuração do Condutor",
             "Avaliação do comportamento do condutor com base em perguntas ponderadas.",
             <>
-              {/* Common Questions */}
               {isFieldVisible('evaluation', 'followedInstructions') && renderField("Seguiu instruções da Karne & Keijo?", formData.followedInstructions)}
               {isFieldVisible('evaluation', 'reportedAnomalies') && renderField("Comunicou anormalidades imediatamente?", formData.reportedAnomalies)}
               {isFieldVisible('evaluation', 'contradictions') && renderField("Há contradições na versão?", formData.contradictions)}

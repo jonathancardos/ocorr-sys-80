@@ -13,9 +13,11 @@ import {
   Truck,
   Activity,
   Shield,
-  Target
+  Target,
+  ShieldCheck // Added ShieldCheck for the new card
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { OmnilinkStatusCard } from "./OmnilinkStatusCard"; // Import the new unified card
 
 export const ModernMetricsGrid = () => {
   const navigate = useNavigate();
@@ -53,6 +55,7 @@ export const ModernMetricsGrid = () => {
   // Calculate metrics
   const totalIncidents = incidents?.length || 0;
   const graveIncidents = incidents?.filter(i => i.severity === 'grave' || i.severity === 'critico').length || 0;
+  const totalDrivers = drivers?.length || 0; // Total drivers for the new card
   const activeDrivers = drivers?.length || 0;
   const omnilinkEmDia = drivers?.filter(d => d.omnilink_score_status === 'em_dia').length || 0;
   const omnilinkInapto = drivers?.filter(d => d.omnilink_score_status === 'inapto').length || 0;
@@ -78,18 +81,6 @@ export const ModernMetricsGrid = () => {
       icon: FileText,
       onClick: () => navigate("/history"),
     },
-    // REMOVED: Ocorrências Críticas card
-    // {
-    //   title: "Ocorrências Críticas",
-    //   value: graveIncidents,
-    //   change: {
-    //     value: graveChange,
-    //     label: "vs mês anterior",
-    //     isPositive: graveChange < 0,
-    //   },
-    //   icon: AlertTriangle,
-    //   onClick: () => navigate("/history"),
-    // },
     {
       title: "Motoristas Ativos",
       value: activeDrivers,
@@ -112,27 +103,13 @@ export const ModernMetricsGrid = () => {
       icon: Truck,
       onClick: () => navigate("/vehicles"),
     },
+    // Unified Omnilink Status Card
     {
-      title: "Omnilink Em Dia",
-      value: omnilinkEmDia,
-      change: {
-        value: Math.floor((omnilinkEmDia / (omnilinkEmDia + omnilinkInapto)) * 100) || 0,
-        label: "taxa de conformidade",
-        isPositive: true,
-      },
-      icon: CheckCircle,
-      onClick: () => navigate("/drivers"),
-    },
-    {
-      title: "Omnilink Inapto",
-      value: omnilinkInapto,
-      change: {
-        value: Math.floor((omnilinkInapto / (omnilinkEmDia + omnilinkInapto)) * 100) || 0,
-        label: "precisam atenção",
-        isPositive: false,
-      },
-      icon: XCircle,
-      onClick: () => navigate("/drivers"),
+      title: "Status Omnilink", // This will be overridden by OmnilinkStatusCard's internal title
+      value: totalDrivers, // This will be overridden by OmnilinkStatusCard's internal value
+      icon: ShieldCheck, // This will be overridden by OmnilinkStatusCard's internal icon
+      onClick: () => navigate("/driver-omnilink-status"), // Navigate to the new details page
+      isUnifiedOmnilinkCard: true, // Custom flag to identify this entry
     },
     {
       title: "Motoristas Indicados",
@@ -205,15 +182,23 @@ export const ModernMetricsGrid = () => {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
       {metricsData.map((metric, index) => (
-        <ModernStatsCard
-          key={metric.title}
-          title={metric.title}
-          value={metric.value}
-          change={metric.change}
-          icon={metric.icon}
-          onClick={metric.onClick}
-          className="animate-fade-in"
-        />
+        metric.isUnifiedOmnilinkCard ? (
+          <OmnilinkStatusCard
+            key={metric.title}
+            totalDrivers={totalDrivers}
+            onClick={metric.onClick}
+          />
+        ) : (
+          <ModernStatsCard
+            key={metric.title}
+            title={metric.title}
+            value={metric.value}
+            change={metric.change}
+            icon={metric.icon}
+            onClick={metric.onClick}
+            className="animate-fade-in"
+          />
+        )
       ))}
     </div>
   );

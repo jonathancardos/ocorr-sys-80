@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Eye, Save, FileText } from 'lucide-react';
 import { IncidentReportPDFLayout } from './IncidentReportPDFLayout';
 import { toast } from 'sonner'; // Importar toast do sonner
-import { getCnhStatus } from './NewIncidentForm'; // Import getCnhStatus from NewIncidentForm
+import { getCnhStatus as getCnhStatusUtil } from '@/lib/driver-utils'; // Import getCnhStatus from new utility
 import { Input } from '@/components/ui/input'; // Adicionado: Importação do componente Input
 import { createRoot } from 'react-dom/client'; // Correct import for createRoot
 
@@ -198,7 +198,7 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewRef = React.useRef<HTMLDivElement>(null);
 
-  const cnhStatus = getCnhStatus(formData.licenseExpiry);
+  const cnhStatus = getCnhStatusUtil(formData.licenseExpiry); // Use the imported utility function
 
   const handleTemplateChange = (templateName: string) => {
     setSelectedTemplate(templateName);
