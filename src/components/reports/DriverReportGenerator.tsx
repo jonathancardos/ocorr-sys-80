@@ -36,10 +36,12 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       let query = supabase.from('drivers').select('*');
 
       if (startDate) {
-        query = query.gte('created_at', format(startDate, 'yyyy-MM-dd'));
+        // UPDATED: Filter by omnilink_score_registration_date
+        query = query.gte('omnilink_score_registration_date', format(startDate, 'yyyy-MM-dd'));
       }
       if (endDate) {
-        query = query.lte('created_at', format(endDate, 'yyyy-MM-dd'));
+        // UPDATED: Filter by omnilink_score_registration_date
+        query = query.lte('omnilink_score_registration_date', format(endDate, 'yyyy-MM-dd'));
       }
 
       query = query.order('full_name', { ascending: true });
@@ -183,7 +185,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="start-date">Data de Início</Label>
+          <Label htmlFor="start-date">Data de Início (Omnilink Score)</Label> {/* UPDATED LABEL */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -210,7 +212,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="end-date">Data de Fim</Label>
+          <Label htmlFor="end-date">Data de Fim (Omnilink Score)</Label> {/* UPDATED LABEL */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
