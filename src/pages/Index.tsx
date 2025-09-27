@@ -5,8 +5,8 @@ import { NewIncidentForm } from "@/components/incidents/NewIncidentForm";
 import { IncidentHistory } from "@/pages/IncidentHistory";
 import { SettingsPage } from "@/pages/SettingsPage";
 import UserManagement from "@/components/admin/UserManagement";
-import { VehicleManagement } from "@/components/admin/VehicleManagement";
 import DriverManagement from "@/components/admin/DriverManagement";
+import { VehicleManagement } from "@/components/admin/VehicleManagement";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -28,6 +28,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate, Outlet, useLocation } from "react-router-dom"; // Import Outlet and useLocation
+import { ModernWelcomeSection } from "@/components/dashboard/ModernWelcomeSection"; // Import ModernWelcomeSection
 
 type PageView = "dashboard" | "new-incident" | "history" | "reports" | "settings" | "users" | "drivers" | "vehicles";
 
@@ -136,6 +137,11 @@ const Index = () => {
             "min-h-[calc(100vh-4rem)] bg-card/50 backdrop-blur-sm border-r border-border/50 transition-all duration-300 ease-in-out flex flex-col",
             isSidebarOpen ? "w-64" : "w-20"
           )}>
+            {isSidebarOpen && (
+              <div className="p-4">
+                <ModernWelcomeSection />
+              </div>
+            )}
             <nav className="p-6 space-y-3 flex-1">
               {visibleNavigationItems.map((item) => {
                 const Icon = item.icon;

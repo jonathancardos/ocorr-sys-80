@@ -1,4 +1,3 @@
-import { ModernWelcomeSection } from "./ModernWelcomeSection";
 import { ModernMetricsGrid } from "./ModernMetricsGrid";
 import { ModernChartsSection } from "./ModernChartsSection";
 import { RecentIncidents } from "./RecentIncidents";
@@ -13,8 +12,7 @@ export const Dashboard = ({ onNewIncident }: { onNewIncident: () => void }) => {
 
   return (
     <div className="min-h-screen space-y-8 animate-fade-in">
-      {/* Modern Welcome Section */}
-      <ModernWelcomeSection onNewIncident={handleNewIncident} />
+      {/* Modern Welcome Section - REMOVED */}
 
       {/* Modern Metrics Grid */}
       <div className="space-y-6">
