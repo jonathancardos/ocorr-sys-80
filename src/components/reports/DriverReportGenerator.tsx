@@ -115,15 +115,15 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       message += `---`; // Separador inicial
 
       drivers.forEach((driver, index) => {
-        const cnhStatus = getCnhStatus(driver.cnh_expiry);
+        // const cnhStatus = getCnhStatus(driver.cnh_expiry); // Removido
         const omnilinkStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
         const indicacaoStatus = getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null);
 
         message += `\n\n*${index + 1}. ${driver.full_name}*\n`;
         message += `  CPF: ${driver.cpf || 'N/A'}\n`;
         message += `  Tipo: ${driver.type || 'N/A'}\n`;
-        message += `  CNH: ${driver.cnh || 'N/A'} (Validade: ${cnhStatus.message})\n`;
-        message += `  Telefone: ${driver.phone || 'N/A'}\n`;
+        // message += `  CNH: ${driver.cnh || 'N/A'} (Validade: ${cnhStatus.message})\n`; // Removido
+        // message += `  Telefone: ${driver.phone || 'N/A'}\n`; // Removido
         message += `  Omnilink Score: ${driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'} (Vencimento: ${driver.omnilink_score_expiry_date ? format(parseISO(driver.omnilink_score_expiry_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'})\n`;
         message += `  Status Omnilink: ${omnilinkStatus.message}\n`;
         message += `  Status Indicação: ${indicacaoStatus}\n`;
