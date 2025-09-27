@@ -84,7 +84,6 @@ export const ModernMetricsGrid = () => {
 
   // Calculate changes (mock data for demo)
   const incidentChange = Math.floor(Math.random() * 20) - 10;
-  const graveChange = Math.floor(Math.random() * 20) - 15;
   const driverChange = Math.floor(Math.random() * 10) + 1;
   const vehicleChange = Math.floor(Math.random() * 15) + 5;
 
@@ -129,51 +128,6 @@ export const ModernMetricsGrid = () => {
       icon: ShieldCheck, // This will be overridden by OmnilinkStatusCard's internal icon
       onClick: () => navigate("/driver-omnilink-status"), // Navigate to the new details page
       isUnifiedOmnilinkCard: true, // Custom flag to identify this entry
-    },
-    // REMOVED: "Motoristas Indicados" and "Não Indicados" cards
-    {
-      title: "Índice de Segurança",
-      value: `${Math.floor(((omnilinkEmDiaCount + indicados) / (activeDrivers * 2)) * 100) || 95}%`,
-      change: {
-        value: 3,
-        label: "melhoria contínua",
-        isPositive: true,
-      },
-      icon: Shield,
-      onClick: () => navigate("/reports"),
-    },
-    {
-      title: "Performance Geral",
-      value: `${Math.floor((totalIncidents > 0 ? (1 - graveIncidents / totalIncidents) : 1) * 100)}%`,
-      change: {
-        value: 8,
-        label: "otimização",
-        isPositive: true,
-      },
-      icon: Target,
-      onClick: () => navigate("/reports"),
-    },
-    {
-      title: "Atividade Mensal",
-      value: `${totalIncidents + activeDrivers}`,
-      change: {
-        value: 12,
-        label: "crescimento",
-        isPositive: true,
-      },
-      icon: Activity,
-      onClick: () => navigate("/reports"),
-    },
-    {
-      title: "Valor em Gestão",
-      value: "R$ 2.4M",
-      change: {
-        value: 15,
-        label: "valorização",
-        isPositive: true,
-      },
-      icon: TrendingUp,
-      onClick: () => navigate("/reports"),
     },
   ];
 
