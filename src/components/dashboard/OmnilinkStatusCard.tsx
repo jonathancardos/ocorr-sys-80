@@ -19,7 +19,7 @@ export const OmnilinkStatusCard: React.FC<OmnilinkStatusCardProps> = ({ totalDri
       }}
       icon={ShieldCheck}
       onClick={onClick}
-      className="col-span-full sm:col-span-2 lg:col-span-1" // Adjust size to fit grid
+      // Removido: className="col-span-full sm:col-span-2 lg:col-span-1"
     />
   );
 };
