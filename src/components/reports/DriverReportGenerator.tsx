@@ -16,6 +16,7 @@ import html2canvas from 'html2canvas';
 import { createRoot } from 'react-dom/client';
 import { DriverReportPDFLayout } from './DriverReportPDFLayout';
 import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils';
+import { PdfPreviewDialog } from './PdfPreviewDialog'; // Import the new preview dialog
 
 type Driver = Tables<'drivers'>;
 
@@ -26,9 +27,9 @@ interface DriverReportGeneratorProps {
 export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ onClose }) => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Keep this for internal state if needed, but PDF generation is now in dialog
   const [isSharingWhatsapp, setIsSharingWhatsapp] = useState(false);
-  const pdfPreviewRef = useRef<HTMLDivElement>(null);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false); // New state for preview dialog
 
   const { data: drivers, isLoading: isLoadingDrivers, error: driversError } = useQuery<Driver[], Error>({
     queryKey: ['reportDrivers', startDate, endDate],
@@ -36,11 +37,9 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       let query = supabase.from('drivers').select('*');
 
       if (startDate) {
-        // UPDATED: Filter by omnilink_score_registration_date
         query = query.gte('omnilink_score_registration_date', format(startDate, 'yyyy-MM-dd'));
       }
       if (endDate) {
-        // UPDATED: Filter by omnilink_score_registration_date
         query = query.lte('omnilink_score_registration_date', format(endDate, 'yyyy-MM-dd'));
       }
 
@@ -53,81 +52,14 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     enabled: !!startDate && !!endDate, // Only fetch if both dates are selected
   });
 
-  const handleGeneratePdf = async () => {
+  const handleOpenPdfPreview = () => {
     if (!drivers || drivers.length === 0) {
       toast.info("Nenhum motorista encontrado", {
         description: "Não há motoristas para gerar o relatório no período selecionado.",
       });
       return;
     }
-
-    setIsGeneratingPdf(true);
-    try {
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px'; // Render off-screen
-      tempDiv.style.width = '210mm'; // A4 width
-      tempDiv.style.minHeight = '297mm'; // A4 height
-      document.body.appendChild(tempDiv);
-
-      const root = createRoot(tempDiv);
-      let resolveRenderPromise: () => void = () => {};
-      const renderPromise = new Promise<void>(resolve => {
-        resolveRenderPromise = resolve;
-      });
-
-      root.render(
-        <DriverReportPDFLayout
-          drivers={drivers}
-          startDate={startDate}
-          endDate={endDate}
-          onRenderComplete={resolveRenderPromise}
-        />
-      );
-
-      await renderPromise; // Wait for the component to signal completion
-      await new Promise(resolve => setTimeout(resolve, 200)); // Small additional delay
-
-      const canvas = await html2canvas(tempDiv, {
-        scale: 2,
-        useCORS: true,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`);
-
-      toast.success("PDF gerado com sucesso!", {
-        description: "O relatório de motoristas foi baixado para seu computador.",
-      });
-
-      root.unmount();
-      document.body.removeChild(tempDiv);
-
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Erro ao gerar PDF", {
-        description: "Ocorreu um erro ao gerar o arquivo PDF. Verifique o console para detalhes.",
-      });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
+    setIsPdfPreviewOpen(true);
   };
 
   const handleShareWhatsapp = () => {
@@ -179,13 +111,13 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     }
   };
 
-  const isGenerateButtonDisabled = !startDate || !endDate || isLoadingDrivers || isGeneratingPdf || isSharingWhatsapp;
+  const isGenerateButtonDisabled = !startDate || !endDate || isLoadingDrivers || isSharingWhatsapp;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="start-date">Data de Início (Omnilink Score)</Label> {/* UPDATED LABEL */}
+          <Label htmlFor="start-date">Data de Início (Omnilink Score)</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -212,7 +144,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="end-date">Data de Fim (Omnilink Score)</Label> {/* UPDATED LABEL */}
+          <Label htmlFor="end-date">Data de Fim (Omnilink Score)</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -265,7 +197,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
           type="button"
           variant="outline"
           onClick={onClose}
-          disabled={isGeneratingPdf || isSharingWhatsapp}
+          disabled={isSharingWhatsapp}
         >
           Cancelar
         </Button>
@@ -289,22 +221,22 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         </Button>
         <Button
           type="button"
-          onClick={handleGeneratePdf}
+          onClick={handleOpenPdfPreview} // Changed to open preview dialog
           disabled={isGenerateButtonDisabled}
         >
-          {isGeneratingPdf ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Gerando PDF...
-            </>
-          ) : (
-            <>
-              <Download className="mr-2 h-4 w-4" />
-              Gerar PDF
-            </>
-          )}
+          <Download className="mr-2 h-4 w-4" />
+          Gerar PDF
         </Button>
       </div>
+
+      {/* PDF Preview Dialog */}
+      <PdfPreviewDialog
+        isOpen={isPdfPreviewOpen}
+        onClose={() => setIsPdfPreviewOpen(false)}
+        drivers={drivers || []}
+        startDate={startDate}
+        endDate={endDate}
+      />
     </div>
   );
 };
