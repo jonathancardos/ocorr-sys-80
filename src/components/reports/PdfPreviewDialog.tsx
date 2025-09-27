@@ -10,6 +10,8 @@ import { createRoot } from 'react-dom/client';
 import { DriverReportPDFLayout } from './DriverReportPDFLayout';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client'; // Import supabase client
+import { uploadFile } from '@/integrations/supabase/storage'; // Import uploadFile
 
 type Driver = Tables<'drivers'>;
 
@@ -19,7 +21,7 @@ interface PdfPreviewDialogProps {
   drivers: Driver[];
   startDate?: Date;
   endDate?: Date;
-  onDownloadSuccess?: () => void; // New prop
+  onDownloadSuccess?: (fileUrl: string) => void; // Modified to pass fileUrl
 }
 
 export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
@@ -28,19 +30,20 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   drivers,
   startDate,
   endDate,
-  onDownloadSuccess, // Destructure new prop
+  onDownloadSuccess,
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewDimensions, setPreviewDimensions] = useState<{ width: number; height: number } | null>(null); // Store dimensions
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  // Removed pdfContentRef as it was referencing the image display div, not the content generation div.
+  const [generatedPdfBlob, setGeneratedPdfBlob] = useState<Blob | null>(null); // Store the PDF Blob
 
   useEffect(() => {
     if (!isOpen) {
       setPreviewImage(null);
       setPreviewDimensions(null);
       setIsGeneratingPreview(true);
+      setGeneratedPdfBlob(null); // Clear blob on close
       return;
     }
 
@@ -48,12 +51,12 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
       setIsGeneratingPreview(true);
       setPreviewImage(null);
       setPreviewDimensions(null);
+      setGeneratedPdfBlob(null);
 
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px'; // Render off-screen
       tempDiv.style.width = '210mm'; // A4 width for consistent rendering
-      // IMPORTANT: Do NOT set a fixed height here. Let content define height.
       document.body.appendChild(tempDiv);
 
       const root = createRoot(tempDiv);
@@ -87,10 +90,30 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
         });
         setPreviewImage(canvas.toDataURL('image/png'));
         setPreviewDimensions({ width: canvas.width, height: canvas.height }); // Store actual canvas dimensions
+
+        // Generate PDF and store its blob for later download/upload
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 295; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight); // Use JPEG for smaller file size
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        setGeneratedPdfBlob(pdf.output('blob')); // Store the PDF as a Blob
+
       } catch (error) {
-        console.error("Error generating preview image:", error);
+        console.error("Error generating preview image or PDF blob:", error);
         toast.error("Erro na pré-visualização", {
-          description: "Não foi possível gerar a imagem de pré-visualização do PDF.",
+          description: "Não foi possível gerar a imagem de pré-visualização ou o PDF.",
         });
       } finally {
         root.unmount();
@@ -103,47 +126,45 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   }, [isOpen, drivers, startDate, endDate]);
 
   const handleDownloadPdf = async () => {
-    if (!previewImage || !previewDimensions) {
+    if (!generatedPdfBlob || !previewDimensions) {
       toast.error("Erro ao baixar PDF", {
-        description: "A imagem de pré-visualização não está disponível.",
+        description: "O PDF não está disponível para download.",
       });
       return;
     }
 
     setIsDownloading(true);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-
-      // Calculate image height based on its original aspect ratio and A4 width
-      const imgHeight = (previewDimensions.height * imgWidth) / previewDimensions.width;
+      const fileName = `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`;
       
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Create a File object from the Blob
+      const pdfFile = new File([generatedPdfBlob], fileName, { type: 'application/pdf' });
 
-      pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      // Upload the PDF to Supabase Storage
+      const path = `reports/${fileName}`; // Define a path in your storage bucket
+      const fileUrl = await uploadFile(pdfFile, path);
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
+      // Trigger download in the browser
+      const url = URL.createObjectURL(generatedPdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
-      pdf.save(`relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`);
       toast.success("PDF gerado com sucesso!", {
         description: "O relatório de motoristas foi baixado para seu computador.",
       });
       onClose();
-      if (onDownloadSuccess) { // Call the callback on success
-        onDownloadSuccess();
+      if (onDownloadSuccess) {
+        onDownloadSuccess(fileUrl); // Pass the uploaded file URL
       }
     } catch (error) {
-      console.error("Error downloading PDF:", error);
+      console.error("Error downloading or uploading PDF:", error);
       toast.error("Erro ao baixar PDF", {
-        description: "Ocorreu um erro ao baixar o arquivo PDF.",
+        description: "Ocorreu um erro ao baixar ou salvar o arquivo PDF.",
       });
     } finally {
       setIsDownloading(false);
@@ -166,7 +187,6 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
               <span>Gerando pré-visualização...</span>
             </div>
           ) : previewImage ? (
-            // Display the preview image, allowing it to scroll if taller than the dialog content area
             <div className="max-w-full h-auto shadow-lg border border-gray-300 bg-white">
               <img src={previewImage} alt="Pré-visualização do PDF" className="max-w-full max-h-full object-contain block" />
             </div>
@@ -181,7 +201,7 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isDownloading}>
             Cancelar
           </Button>
-          <Button onClick={handleDownloadPdf} disabled={isGeneratingPreview || isDownloading || !previewImage}>
+          <Button onClick={handleDownloadPdf} disabled={isGeneratingPreview || isDownloading || !generatedPdfBlob}>
             {isDownloading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

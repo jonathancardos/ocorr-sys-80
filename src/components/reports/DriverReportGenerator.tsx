@@ -23,16 +23,24 @@ type Driver = Tables<'drivers'>;
 
 interface DriverReportGeneratorProps {
   onClose: () => void;
+  initialStartDate?: Date; // New prop
+  initialEndDate?: Date;   // New prop
 }
 
-export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ onClose }) => {
+export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ onClose, initialStartDate, initialEndDate }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
+  const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharingWhatsapp, setIsSharingWhatsapp] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+
+  // Update local state if initial dates change (e.g., from URL params)
+  useEffect(() => {
+    setStartDate(initialStartDate);
+    setEndDate(initialEndDate);
+  }, [initialStartDate, initialEndDate]);
 
   const { data: drivers, isLoading: isLoadingDrivers, error: driversError } = useQuery<Driver[], Error>({
     queryKey: ['reportDrivers', startDate, endDate],
@@ -115,15 +123,12 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       message += `---`; // Separador inicial
 
       drivers.forEach((driver, index) => {
-        // const cnhStatus = getCnhStatus(driver.cnh_expiry); // Removido
         const omnilinkStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
         const indicacaoStatus = getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null);
 
         message += `\n\n*${index + 1}. ${driver.full_name}*\n`;
         message += `  CPF: ${driver.cpf || 'N/A'}\n`;
         message += `  Tipo: ${driver.type || 'N/A'}\n`;
-        // message += `  CNH: ${driver.cnh || 'N/A'} (Validade: ${cnhStatus.message})\n`; // Removido
-        // message += `  Telefone: ${driver.phone || 'N/A'}\n`; // Removido
         message += `  Omnilink Score: ${driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'} (Vencimento: ${driver.omnilink_score_expiry_date ? format(parseISO(driver.omnilink_score_expiry_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'})\n`;
         message += `  Status Omnilink: ${omnilinkStatus.message}\n`;
         message += `  Status Indicação: ${indicacaoStatus}\n`;
@@ -162,14 +167,15 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     }
   };
 
-  const handleDownloadPdfFromPreview = async () => {
+  const handleDownloadPdfFromPreview = async (fileUrl: string) => { // Now accepts fileUrl
     logReportMutation.mutate({
       report_type: 'driver_report',
       generated_by: user?.id || null,
       start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
       end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
       file_name: `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`,
-      metadata: { driverCount: drivers?.length || 0 },
+      file_url: fileUrl, // Save the generated PDF URL
+      metadata: { driverCount: drivers?.length || 0, sharedVia: 'pdf_download' },
     });
   };
 

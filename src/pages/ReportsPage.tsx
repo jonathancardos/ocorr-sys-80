@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart3, Users, FileText, Download, History } from 'lucide-react'; // Added History icon
 import { DriverReportCard } from '@/components/reports/DriverReportCard';
@@ -8,11 +8,38 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 import { GeneratedReportsLog } from '@/components/reports/GeneratedReportsLog'; // Import new component
+import { useLocation } from 'react-router-dom'; // Import useLocation
 
 export const ReportsPage: React.FC = () => {
   const { profile, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
   const [isDriverReportDialogOpen, setIsDriverReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('generators'); // New state for active tab
+  const [initialGeneratorDates, setInitialGeneratorDates] = useState<{ startDate?: Date; endDate?: Date } | undefined>(undefined);
+
+  useEffect(() => {
+    const tabParam = queryParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+
+    const reportTypeParam = queryParams.get('reportType');
+    const startDateParam = queryParams.get('startDate');
+    const endDateParam = queryParams.get('endDate');
+
+    if (reportTypeParam === 'driver_report' && startDateParam && endDateParam) {
+      setInitialGeneratorDates({
+        startDate: new Date(startDateParam),
+        endDate: new Date(endDateParam),
+      });
+      setIsDriverReportDialogOpen(true);
+    } else {
+      setInitialGeneratorDates(undefined); // Clear if no params
+    }
+  }, [location.search]);
+
 
   if (authLoading) {
     return (
@@ -100,7 +127,11 @@ export const ReportsPage: React.FC = () => {
               Selecione o período para gerar o relatório de motoristas cadastrados.
             </DialogDescription>
           </DialogHeader>
-          <DriverReportGenerator onClose={() => setIsDriverReportDialogOpen(false)} />
+          <DriverReportGenerator 
+            onClose={() => setIsDriverReportDialogOpen(false)} 
+            initialStartDate={initialGeneratorDates?.startDate}
+            initialEndDate={initialGeneratorDates?.endDate}
+          />
         </DialogContent>
       </Dialog>
     </div>

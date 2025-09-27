@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, Calendar, Download, ExternalLink, FilterX, Search, ArrowUp, ArrowDown } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2, FileText, Calendar, Download, ExternalLink, FilterX, Search, ArrowUp, ArrowDown, Repeat, Trash2, Share2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { format, parseISO } from 'date-fns';
@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 type GeneratedReport = Tables<'generated_reports'> & {
   profiles?: { full_name: string | null; username: string | null };
@@ -20,6 +21,7 @@ type SortDirection = 'asc' | 'desc';
 
 export const GeneratedReportsLog: React.FC = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate(); // Initialize useNavigate
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('generated_at');
@@ -47,7 +49,8 @@ export const GeneratedReportsLog: React.FC = () => {
         report.report_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.profiles?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+        report.profiles?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.metadata?.sharedVia?.toLowerCase().includes(searchTerm.toLowerCase()) // Search in metadata
       );
     }
 
@@ -77,6 +80,29 @@ export const GeneratedReportsLog: React.FC = () => {
 
     return currentReports;
   }, [reports, searchTerm, filterType, sortColumn, sortDirection]);
+
+  // Mutation to delete a report log
+  const deleteReportMutation = useMutation({
+    mutationFn: async (reportId: string) => {
+      const { error } = await supabase
+        .from('generated_reports')
+        .delete()
+        .eq('id', reportId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['generatedReports'] });
+      toast.success("Relatório excluído!", {
+        description: "O registro do relatório foi removido do histórico.",
+      });
+    },
+    onError: (err: any) => {
+      console.error('Error deleting report:', err);
+      toast.error("Erro ao excluir relatório", {
+        description: err.message || "Não foi possível excluir o registro do relatório.",
+      });
+    },
+  });
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -109,6 +135,28 @@ export const GeneratedReportsLog: React.FC = () => {
       case 'driver_report': return 'Relatório de Motoristas';
       case 'incident_report': return 'Relatório de Ocorrências';
       default: return type;
+    }
+  };
+
+  const handleRegenerateReport = (report: GeneratedReport) => {
+    if (report.report_type === 'driver_report') {
+      // Navigate to the driver report generator with pre-filled dates
+      const startDateParam = report.start_date ? format(parseISO(report.start_date), 'yyyy-MM-dd') : '';
+      const endDateParam = report.end_date ? format(parseISO(report.end_date), 'yyyy-MM-dd') : '';
+      navigate(`/reports?tab=generators&reportType=driver_report&startDate=${startDateParam}&endDate=${endDateParam}`);
+      toast.info("Gerador de relatório aberto", {
+        description: "As datas foram pré-preenchidas para você.",
+      });
+    } else {
+      toast.info("Funcionalidade em desenvolvimento", {
+        description: "A re-geração para este tipo de relatório ainda não está disponível.",
+      });
+    }
+  };
+
+  const handleDeleteReport = (reportId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este registro de relatório?")) {
+      deleteReportMutation.mutate(reportId);
     }
   };
 
@@ -216,18 +264,26 @@ export const GeneratedReportsLog: React.FC = () => {
                     <TableCell>{report.start_date ? format(parseISO(report.start_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
                     <TableCell>{report.end_date ? format(parseISO(report.end_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
                     <TableCell className="text-right">
-                      {report.file_url && (
-                        <Button variant="ghost" size="sm" asChild>
-                          <a href={report.file_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
+                      <div className="flex items-center justify-end space-x-2">
+                        {report.file_url && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={report.file_url} target="_blank" rel="noopener noreferrer" title="Baixar PDF">
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        {report.metadata?.sharedVia === 'whatsapp' && (
+                          <Button variant="ghost" size="sm" title="Compartilhado via WhatsApp" disabled>
+                            <Share2 className="h-4 w-4 text-green-500" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => handleRegenerateReport(report)} title="Refazer Relatório">
+                          <Repeat className="h-4 w-4" />
                         </Button>
-                      )}
-                      {!report.file_url && (
-                        <Button variant="ghost" size="sm" disabled>
-                          <Download className="h-4 w-4 text-muted-foreground" />
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteReport(report.id)} title="Excluir Registro" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
