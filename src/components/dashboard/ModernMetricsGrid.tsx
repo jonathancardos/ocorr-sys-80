@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OmnilinkStatusCard } from "./OmnilinkStatusCard"; // Import the new unified card
+import { getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // NEW: Import getDetailedOmnilinkStatus
 
 export const ModernMetricsGrid = () => {
   const navigate = useNavigate();
@@ -56,9 +57,27 @@ export const ModernMetricsGrid = () => {
   const totalIncidents = incidents?.length || 0;
   const graveIncidents = incidents?.filter(i => i.severity === 'grave' || i.severity === 'critico').length || 0;
   const totalDrivers = drivers?.length || 0; // Total drivers for the new card
-  const activeDrivers = drivers?.length || 0;
-  const omnilinkEmDia = drivers?.filter(d => d.omnilink_score_status === 'em_dia').length || 0;
-  const omnilinkInapto = drivers?.filter(d => d.omnilink_score_status === 'inapto').length || 0;
+  
+  let omnilinkEmDiaCount = 0;
+  let omnilinkPrestVencerCount = 0;
+  let omnilinkVencidoCount = 0;
+
+  drivers?.forEach(driver => {
+    const detailedStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
+    switch (detailedStatus.status) {
+      case 'em_dia':
+        omnilinkEmDiaCount++;
+        break;
+      case 'prest_vencer':
+        omnilinkPrestVencerCount++;
+        break;
+      case 'vencido':
+        omnilinkVencidoCount++;
+        break;
+    }
+  });
+
+  const activeDrivers = drivers?.length || 0; // Assuming all registered drivers are active for this metric
   const indicados = drivers?.filter(d => d.status_indicacao === 'indicado' || d.status_indicacao === 'retificado').length || 0;
   const naoIndicados = drivers?.filter(d => d.status_indicacao === 'nao_indicado').length || 0;
   const totalVehicles = vehicles?.length || 0;
@@ -135,7 +154,7 @@ export const ModernMetricsGrid = () => {
     },
     {
       title: "Índice de Segurança",
-      value: `${Math.floor(((omnilinkEmDia + indicados) / (activeDrivers * 2)) * 100) || 95}%`,
+      value: `${Math.floor(((omnilinkEmDiaCount + indicados) / (activeDrivers * 2)) * 100) || 95}%`,
       change: {
         value: 3,
         label: "melhoria contínua",

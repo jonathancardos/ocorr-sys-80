@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,12 +10,20 @@ import { Loader2 } from 'lucide-react';
 import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
-import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry } from '@/lib/driver-utils'; // Import from new utility
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import from new utility
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
   onClose: () => void;
 }
+
+const predefinedTechnologies = [
+  "Bloqueador Duplo",
+  "Bloqueio",
+  "Rastreio",
+  "2G",
+  "4G",
+];
 
 const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose }) => {
   const queryClient = useQueryClient();
@@ -35,6 +43,16 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
     reason_nao_indicacao: null, // NEW FIELD
   });
 
+  const [detailedOmnilinkStatus, setDetailedOmnilinkStatus] = useState<OmnilinkDetailedStatus | null>(null); // NEW STATE
+
+  useEffect(() => {
+    if (formData.omnilink_score_registration_date) {
+      setDetailedOmnilinkStatus(getDetailedOmnilinkStatus(formData.omnilink_score_registration_date));
+    } else {
+      setDetailedOmnilinkStatus(null);
+    }
+  }, [formData.omnilink_score_registration_date]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { // Updated to handle Textarea
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value === '' ? null : value })); // Set to null if empty string
@@ -43,13 +61,15 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
   const handleOmnilinkRegDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const regDate = e.target.value === '' ? null : e.target.value;
     const expiryDate = calculateOmnilinkScoreExpiry(regDate);
-    const status = calculateOmnilinkScoreStatus(regDate);
+    const statusForDb = calculateOmnilinkScoreStatus(regDate); // For DB storage
+    const detailedStatus = getDetailedOmnilinkStatus(regDate); // For UI display
     setFormData(prev => ({
       ...prev,
       omnilink_score_registration_date: regDate,
       omnilink_score_expiry_date: expiryDate,
-      omnilink_score_status: status,
+      omnilink_score_status: statusForDb, // Store 'em_dia' or 'inapto' in DB
     }));
+    setDetailedOmnilinkStatus(detailedStatus); // Update detailed status for UI
   };
 
   const handleSelectChange = (id: keyof TablesInsert<'drivers'>, value: string) => {
@@ -187,10 +207,10 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="omnilink_score_status">Status Omnilink Score</Label>
+          <Label htmlFor="omnilink_score_status_display">Status Omnilink Score</Label>
           <Input
-            id="omnilink_score_status"
-            value={formData.omnilink_score_status === 'em_dia' ? 'Em Dia' : formData.omnilink_score_status === 'inapto' ? 'Inapto' : ''}
+            id="omnilink_score_status_display" // Changed ID to avoid conflict with formData.omnilink_score_status
+            value={detailedOmnilinkStatus?.message || ''} // Display detailed message
             readOnly
             className="bg-muted/50"
           />

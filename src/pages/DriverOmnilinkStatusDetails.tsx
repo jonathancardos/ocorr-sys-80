@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useNavigate } from 'react-router-dom';
-import { getCnhStatus, calculateOmnilinkScoreStatus } from '@/lib/driver-utils'; // Import from new utility
+import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import getDetailedOmnilinkStatus
 import { ResponsiveContainer, Pie, Cell, Legend, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 
@@ -85,7 +85,7 @@ export const DriverOmnilinkStatusDetails: React.FC = () => {
     if (!drivers) {
       return {
         cnhStatuses: { valid: 0, expiringSoon: 0, expired: 0, unknown: 0 },
-        omnilinkStatuses: { emDia: 0, inapto: 0, unknown: 0 },
+        omnilinkStatuses: { emDia: 0, prestVencer: 0, vencido: 0, unknown: 0 }, // UPDATED: granular statuses
       };
     }
 
@@ -95,7 +95,8 @@ export const DriverOmnilinkStatusDetails: React.FC = () => {
     let cnhUnknown = 0;
 
     let omnilinkEmDia = 0;
-    let omnilinkInapto = 0;
+    let omnilinkPrestVencer = 0; // NEW
+    let omnilinkVencido = 0; // NEW
     let omnilinkUnknown = 0;
 
     drivers.forEach(driver => {
@@ -116,20 +117,27 @@ export const DriverOmnilinkStatusDetails: React.FC = () => {
           break;
       }
 
-      // Omnilink Status
-      const omnilinkStatus = calculateOmnilinkScoreStatus(driver.omnilink_score_registration_date);
-      if (omnilinkStatus === 'em_dia') {
-        omnilinkEmDia++;
-      } else if (omnilinkStatus === 'inapto') {
-        omnilinkInapto++;
-      } else {
-        omnilinkUnknown++;
+      // Omnilink Status (UPDATED LOGIC)
+      const detailedOmnilinkStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
+      switch (detailedOmnilinkStatus.status) {
+        case 'em_dia':
+          omnilinkEmDia++;
+          break;
+        case 'prest_vencer':
+          omnilinkPrestVencer++;
+          break;
+        case 'vencido':
+          omnilinkVencido++;
+          break;
+        case 'unknown':
+          omnilinkUnknown++;
+          break;
       }
     });
 
     return {
       cnhStatuses: { valid: cnhValid, expiringSoon: cnhExpiringSoon, expired: cnhExpired, unknown: cnhUnknown },
-      omnilinkStatuses: { emDia: omnilinkEmDia, inapto: omnilinkInapto, unknown: omnilinkUnknown },
+      omnilinkStatuses: { emDia: omnilinkEmDia, prestVencer: omnilinkPrestVencer, vencido: omnilinkVencido, unknown: omnilinkUnknown }, // UPDATED
     };
   }, [drivers]);
 
@@ -142,7 +150,8 @@ export const DriverOmnilinkStatusDetails: React.FC = () => {
 
   const omnilinkPieChartData = [
     { name: "Em Dia", value: omnilinkStatuses.emDia, color: "hsl(var(--success))" },
-    { name: "Inapto", value: omnilinkStatuses.inapto, color: "hsl(var(--destructive))" },
+    { name: "Prestes a Vencer", value: omnilinkStatuses.prestVencer, color: "hsl(var(--warning))" }, // NEW
+    { name: "Vencido", value: omnilinkStatuses.vencido, color: "hsl(var(--destructive))" }, // NEW
     { name: "Não Informado", value: omnilinkStatuses.unknown, color: "hsl(var(--muted-foreground))" },
   ];
 
@@ -235,19 +244,31 @@ export const DriverOmnilinkStatusDetails: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{omnilinkStatuses.emDia}</div>
-            <p className="text-xs text-muted-foreground">Motoristas aptos pelo Omnilink Score</p>
+            <p className="text-xs text-muted-foreground">Motoristas com cadastro Omnilink em dia</p>
           </CardContent>
         </Card>
 
-        {/* Card: Omnilink Inapto */}
+        {/* Card: Omnilink Prestes a Vencer */}
         <Card className="modern-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Omnilink Inapto</CardTitle>
+            <CardTitle className="text-sm font-medium">Omnilink Prestes a Vencer</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-warning" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{omnilinkStatuses.prestVencer}</div>
+            <p className="text-xs text-muted-foreground">Cadastros Omnilink vencendo nos próximos 3 meses</p>
+          </CardContent>
+        </Card>
+
+        {/* Card: Omnilink Vencido */}
+        <Card className="modern-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Omnilink Vencido</CardTitle>
             <XCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{omnilinkStatuses.inapto}</div>
-            <p className="text-xs text-muted-foreground">Motoristas inaptos pelo Omnilink Score</p>
+            <div className="text-2xl font-bold">{omnilinkStatuses.vencido}</div>
+            <p className="text-xs text-muted-foreground">Cadastros Omnilink já expirados</p>
           </CardContent>
         </Card>
       </div>

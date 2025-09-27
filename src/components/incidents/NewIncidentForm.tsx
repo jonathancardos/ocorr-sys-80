@@ -52,7 +52,7 @@ import ReportCustomizationTab, { PdfConfig } from './ReportCustomizationTab';
 import { uploadFile, uploadFiles, deleteFile } from '@/integrations/supabase/storage';
 
 // Import from new driver-utils
-import { getCnhStatus as getCnhStatusUtil, CnhStatus } from '@/lib/driver-utils';
+import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpiry, calculateOmnilinkScoreStatus } from '@/lib/driver-utils';
 
 
 interface NewIncidentFormProps {
@@ -120,6 +120,9 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     driverPhone: "", // Will be populated from selected driver
     driverLicense: "", // Will be populated from selected driver
     licenseExpiry: "", // Will be populated from selected driver
+    omnilinkScoreRegistrationDate: "" as string | null, // NEW: Omnilink registration date
+    omnilinkScoreExpiryDate: "" as string | null, // NEW: Omnilink expiry date
+    omnilinkScoreStatus: "" as string | null, // NEW: Omnilink status (em_dia/inapto)
     
     // Laudo Omnilink
     omnilinkStatus: "" as "yes" | "no" | "", // Changed to string
@@ -176,31 +179,29 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     omnilinkPhoto: null as { name: string, url: string } | null,
   });
 
-  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({
+  const [uploadingFiles] = useState<{ [key: string]: boolean }>({
     boFiles: false,
     sapScreenshots: false,
     riskReports: false,
     omnilinkPhoto: false,
   });
 
-  // Define fields for each section for completion calculation
   const sectionFields = {
     identification: [
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
-      'locationType', // This is the new primary selector
-      // Conditional fields will be added dynamically in calculateSectionCompletion
+      'locationType',
     ],
-    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry'],
-    omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict'], // Updated
-    tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop'], // Conditional fields handled in logic
+    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
+    omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict'],
+    tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop'],
     cargo: ['totalCargoValue', 'stolenCargoValue', 'cargoObservations'],
     risk: ['riskObservations'],
     final: ['omnilinkSummary', 'driverSummary', 'trackingSummary', 'cargoSummary', 'riskSummary', 'finalConclusion', 'recommendations', 'analystName'],
     attachments: ['boFiles', 'sapScreenshots', 'riskReports', 'omnilinkPhoto'],
-    "pdf-customization": [], // No fields for completion calculation in this section
+    "pdf-customization": [],
   };
 
-  const calculateSectionCompletion = (currentFormData: typeof formData, sectionId: keyof typeof sectionFields | 'evaluation') => {
+  const calculateSectionCompletion = (currentFormData: typeof formData, sectionId: keyof typeof sectionFields | 'evaluation'): number => {
     let filledCount = 0;
     let totalCount = 0;
 
@@ -226,7 +227,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
       // CNH expiry is always part of the score, so it should be part of totalCount for evaluation
       totalCount++; // For licenseExpiry check
-      if (currentFormData.licenseExpiry.trim() !== '') filledCount++; // Assuming licenseExpiry is always filled if a driver is selected
+      if (currentFormData.licenseExpiry && currentFormData.licenseExpiry.trim() !== '') filledCount++; // Assuming licenseExpiry is always filled if a driver is selected
 
       if (totalCount === 0) return 100;
       return Math.round((filledCount / totalCount) * 100);
@@ -354,7 +355,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     }));
   }, [nextIncidentNumber]); // Re-run when nextIncidentNumber is fetched
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
@@ -452,6 +453,9 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           driverPhone: selectedDriver.phone || '',
           driverLicense: selectedDriver.cnh || '',
           licenseExpiry: selectedDriver.cnh_expiry || '',
+          omnilinkScoreRegistrationDate: selectedDriver.omnilink_score_registration_date || '', // NEW
+          omnilinkScoreExpiryDate: selectedDriver.omnilink_score_expiry_date || '', // NEW
+          omnilinkScoreStatus: selectedDriver.omnilink_score_status || '', // NEW
         };
         // Recalculate score and risk level after populating driver data
         const score = calculateDriverScore(newData);
@@ -469,8 +473,11 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         driverPhone: '',
         driverLicense: '',
         licenseExpiry: '',
-        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '' }), // Recalculate score
-        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '' })), // Recalculate risk
+        omnilinkScoreRegistrationDate: null, // NEW
+        omnilinkScoreExpiryDate: null, // NEW
+        omnilinkScoreStatus: null, // NEW
+        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null }), // Recalculate score
+        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null })), // Recalculate risk
       }));
     }
   };
@@ -536,6 +543,12 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     if (cnhStatus.status === 'expired') {
       score += 10;
     }
+
+    // Omnilink vencido (peso 10) - always applies if driver selected and registration date exists
+    const omnilinkDetailedStatus = getCnhStatus(data.omnilinkScoreRegistrationDate); // Use the correct field
+    if (omnilinkDetailedStatus.status === 'expired') {
+      score += 10;
+    }
     
     return score;
   };
@@ -573,6 +586,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           omnilinkPhotoAttachment={formData.omnilinkPhoto ? [formData.omnilinkPhoto] : []}
           pdfConfig={config || pdfConfig}
           cnhStatus={getCnhStatus(formData.licenseExpiry)}
+          omnilinkDetailedStatus={getDetailedOmnilinkStatus(formData.omnilinkScoreRegistrationDate)} // NEW
           onRenderComplete={resolveRenderPromise}
         />
       );

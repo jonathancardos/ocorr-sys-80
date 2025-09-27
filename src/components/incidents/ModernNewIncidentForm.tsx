@@ -25,6 +25,10 @@ import ReportCustomizationTab from './ReportCustomizationTab';
 import NewDriverForm from '@/components/drivers/NewDriverForm';
 import NewVehicleForm from '@/components/vehicles/NewVehicleForm';
 
+// Import from new driver-utils
+import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpiry, calculateOmnilinkScoreStatus } from '@/lib/driver-utils';
+
+
 interface NewIncidentFormProps {
   onClose: () => void;
   onSave: (data: any) => void;
@@ -43,20 +47,8 @@ const sections = [
   { id: "pdf-customization", label: "Visualizar PDF", icon: Download },
 ];
 
-export interface CnhStatus {
-  status: 'valid' | 'expiring_soon' | 'expired' | 'unknown';
-  message: string;
-  monthsDifference: number;
-  daysDifference: number;
-}
-
 // Helper function to get CNH status
-export const getCnhStatus = (licenseExpiryDateString: string): CnhStatus => {
-  if (!licenseExpiryDateString) {
-    return { status: 'unknown', message: 'Data de validade da CNH não informada.', monthsDifference: 0, daysDifference: 0 };
-  }
-  return { status: 'valid', message: 'CNH válida', monthsDifference: 0, daysDifference: 0 };
-};
+export const getCnhStatus = getCnhStatusUtil;
 
 export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const isMobile = useIsMobile();
@@ -94,6 +86,9 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     driverPhone: "",
     driverLicense: "",
     licenseExpiry: "",
+    omnilinkScoreRegistrationDate: "" as string | null, // NEW
+    omnilinkScoreExpiryDate: "" as string | null, // NEW
+    omnilinkScoreStatus: "" as string | null, // NEW
     
     omnilinkStatus: "" as "yes" | "no" | "",
     omnilinkObservations: "",
@@ -155,7 +150,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
       'locationType',
     ],
-    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry'],
+    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
     omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict'],
     tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop'],
     cargo: ['totalCargoValue', 'stolenCargoValue', 'cargoObservations'],
@@ -400,7 +395,6 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                 <div className="flex overflow-x-auto scrollbar-hide gap-2">
                   {sections.map((section) => {
                     const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
-                    const isActive = activeTab === section.id;
                     const IconComponent = section.icon;
                     
                     return (

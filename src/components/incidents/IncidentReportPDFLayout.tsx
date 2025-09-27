@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils"; // Import cn for conditional classNames
 import { AlertTriangle, Paperclip } from "lucide-react"; // Import icons for better visual
 import { PdfConfig } from './ReportCustomizationTab'; // Import PdfConfig type
-import { getCnhStatus as getCnhStatusUtil, CnhStatus } from '@/lib/driver-utils'; // Import from new utility
+import { getCnhStatus as getCnhStatusUtil, CnhStatus, OmnilinkDetailedStatus } from '@/lib/driver-utils'; // Import from new utility
 
 interface AttachmentItem {
   name: string;
@@ -18,6 +18,7 @@ interface IncidentReportPDFLayoutProps {
   riskReportAttachments: AttachmentItem[]; // Changed to structured array
   omnilinkPhotoAttachment: AttachmentItem[]; // Changed to structured array
   cnhStatus: CnhStatus; // Pass CNH status directly
+  omnilinkDetailedStatus: OmnilinkDetailedStatus; // NEW: Pass Omnilink detailed status directly
   pdfConfig: PdfConfig; // New prop for PDF configuration
   onRenderComplete?: () => void; // New prop to signal render completion
 }
@@ -36,6 +37,9 @@ const fieldLabels: { [key: string]: string } = {
   vehiclePlate: "Placa do Veículo", vehicleModel: "Modelo do Veículo", vehicleTechnology: "Tecnologias do Veículo",
   driverName: "Nome do Motorista", driverCpf: "CPF do Motorista", driverPhone: "Telefone do Motorista",
   driverLicense: "CNH do Motorista", licenseExpiry: "Validade da CNH",
+  omnilinkScoreRegistrationDate: "Data de Cadastro Omnilink Score", // NEW
+  omnilinkScoreExpiryDate: "Vencimento Omnilink Score", // NEW
+  omnilinkScoreStatus: "Status Omnilink Score", // NEW
 
   omnilinkStatus: "Motorista Apto", omnilinkObservations: "Observações Omnilink", omnilinkAnalystVerdict: "Veredito do Analista",
 
@@ -67,6 +71,7 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
   riskReportAttachments,
   omnilinkPhotoAttachment,
   cnhStatus,
+  omnilinkDetailedStatus, // NEW
   pdfConfig,
   onRenderComplete, // Destructure the new prop
 }) => {
@@ -298,6 +303,17 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
                   cnhStatus.status === 'expiring_soon' && "text-orange-500" // Orange for expiring soon
                 )}>
                   <AlertTriangle className="h-4 w-4" /> {cnhStatus.message}
+                </div>
+              )}
+              {isFieldVisible('vehicle', 'omnilinkScoreRegistrationDate') && renderField("Data de Cadastro Omnilink Score", formData.omnilinkScoreRegistrationDate)}
+              {isFieldVisible('vehicle', 'omnilinkScoreExpiryDate') && renderField("Vencimento Omnilink Score", formData.omnilinkScoreExpiryDate)}
+              {isFieldVisible('vehicle', 'omnilinkScoreStatus') && omnilinkDetailedStatus.status !== 'unknown' && isFieldVisible('vehicle', 'omnilinkScoreRegistrationDate') && (
+                <div className={cn(
+                  "col-span-full text-sm font-medium flex items-center gap-1",
+                  omnilinkDetailedStatus.status === 'vencido' && "text-red-600",
+                  omnilinkDetailedStatus.status === 'prest_vencer' && "text-orange-500"
+                )}>
+                  <AlertTriangle className="h-4 w-4" /> {omnilinkDetailedStatus.message}
                 </div>
               )}
             </>

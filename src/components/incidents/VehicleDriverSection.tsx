@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { AlertTriangle, Truck, UserPlus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { Vehicle } from '@/types/vehicles';
-import { CnhStatus } from '@/lib/driver-utils'; // Import CnhStatus type from new utility
+import { CnhStatus, OmnilinkDetailedStatus, getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import OmnilinkDetailedStatus and getDetailedOmnilinkStatus
 
 type Driver = Tables<'drivers'>;
 
@@ -39,6 +39,25 @@ export const VehicleDriverSection: React.FC<VehicleDriverSectionProps> = ({
   setIsNewVehicleDialogOpen,
   cnhStatus,
 }) => {
+  const [detailedOmnilinkStatus, setDetailedOmnilinkStatus] = useState<OmnilinkDetailedStatus | null>(null);
+
+  useEffect(() => {
+    if (formData.omnilink_score_registration_date) {
+      setDetailedOmnilinkStatus(getDetailedOmnilinkStatus(formData.omnilink_score_registration_date));
+    } else {
+      setDetailedOmnilinkStatus(null);
+    }
+  }, [formData.omnilink_score_registration_date]);
+
+  const getOmnilinkBadgeVariant = (status: OmnilinkDetailedStatus['status']) => {
+    switch (status) {
+      case 'em_dia': return 'success';
+      case 'prest_vencer': return 'warning';
+      case 'vencido': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-card p-8">
       <div className="mb-8 flex items-center gap-3">
@@ -235,6 +254,32 @@ export const VehicleDriverSection: React.FC<VehicleDriverSectionProps> = ({
               {cnhStatus.message}
             </div>
           )}
+        </div>
+
+        {/* NEW: Omnilink Score Status Display */}
+        <div className="space-y-3">
+          <Label htmlFor="omnilinkStatusDisplay" className="text-sm font-medium">
+            Status Omnilink Score
+          </Label>
+          <div className="flex items-center gap-2">
+            {detailedOmnilinkStatus && detailedOmnilinkStatus.status !== 'unknown' ? (
+              <Badge variant={getOmnilinkBadgeVariant(detailedOmnilinkStatus.status)}>
+                {detailedOmnilinkStatus.status === 'em_dia' ? 'Em Dia' : detailedOmnilinkStatus.status === 'prest_vencer' ? 'Prestes a Vencer' : 'Vencido'}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">N/A</Badge>
+            )}
+            {detailedOmnilinkStatus && detailedOmnilinkStatus.status !== 'em_dia' && detailedOmnilinkStatus.status !== 'unknown' && (
+              <div className={cn(
+                "flex items-center gap-2 text-sm",
+                detailedOmnilinkStatus.status === 'vencido' && "text-destructive",
+                detailedOmnilinkStatus.status === 'prest_vencer' && "text-warning"
+              )}>
+                <AlertTriangle className="h-4 w-4" />
+                {detailedOmnilinkStatus.message}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

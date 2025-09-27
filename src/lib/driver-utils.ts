@@ -8,6 +8,13 @@ export interface CnhStatus {
   daysDifference: number;
 }
 
+export interface OmnilinkDetailedStatus {
+  status: 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown';
+  message: string;
+  monthsDifference: number;
+  daysDifference: number;
+}
+
 /**
  * Calculates the CNH status based on the expiry date.
  * @param licenseExpiryDateString The CNH expiry date in 'yyyy-MM-dd' format.
@@ -81,7 +88,24 @@ export const getCnhStatus = (licenseExpiryDateString: string | null): CnhStatus 
 };
 
 /**
- * Calculates the Omnilink Score status based on the registration date.
+ * Calculates the Omnilink Score expiry date based on the registration date.
+ * @param registrationDateString The Omnilink Score registration date in 'yyyy-MM-dd' format.
+ * @returns The expiry date in 'yyyy-MM-dd' format, or null if date is invalid/missing.
+ */
+export const calculateOmnilinkScoreExpiry = (registrationDateString: string | null) => {
+  if (!registrationDateString) return null;
+  try {
+    const parsedRegDate = parseISO(registrationDateString);
+    if (isNaN(parsedRegDate.getTime())) return null;
+    const expiryDate = addMonths(parsedRegDate, 6);
+    return format(expiryDate, 'yyyy-MM-dd');
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Calculates the Omnilink Score status for database storage ('em_dia' or 'inapto').
  * @param registrationDateString The Omnilink Score registration date in 'yyyy-MM-dd' format.
  * @returns 'em_dia' if within 6 months, 'inapto' if expired, or null if date is invalid/missing.
  */
@@ -98,18 +122,61 @@ export const calculateOmnilinkScoreStatus = (registrationDateString: string | nu
 };
 
 /**
- * Calculates the Omnilink Score expiry date based on the registration date.
+ * Calculates the detailed Omnilink Score status for UI display.
  * @param registrationDateString The Omnilink Score registration date in 'yyyy-MM-dd' format.
- * @returns The expiry date in 'yyyy-MM-dd' format, or null if date is invalid/missing.
+ * @returns An object containing the detailed status, a descriptive message, and differences in months/days.
  */
-export const calculateOmnilinkScoreExpiry = (registrationDateString: string | null) => {
-  if (!registrationDateString) return null;
-  try {
-    const parsedRegDate = parseISO(registrationDateString);
-    if (isNaN(parsedRegDate.getTime())) return null;
-    const expiryDate = addMonths(parsedRegDate, 6);
-    return format(expiryDate, 'yyyy-MM-dd');
-  } catch {
-    return null;
+export const getDetailedOmnilinkStatus = (registrationDateString: string | null): OmnilinkDetailedStatus => {
+  if (!registrationDateString) {
+    return { status: 'unknown', message: 'Data de cadastro Omnilink não informada.', monthsDifference: 0, daysDifference: 0 };
   }
+
+  const parsedRegDate = parseISO(registrationDateString);
+  if (isNaN(parsedRegDate.getTime())) {
+    return { status: 'unknown', message: 'Data de cadastro Omnilink inválida.', monthsDifference: 0, daysDifference: 0 };
+  }
+
+  const expiryDate = addMonths(parsedRegDate, 6);
+  const today = startOfDay(new Date());
+
+  const daysDiff = differenceInDays(expiryDate, today); // Positive if expiry is in the future, negative if in the past
+  const monthsDiff = differenceInMonths(expiryDate, today);
+
+  let status: OmnilinkDetailedStatus['status'];
+  let message: string;
+
+  if (daysDiff < 0) { // Expiry date is in the past
+    status = 'vencido';
+    const absDaysDiff = Math.abs(daysDiff);
+    const absMonthsDiff = Math.abs(monthsDiff);
+    message = 'Cadastro Omnilink vencido há ';
+    if (absMonthsDiff > 0) {
+      message += `${absMonthsDiff} mês${absMonthsDiff > 1 ? 'es' : ''}.`;
+    } else {
+      message += `${absDaysDiff} dia${absDaysDiff > 1 ? 's' : ''}.`;
+    }
+  } else if (daysDiff >= 0 && daysDiff <= 90) { // Expiry is today or within the next 3 months (approx 90 days)
+    status = 'prest_vencer';
+    message = 'Cadastro Omnilink em dia, prestes a vencer em ';
+    if (monthsDiff > 0) {
+      message += `${monthsDiff} mês${monthsDiff > 1 ? 'es' : ''}.`;
+    } else if (daysDiff >= 0) {
+      message += `${daysDiff} dia${daysDiff > 1 ? 's' : ''}.`;
+    }
+  } else { // Expiry is more than 3 months away
+    status = 'em_dia';
+    message = 'Cadastro Omnilink em dia. Vence em ';
+    if (monthsDiff > 0) {
+      message += `${monthsDiff} mês${monthsDiff > 1 ? 'es' : ''}.`;
+    } else {
+      message += `${daysDiff} dia${daysDiff > 1 ? 's' : ''}.`;
+    }
+  }
+
+  return {
+    status,
+    message,
+    daysDifference: daysDiff,
+    monthsDifference: monthsDiff,
+  };
 };

@@ -25,7 +25,7 @@ import { DuplicateDriverDialog } from '@/components/drivers/DuplicateDriverDialo
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry } from '@/lib/driver-utils'; // Import from new utility
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import from new utility
 
 
 type Driver = Tables<'drivers'>;
@@ -64,11 +64,8 @@ const DriverManagement = () => {
   // New state for filters and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'registered' | 'pending' | 'duplicates'>('all');
-  const [filterOmnilinkStatus, setFilterOmnilinkStatus] = useState<'all' | 'em_dia' | 'inapto'>('all');
+  const [filterOmnilinkStatus, setFilterOmnilinkStatus] = useState<'all' | 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown'>('all'); // UPDATED: granular statuses
   const [filterIndicacaoStatus, setFilterIndicacaoStatus] = useState<'all' | 'indicado' | 'retificado' | 'nao_indicado'>('all');
-
-  const [sortColumn, setSortColumn] = useState<SortColumn>('full_name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
     full_name: '',
@@ -272,13 +269,11 @@ const DriverManagement = () => {
       }
     }
 
-    // Apply Omnilink status filter
+    // Apply Omnilink status filter (UPDATED LOGIC)
     if (filterOmnilinkStatus !== 'all') {
       currentList = currentList.filter(item => {
-        if (item._itemType === 'registered' || item._itemType === 'pending_new' || item._itemType === 'pending_duplicate') {
-          return item.omnilink_score_status === filterOmnilinkStatus;
-        }
-        return false;
+        const detailedStatus = getDetailedOmnilinkStatus(item.omnilink_score_registration_date);
+        return detailedStatus.status === filterOmnilinkStatus;
       });
     }
 
@@ -317,8 +312,9 @@ const DriverManagement = () => {
           valA = a._itemType === 'registered' ? 'ativo' : 'pendente';
           valB = b._itemType === 'registered' ? 'ativo' : 'pendente';
         } else if (sortColumn === 'omnilink_score_status') {
-          valA = a.omnilink_score_status || '';
-          valB = b.omnilink_score_status || '';
+          // Use detailed status for sorting if desired, or keep simple DB status
+          valA = getDetailedOmnilinkStatus(a.omnilink_score_registration_date).status;
+          valB = getDetailedOmnilinkStatus(b.omnilink_score_registration_date).status;
         } else if (sortColumn === 'status_indicacao') {
           valA = a.status_indicacao || '';
           valB = b.status_indicacao || '';
@@ -739,7 +735,17 @@ const DriverManagement = () => {
 
   const handleFormInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value === '' ? null : value }));
+    setFormData(prev => {
+      const newState = { ...prev, [id]: value === '' ? null : value };
+      if (id === 'omnilink_score_registration_date') {
+        const regDate = value === '' ? null : value;
+        const expiryDate = calculateOmnilinkScoreExpiry(regDate);
+        const statusForDb = calculateOmnilinkScoreStatus(regDate);
+        newState.omnilink_score_expiry_date = expiryDate;
+        newState.omnilink_score_status = statusForDb;
+      }
+      return newState;
+    });
   };
 
   const handleFormSelectChange = (id: keyof TablesInsert<'drivers'>, value: string) => {
@@ -901,10 +907,32 @@ const DriverManagement = () => {
     }
   };
 
-  const getOmnilinkStatusBadgeVariant = (status: string | null) => {
-    if (status === 'em_dia') return 'success';
-    if (status === 'inapto') return 'destructive';
-    return 'secondary';
+  const getOmnilinkBadgeProps = (item: CombinedDriverItem) => {
+    const regDate = item.omnilink_score_registration_date;
+    const detailedStatus = getDetailedOmnilinkStatus(regDate);
+    let variant: 'success' | 'warning' | 'destructive' | 'secondary' = 'secondary';
+    let label = detailedStatus.message;
+
+    switch (detailedStatus.status) {
+      case 'em_dia':
+        variant = 'success';
+        label = 'Em Dia'; // Simplified label for badge
+        break;
+      case 'prest_vencer':
+        variant = 'warning';
+        label = 'Prest. Vencer'; // Simplified label for badge
+        break;
+      case 'vencido':
+        variant = 'destructive';
+        label = 'Vencido'; // Simplified label for badge
+        break;
+      case 'unknown':
+      default:
+        variant = 'secondary';
+        label = 'N/A';
+        break;
+    }
+    return { variant, label, message: detailedStatus.message };
   };
 
   const getIndicacaoStatusBadgeVariant = (status: 'indicado' | 'retificado' | 'nao_indicado' | null) => {
@@ -1154,7 +1182,7 @@ const DriverManagement = () => {
                     <Label htmlFor="omnilink_score_status">Status Omnilink Score</Label>
                     <Input
                       id="omnilink_score_status"
-                      value={formData.omnilink_score_status === 'em_dia' ? 'Em Dia' : formData.omnilink_score_status === 'inapto' ? 'Inapto' : ''}
+                      value={getDetailedOmnilinkStatus(formData.omnilink_score_registration_date).message || ''} // Display detailed message
                       readOnly
                       className="bg-muted/50"
                     />
@@ -1275,7 +1303,7 @@ const DriverManagement = () => {
                 <SelectItem value="duplicates">Duplicados</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterOmnilinkStatus} onValueChange={(value: 'all' | 'em_dia' | 'inapto') => setFilterOmnilinkStatus(value)}>
+            <Select value={filterOmnilinkStatus} onValueChange={(value: 'all' | 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown') => setFilterOmnilinkStatus(value)}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Status Omnilink" />
@@ -1283,7 +1311,9 @@ const DriverManagement = () => {
               <SelectContent>
                 <SelectItem value="all">Todos Status Omnilink</SelectItem>
                 <SelectItem value="em_dia">Em Dia</SelectItem>
-                <SelectItem value="inapto">Inapto</SelectItem>
+                <SelectItem value="prest_vencer">Prestes a Vencer</SelectItem>
+                <SelectItem value="vencido">Vencido</SelectItem>
+                <SelectItem value="unknown">Não Informado</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterIndicacaoStatus} onValueChange={(value: 'all' | 'indicado' | 'retificado' | 'nao_indicado') => setFilterIndicacaoStatus(value)}>
@@ -1428,10 +1458,18 @@ const DriverManagement = () => {
                       <TableCell className="whitespace-nowrap">{formatDate(item.omnilink_score_registration_date)}</TableCell>
                       <TableCell className="whitespace-nowrap">{formatDate(item.omnilink_score_expiry_date)}</TableCell>
                       <TableCell className="whitespace-nowrap">
-                        {item.omnilink_score_status ? (
-                          <Badge variant={getOmnilinkStatusBadgeVariant(item.omnilink_score_status)}>
-                            {item.omnilink_score_status === 'em_dia' ? 'Em Dia' : 'Inapto'}
-                          </Badge>
+                        {item.omnilink_score_registration_date ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge {...getOmnilinkBadgeProps(item)}>
+                                {getOmnilinkBadgeProps(item).label}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs p-2">
+                              <p className="text-sm font-medium mb-1">Status Omnilink:</p>
+                              <p className="text-xs text-muted-foreground">{getOmnilinkBadgeProps(item).message}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : '-'}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
