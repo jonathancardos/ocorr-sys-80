@@ -73,19 +73,8 @@ export const ModernWelcomeSection = ({ onNewIncident }: ModernWelcomeSectionProp
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Action Button */}
-          <div className="flex items-end col-span-full lg:col-span-1"> {/* Adjusted to take full width on small screens, one column on large */}
-            <Button 
-              onClick={onNewIncident}
-              className="group w-full bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"
-              size="lg"
-            >
-              <Plus className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-              Nova Ocorrência
-            </Button>
-          </div>
-        </div>
+        {/* O botão "Nova Ocorrência" foi removido daqui */}
+        
       </div>
 
       {/* Animated Border */}
