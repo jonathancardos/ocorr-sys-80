@@ -13,10 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-type GeneratedReport = Tables<'generated_reports'> & {
-  profiles?: { full_name: string | null; username: string | null };
+// Definindo o tipo para a view, incluindo os campos do perfil
+type ReportWithProfile = Tables<'generated_reports'> & {
+  profile_full_name: string | null;
+  profile_username: string | null;
+  profile_email: string | null;
 };
-type SortColumn = keyof GeneratedReport | null;
+
+type SortColumn = keyof ReportWithProfile | null;
 type SortDirection = 'asc' | 'desc';
 
 export const GeneratedReportsLog: React.FC = () => {
@@ -27,12 +31,12 @@ export const GeneratedReportsLog: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('generated_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { data: reports, isLoading, error } = useQuery<GeneratedReport[], Error>({
-    queryKey: ['generatedReports'],
+  const { data: reports, isLoading, error } = useQuery<ReportWithProfile[], Error>({
+    queryKey: ['reportsWithProfiles'], // Usando uma nova chave para a query da view
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('generated_reports')
-        .select('*, profiles(full_name, username)') // Fetch related profile data
+        .from('reports_with_profiles') // Consultando a nova view
+        .select('*') // Selecionando todos os campos da view
         .order('generated_at', { ascending: false });
 
       if (error) throw error;
@@ -48,8 +52,8 @@ export const GeneratedReportsLog: React.FC = () => {
       currentReports = currentReports.filter(report =>
         report.report_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.profiles?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.profile_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || // Usando o novo campo da view
+        report.profile_username?.toLowerCase().includes(searchTerm.toLowerCase()) || // Usando o novo campo da view
         report.metadata?.sharedVia?.toLowerCase().includes(searchTerm.toLowerCase()) // Search in metadata
       );
     }
@@ -69,7 +73,7 @@ export const GeneratedReportsLog: React.FC = () => {
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         }
         if (valA instanceof Date && valB instanceof Date) {
-          return sortDirection === 'asc' ? valA.getTime() - valB.getTime() : valB.getTime() - valA.getTime();
+          return sortDirection === 'asc' ? valA.getTime() - valB.getTime() : valB.getTime() - a.getTime();
         }
         // Handle null/undefined values for sorting
         if (valA === null || valA === undefined) return sortDirection === 'asc' ? 1 : -1;
@@ -85,13 +89,13 @@ export const GeneratedReportsLog: React.FC = () => {
   const deleteReportMutation = useMutation({
     mutationFn: async (reportId: string) => {
       const { error } = await supabase
-        .from('generated_reports')
+        .from('generated_reports') // Ainda deletamos da tabela original
         .delete()
         .eq('id', reportId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['generatedReports'] });
+      queryClient.invalidateQueries({ queryKey: ['reportsWithProfiles'] }); // Invalidar a query da view
       toast.success("Relatório excluído!", {
         description: "O registro do relatório foi removido do histórico.",
       });
@@ -138,7 +142,7 @@ export const GeneratedReportsLog: React.FC = () => {
     }
   };
 
-  const handleRegenerateReport = (report: GeneratedReport) => {
+  const handleRegenerateReport = (report: ReportWithProfile) => {
     if (report.report_type === 'driver_report') {
       // Navigate to the driver report generator with pre-filled dates
       const startDateParam = report.start_date ? format(parseISO(report.start_date), 'yyyy-MM-dd') : '';
@@ -230,9 +234,9 @@ export const GeneratedReportsLog: React.FC = () => {
                     Nome do Arquivo {renderSortIcon('file_name')}
                   </div>
                 </TableHead>
-                <TableHead onClick={() => handleSort('generated_by')} className="cursor-pointer hover:text-primary whitespace-nowrap">
+                <TableHead onClick={() => handleSort('profile_full_name')} className="cursor-pointer hover:text-primary whitespace-nowrap">
                   <div className="flex items-center">
-                    Gerado Por {renderSortIcon('generated_by')}
+                    Gerado Por {renderSortIcon('profile_full_name')}
                   </div>
                 </TableHead>
                 <TableHead onClick={() => handleSort('generated_at')} className="cursor-pointer hover:text-primary whitespace-nowrap">
@@ -259,7 +263,7 @@ export const GeneratedReportsLog: React.FC = () => {
                   <TableRow key={report.id}>
                     <TableCell className="font-medium">{getReportTypeLabel(report.report_type)}</TableCell>
                     <TableCell>{report.file_name || '-'}</TableCell>
-                    <TableCell>{report.profiles?.full_name || report.profiles?.username || 'Usuário Desconhecido'}</TableCell>
+                    <TableCell>{report.profile_full_name || report.profile_username || 'Usuário Desconhecido'}</TableCell>
                     <TableCell>{format(parseISO(report.generated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
                     <TableCell>{report.start_date ? format(parseISO(report.start_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
                     <TableCell>{report.end_date ? format(parseISO(report.end_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
