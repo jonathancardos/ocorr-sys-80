@@ -29,13 +29,15 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   endDate,
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewDimensions, setPreviewDimensions] = useState<{ width: number; height: number } | null>(null); // Store dimensions
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const pdfContentRef = useRef<HTMLDivElement>(null); // Ref for the div that will hold the PDF layout
+  // Removed pdfContentRef as it was referencing the image display div, not the content generation div.
 
   useEffect(() => {
     if (!isOpen) {
       setPreviewImage(null);
+      setPreviewDimensions(null);
       setIsGeneratingPreview(true);
       return;
     }
@@ -43,12 +45,13 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
     const generatePreview = async () => {
       setIsGeneratingPreview(true);
       setPreviewImage(null);
+      setPreviewDimensions(null);
 
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px'; // Render off-screen
-      tempDiv.style.width = '210mm'; // A4 width
-      tempDiv.style.minHeight = '297mm'; // A4 height
+      tempDiv.style.width = '210mm'; // A4 width for consistent rendering
+      // IMPORTANT: Do NOT set a fixed height here. Let content define height.
       document.body.appendChild(tempDiv);
 
       const root = createRoot(tempDiv);
@@ -73,8 +76,15 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
         const canvas = await html2canvas(tempDiv, {
           scale: 2, // Increase scale for better quality
           useCORS: true, // Important for images from external sources if any
+          windowWidth: tempDiv.scrollWidth, // Ensure full width is captured
+          windowHeight: tempDiv.scrollHeight, // Ensure full height is captured
+          x: 0,
+          y: 0,
+          width: tempDiv.offsetWidth,
+          height: tempDiv.offsetHeight,
         });
         setPreviewImage(canvas.toDataURL('image/png'));
+        setPreviewDimensions({ width: canvas.width, height: canvas.height }); // Store actual canvas dimensions
       } catch (error) {
         console.error("Error generating preview image:", error);
         toast.error("Erro na pré-visualização", {
@@ -91,7 +101,7 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   }, [isOpen, drivers, startDate, endDate]);
 
   const handleDownloadPdf = async () => {
-    if (!previewImage) {
+    if (!previewImage || !previewDimensions) {
       toast.error("Erro ao baixar PDF", {
         description: "A imagem de pré-visualização não está disponível.",
       });
@@ -103,21 +113,20 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 295; // A4 height in mm
-      const imgHeight = (pdfContentRef.current?.offsetHeight || 0) * imgWidth / (pdfContentRef.current?.offsetWidth || 1); // Estimate height based on rendered content
-      
-      // Fallback if ref is not available or dimensions are zero
-      const finalImgHeight = imgHeight > 0 ? imgHeight : (297 * imgWidth) / 210; // Default to A4 aspect ratio if calculation fails
 
-      let heightLeft = finalImgHeight;
+      // Calculate image height based on its original aspect ratio and A4 width
+      const imgHeight = (previewDimensions.height * imgWidth) / previewDimensions.width;
+      
+      let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, finalImgHeight);
+      pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
       while (heightLeft >= 0) {
-        position = heightLeft - finalImgHeight;
+        position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, finalImgHeight);
+        pdf.addImage(previewImage, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
 
@@ -152,7 +161,8 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
               <span>Gerando pré-visualização...</span>
             </div>
           ) : previewImage ? (
-            <div ref={pdfContentRef} className="w-[210mm] h-auto shadow-lg border border-gray-300 bg-white">
+            // Display the preview image, allowing it to scroll if taller than the dialog content area
+            <div className="max-w-full h-auto shadow-lg border border-gray-300 bg-white">
               <img src={previewImage} alt="Pré-visualização do PDF" className="w-full h-auto block" />
             </div>
           ) : (
