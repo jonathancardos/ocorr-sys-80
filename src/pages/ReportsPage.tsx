@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BarChart3, Users, FileText, Download } from 'lucide-react';
+import { BarChart3, Users, FileText, Download, History } from 'lucide-react'; // Added History icon
 import { DriverReportCard } from '@/components/reports/DriverReportCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DriverReportGenerator } from '@/components/reports/DriverReportGenerator';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, ShieldCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
+import { GeneratedReportsLog } from '@/components/reports/GeneratedReportsLog'; // Import new component
 
 export const ReportsPage: React.FC = () => {
   const { profile, loading: authLoading } = useAuth();
   const [isDriverReportDialogOpen, setIsDriverReportDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('generators'); // New state for active tab
 
   if (authLoading) {
     return (
@@ -46,21 +49,48 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DriverReportCard onClick={() => setIsDriverReportDialogOpen(true)} />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="border-b mb-8">
+          <TabsList className="flex w-full h-auto p-0 bg-transparent overflow-x-auto custom-scrollbar flex-nowrap">
+            <TabsTrigger
+              value="generators"
+              className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Geradores de Relatório
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-transparent data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary py-3 px-4 font-medium"
+            >
+              <History className="mr-2 h-4 w-4" />
+              Histórico de Relatórios
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        {/* Add more report cards here as needed */}
-        <Card className="modern-card flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-          <FileText className="h-12 w-12 mb-3" />
-          <CardTitle className="text-lg">Relatório de Ocorrências</CardTitle>
-          <CardDescription>Em breve</CardDescription>
-        </Card>
-        <Card className="modern-card flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-          <Download className="h-12 w-12 mb-3" />
-          <CardTitle className="text-lg">Relatório de Veículos</CardTitle>
-          <CardDescription>Em breve</CardDescription>
-        </Card>
-      </div>
+        <TabsContent value="generators">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <DriverReportCard onClick={() => setIsDriverReportDialogOpen(true)} />
+
+            {/* Add more report cards here as needed */}
+            <Card className="modern-card flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+              <FileText className="h-12 w-12 mb-3" />
+              <CardTitle className="text-lg">Relatório de Ocorrências</CardTitle>
+              <CardDescription>Em breve</CardDescription>
+            </Card>
+            <Card className="modern-card flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+              <Download className="h-12 w-12 mb-3" />
+              <CardTitle className="text-lg">Relatório de Veículos</CardTitle>
+              <CardDescription>Em breve</CardDescription>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <GeneratedReportsLog />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isDriverReportDialogOpen} onOpenChange={setIsDriverReportDialogOpen}>
         <DialogContent className="sm:max-w-[700px]">

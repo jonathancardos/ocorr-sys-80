@@ -19,6 +19,7 @@ interface PdfPreviewDialogProps {
   drivers: Driver[];
   startDate?: Date;
   endDate?: Date;
+  onDownloadSuccess?: () => void; // New prop
 }
 
 export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
@@ -27,6 +28,7 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   drivers,
   startDate,
   endDate,
+  onDownloadSuccess, // Destructure new prop
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewDimensions, setPreviewDimensions] = useState<{ width: number; height: number } | null>(null); // Store dimensions
@@ -135,6 +137,9 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
         description: "O relatório de motoristas foi baixado para seu computador.",
       });
       onClose();
+      if (onDownloadSuccess) { // Call the callback on success
+        onDownloadSuccess();
+      }
     } catch (error) {
       console.error("Error downloading PDF:", error);
       toast.error("Erro ao baixar PDF", {

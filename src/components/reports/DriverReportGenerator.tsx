@@ -7,16 +7,17 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import useMutation and useQueryClient
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+import { Tables, TablesInsert } from '@/integrations/supabase/types'; // Import TablesInsert
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { createRoot } from 'react-dom/client';
 import { DriverReportPDFLayout } from './DriverReportPDFLayout';
 import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils';
-import { PdfPreviewDialog } from './PdfPreviewDialog'; // Import the new preview dialog
+import { PdfPreviewDialog } from './PdfPreviewDialog';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
 type Driver = Tables<'drivers'>;
 
@@ -25,11 +26,13 @@ interface DriverReportGeneratorProps {
 }
 
 export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ onClose }) => {
+  const { user } = useAuth(); // Get current user
+  const queryClient = useQueryClient(); // Get query client for invalidation
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Keep this for internal state if needed, but PDF generation is now in dialog
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharingWhatsapp, setIsSharingWhatsapp] = useState(false);
-  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false); // New state for preview dialog
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
 
   const { data: drivers, isLoading: isLoadingDrivers, error: driversError } = useQuery<Driver[], Error>({
     queryKey: ['reportDrivers', startDate, endDate],
@@ -49,7 +52,29 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       if (error) throw error;
       return data || [];
     },
-    enabled: !!startDate && !!endDate, // Only fetch if both dates are selected
+    enabled: !!startDate && !!endDate,
+  });
+
+  // Mutation to log the generated report
+  const logReportMutation = useMutation({
+    mutationFn: async (reportData: TablesInsert<'generated_reports'>) => {
+      const { data, error } = await supabase
+        .from('generated_reports')
+        .insert(reportData)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['generatedReports'] }); // Invalidate the log to show new entry
+    },
+    onError: (err: any) => {
+      console.error('Error logging report:', err);
+      toast.error("Erro ao registrar relatório", {
+        description: err.message || "Não foi possível registrar o relatório gerado.",
+      });
+    },
   });
 
   const handleOpenPdfPreview = () => {
@@ -101,6 +126,17 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       toast.success("Relatório enviado para WhatsApp!", {
         description: "Uma nova janela/aba foi aberta para compartilhar o resumo.",
       });
+
+      // Log the report generation
+      logReportMutation.mutate({
+        report_type: 'driver_report',
+        generated_by: user?.id || null,
+        start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+        end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+        file_name: `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.txt`, // Use .txt for WhatsApp summary
+        metadata: { sharedVia: 'whatsapp', driverCount: drivers.length },
+      });
+
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
       toast.error("Erro ao compartilhar", {
@@ -109,6 +145,19 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     } finally {
       setIsSharingWhatsapp(false);
     }
+  };
+
+  const handleDownloadPdfFromPreview = async () => {
+    // This function will be called from PdfPreviewDialog, which handles the actual download.
+    // Here, we just log the event.
+    logReportMutation.mutate({
+      report_type: 'driver_report',
+      generated_by: user?.id || null,
+      start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+      end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+      file_name: `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`,
+      metadata: { driverCount: drivers?.length || 0 },
+    });
   };
 
   const isGenerateButtonDisabled = !startDate || !endDate || isLoadingDrivers || isSharingWhatsapp;
@@ -221,7 +270,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         </Button>
         <Button
           type="button"
-          onClick={handleOpenPdfPreview} // Changed to open preview dialog
+          onClick={handleOpenPdfPreview}
           disabled={isGenerateButtonDisabled}
         >
           <Download className="mr-2 h-4 w-4" />
@@ -229,13 +278,13 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         </Button>
       </div>
 
-      {/* PDF Preview Dialog */}
       <PdfPreviewDialog
         isOpen={isPdfPreviewOpen}
         onClose={() => setIsPdfPreviewOpen(false)}
         drivers={drivers || []}
         startDate={startDate}
         endDate={endDate}
+        onDownloadSuccess={handleDownloadPdfFromPreview} // Pass the logging function
       />
     </div>
   );
