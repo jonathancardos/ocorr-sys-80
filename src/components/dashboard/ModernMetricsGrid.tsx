@@ -78,17 +78,18 @@ export const ModernMetricsGrid = () => {
       icon: FileText,
       onClick: () => navigate("/history"),
     },
-    {
-      title: "Ocorrências Críticas",
-      value: graveIncidents,
-      change: {
-        value: graveChange,
-        label: "vs mês anterior",
-        isPositive: graveChange < 0,
-      },
-      icon: AlertTriangle,
-      onClick: () => navigate("/history"),
-    },
+    // REMOVED: Ocorrências Críticas card
+    // {
+    //   title: "Ocorrências Críticas",
+    //   value: graveIncidents,
+    //   change: {
+    //     value: graveChange,
+    //     label: "vs mês anterior",
+    //     isPositive: graveChange < 0,
+    //   },
+    //   icon: AlertTriangle,
+    //   onClick: () => navigate("/history"),
+    // },
     {
       title: "Motoristas Ativos",
       value: activeDrivers,
