@@ -22,7 +22,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSidebar, isSidebarOpen }: HeaderProps) => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user } = useAuth(); // Adicionado 'user' para exibir email
   const isMobile = useIsMobile();
 
   const getInitials = (name: string) => {
@@ -77,16 +77,7 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
                       </Button>
                     );
                   })}
-                  {/* Botão de Logout no menu lateral mobile */}
-                  <DropdownMenuSeparator />
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-left py-2 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:translate-x-1"
-                    onClick={signOut}
-                  >
-                    <LogOut className="mr-3 h-4 w-4" />
-                    <span className="font-medium text-wrap">Sair</span>
-                  </Button>
+                  {/* Botão de Logout no menu lateral mobile - REMOVIDO, agora no dropdown do perfil */}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -136,6 +127,49 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
           
           {/* Botão de alternância de tema */}
           <ThemeToggle />
+
+          {/* User Profile and Logout Dropdown - MOVIDO PARA CÁ */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center space-x-2 px-2 sm:px-3 h-9 sm:h-10 text-primary-foreground hover:bg-primary-foreground/10">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                  {profile?.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={profile.username} />
+                  ) : (
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {profile ? getInitials(profile.full_name) : 'U'}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                {!isMobile && ( // Mostrar nome de usuário apenas em desktop
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-primary-foreground">@{profile?.username}</div>
+                  </div>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-card/20 backdrop-blur-md border border-border/50">
+              <DropdownMenuLabel>
+                <div className="text-wrap">
+                  <div className="font-medium">@{profile?.username}</div>
+                  {profile?.full_name && profile.full_name !== user?.email && (
+                    <div className="text-sm text-muted-foreground">{profile?.full_name}</div>
+                  )}
+                  {user?.email && <div className="text-xs text-muted-foreground">{user.email}</div>}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Meu Perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

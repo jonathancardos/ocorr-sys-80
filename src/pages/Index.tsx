@@ -178,56 +178,7 @@ const Index = () => {
                 );
               })}
             </nav>
-            {/* User Profile and Logout at the bottom of the sidebar */}
-            <div className={cn(
-              "p-4 border-t border-border/50",
-              !isSidebarOpen && "flex justify-center"
-            )}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className={cn(
-                    "flex items-center space-x-2 px-2 sm:px-3 h-9 sm:h-10",
-                    isSidebarOpen ? "w-full justify-start" : "w-auto justify-center"
-                  )}>
-                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
-                      {profile?.avatar_url ? (
-                        <AvatarImage src={profile.avatar_url} alt={profile.username} />
-                      ) : (
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {profile ? getInitials(profile.full_name) : 'U'}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    {isSidebarOpen && (
-                      <div className="text-left">
-                        <div className="text-sm font-medium text-foreground">@{profile?.username}</div>
-                      </div>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
-                  <DropdownMenuLabel>
-                    <div className="text-wrap">
-                      <div className="font-medium">@{profile?.username}</div>
-                      {profile?.full_name && profile.full_name !== user?.email && (
-                        <div className="text-sm text-muted-foreground">{profile?.full_name}</div>
-                      )}
-                      {user?.email && <div className="text-xs text-muted-foreground">{user.email}</div>}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    Meu Perfil
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            {/* User Profile and Logout at the bottom of the sidebar - REMOVIDO DAQUI */}
           </aside>
         )}
 
