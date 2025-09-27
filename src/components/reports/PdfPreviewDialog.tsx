@@ -163,7 +163,7 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
           ) : previewImage ? (
             // Display the preview image, allowing it to scroll if taller than the dialog content area
             <div className="max-w-full h-auto shadow-lg border border-gray-300 bg-white">
-              <img src={previewImage} alt="Pré-visualização do PDF" className="w-full h-auto block" />
+              <img src={previewImage} alt="Pré-visualização do PDF" className="max-w-full max-h-full object-contain block" />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-destructive">
