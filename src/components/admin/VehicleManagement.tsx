@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import BulkVehicleUpload from '@/components/vehicles/BulkVehicleUpload'; // Import BulkVehicleUpload
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'; // Adicionado: Importação do DropdownMenu
 
 const predefinedTechnologies = [
   "Bloqueador Duplo",
