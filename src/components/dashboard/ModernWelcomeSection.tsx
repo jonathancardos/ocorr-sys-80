@@ -74,29 +74,8 @@ export const ModernWelcomeSection = ({ onNewIncident }: ModernWelcomeSectionProp
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Quick Stats */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">Performance Hoje</span>
-            </div>
-            <div className="text-2xl font-bold">+15.3%</div>
-            <p className="text-sm text-primary-foreground/70">
-              Acima da média mensal
-            </p>
-          </div>
-
-          {/* Tasks Summary */}
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Atividades Pendentes</div>
-            <div className="text-2xl font-bold">7</div>
-            <p className="text-sm text-primary-foreground/70">
-              3 com alta prioridade
-            </p>
-          </div>
-
           {/* Action Button */}
-          <div className="flex items-end">
+          <div className="flex items-end col-span-full lg:col-span-1"> {/* Adjusted to take full width on small screens, one column on large */}
             <Button 
               onClick={onNewIncident}
               className="group w-full bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"
@@ -105,35 +84,6 @@ export const ModernWelcomeSection = ({ onNewIncident }: ModernWelcomeSectionProp
               <Plus className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
               Nova Ocorrência
             </Button>
-          </div>
-        </div>
-
-        {/* Progress Indicators */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Meta Mensal</span>
-              <span>73%</span>
-            </div>
-            <div className="h-2 rounded-full bg-white/20">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-white to-accent transition-all duration-1000 ease-out"
-                style={{ width: "73%" }}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Qualidade</span>
-              <span>91%</span>
-            </div>
-            <div className="h-2 rounded-full bg-white/20">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-white to-success transition-all duration-1000 ease-out"
-                style={{ width: "91%" }}
-              />
-            </div>
           </div>
         </div>
       </div>
