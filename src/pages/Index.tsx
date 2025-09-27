@@ -10,7 +10,7 @@ import { VehicleManagement } from "@/components/admin/VehicleManagement";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  BarChart3,
+  BarChart3, // Used for Reports
   FileText,
   History,
   Home,
@@ -37,7 +37,7 @@ const defaultNavigationItems = [
   { id: "dashboard", label: "Dashboard", icon: Home, path: "/" },
   { id: "new-incident", label: "Nova Ocorrência", icon: FileText, path: "/new-incident" },
   { id: "history", label: "Histórico", icon: History, path: "/history" },
-  { id: "reports", label: "Relatórios", icon: BarChart3, path: "/reports" },
+  { id: "reports", label: "Relatórios", icon: BarChart3, path: "/reports" }, // UPDATED: Added Reports
   { id: "users", label: "Gerenciamento de Usuários", icon: Users, path: "/users" },
   { id: "drivers", label: "Gerenciamento de Motoristas", icon: Truck, path: "/drivers" },
   { id: "vehicles", label: "Gerenciamento de Veículos", icon: Car, path: "/vehicles" },

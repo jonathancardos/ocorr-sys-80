@@ -15,6 +15,7 @@ import { Dashboard } from "./components/dashboard/Dashboard"; // Import Dashboar
 import { NewIncidentForm as ModernNewIncidentForm } from "./components/incidents/ModernNewIncidentForm"; // Import NewIncidentForm
 import { IncidentHistory } from "./pages/IncidentHistory"; // Import IncidentHistory
 import { DriverOmnilinkStatusDetails } from "./pages/DriverOmnilinkStatusDetails"; // Import new details page
+import { ReportsPage } from "./pages/ReportsPage"; // NEW: Import ReportsPage
 import { BarChart3 } from "lucide-react"; // Import BarChart3
 import AnimatedStars from "./components/AnimatedStars"; // Import AnimatedStars
 
@@ -61,15 +62,7 @@ const App = () => (
               <Route index element={<Dashboard onNewIncident={() => {}} />} /> {/* Default route for / */}
               <Route path="new-incident" element={<ModernNewIncidentForm onClose={() => {}} onSave={() => {}} />} />
               <Route path="history" element={<IncidentHistory />} />
-              <Route path="reports" element={
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center">
-                    <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-foreground mb-2">Relatórios</h3>
-                    <p className="text-muted-foreground">Em desenvolvimento...</p>
-                  </div>
-                </div>
-              } />
+              <Route path="reports" element={<ReportsPage />} /> {/* UPDATED: Use ReportsPage */}
               <Route path="users" element={<UserManagement />} />
               <Route path="drivers" element={<DriverManagement />} />
               <Route path="vehicles" element={<VehicleManagement />} />
