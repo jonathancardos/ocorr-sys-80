@@ -316,7 +316,7 @@ const BulkVehicleUpload: React.FC<BulkVehicleUploadProps> = ({ onUploadComplete,
                     <SelectTrigger id={`map-${dbField}`}>
                       <SelectValue placeholder="Selecione a coluna da planilha" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card border-border"> {/* REMOVED glass effect classes */}
                       <SelectItem value="unmapped">Nenhum</SelectItem>
                       {spreadsheetHeaders.map(header => (
                         <SelectItem key={header} value={header}>

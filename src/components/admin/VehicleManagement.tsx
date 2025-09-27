@@ -826,7 +826,7 @@ export const VehicleManagement = () => {
                 Upload em Massa
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-card/20 backdrop-blur-md border border-border/50">
+            <DialogContent className="sm:max-w-[600px]"> {/* REMOVED glass effect classes */}
               <DialogHeader>
                 <DialogTitle>Upload em Massa de Veículos</DialogTitle>
                 <DialogDescription>
