@@ -11,7 +11,8 @@ import { ptBR } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox
 
 // Definindo o tipo para a view, incluindo os campos do perfil
 type ReportWithProfile = Tables<'generated_reports'> & {
@@ -25,18 +26,19 @@ type SortDirection = 'asc' | 'desc';
 
 export const GeneratedReportsLog: React.FC = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('generated_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]); // New state for selected reports
 
   const { data: reports, isLoading, error } = useQuery<ReportWithProfile[], Error>({
-    queryKey: ['reportsWithProfiles'], // Usando uma nova chave para a query da view
+    queryKey: ['reportsWithProfiles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('reports_with_profiles') // Consultando a nova view
-        .select('*') // Selecionando todos os campos da view
+        .from('reports_with_profiles')
+        .select('*')
         .order('generated_at', { ascending: false });
 
       if (error) throw error;
@@ -52,9 +54,9 @@ export const GeneratedReportsLog: React.FC = () => {
       currentReports = currentReports.filter(report =>
         report.report_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.profile_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || // Usando o novo campo da view
-        report.profile_username?.toLowerCase().includes(searchTerm.toLowerCase()) || // Usando o novo campo da view
-        report.metadata?.sharedVia?.toLowerCase().includes(searchTerm.toLowerCase()) // Search in metadata
+        report.profile_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.profile_username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.metadata?.sharedVia?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -85,25 +87,50 @@ export const GeneratedReportsLog: React.FC = () => {
     return currentReports;
   }, [reports, searchTerm, filterType, sortColumn, sortDirection]);
 
-  // Mutation to delete a report log
+  // Mutation to delete a single report log
   const deleteReportMutation = useMutation({
     mutationFn: async (reportId: string) => {
       const { error } = await supabase
-        .from('generated_reports') // Ainda deletamos da tabela original
+        .from('generated_reports')
         .delete()
         .eq('id', reportId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reportsWithProfiles'] }); // Invalidar a query da view
+      queryClient.invalidateQueries({ queryKey: ['reportsWithProfiles'] });
       toast.success("Relatório excluído!", {
         description: "O registro do relatório foi removido do histórico.",
       });
+      setSelectedReportIds(prev => prev.filter(id => id !== reportId)); // Remove from selection
     },
     onError: (err: any) => {
       console.error('Error deleting report:', err);
       toast.error("Erro ao excluir relatório", {
         description: err.message || "Não foi possível excluir o registro do relatório.",
+      });
+    },
+  });
+
+  // Mutation to delete multiple report logs
+  const bulkDeleteReportsMutation = useMutation({
+    mutationFn: async (reportIds: string[]) => {
+      const { error } = await supabase
+        .from('generated_reports')
+        .delete()
+        .in('id', reportIds);
+      if (error) throw error;
+    },
+    onSuccess: (data, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['reportsWithProfiles'] });
+      toast.success("Relatórios excluídos!", {
+        description: `${ids.length} registro(s) de relatório(s) foram removido(s) do histórico.`,
+      });
+      setSelectedReportIds([]); // Clear selection
+    },
+    onError: (err: any) => {
+      console.error('Error bulk deleting reports:', err);
+      toast.error("Erro ao excluir relatórios", {
+        description: err.message || "Não foi possível excluir os registros de relatórios selecionados.",
       });
     },
   });
@@ -142,9 +169,20 @@ export const GeneratedReportsLog: React.FC = () => {
     }
   };
 
+  const getGeneratedViaLabel = (metadata: Json | null) => {
+    if (metadata && typeof metadata === 'object' && 'sharedVia' in metadata) {
+      const sharedVia = (metadata as { sharedVia: string }).sharedVia;
+      switch (sharedVia) {
+        case 'pdf_download': return 'PDF (Download)';
+        case 'whatsapp': return 'WhatsApp';
+        default: return 'N/A';
+      }
+    }
+    return 'N/A';
+  };
+
   const handleRegenerateReport = (report: ReportWithProfile) => {
     if (report.report_type === 'driver_report') {
-      // Navigate to the driver report generator with pre-filled dates
       const startDateParam = report.start_date ? format(parseISO(report.start_date), 'yyyy-MM-dd') : '';
       const endDateParam = report.end_date ? format(parseISO(report.end_date), 'yyyy-MM-dd') : '';
       navigate(`/reports?tab=generators&reportType=driver_report&startDate=${startDateParam}&endDate=${endDateParam}`);
@@ -163,6 +201,35 @@ export const GeneratedReportsLog: React.FC = () => {
       deleteReportMutation.mutate(reportId);
     }
   };
+
+  const handleSelectReport = (reportId: string, isChecked: boolean) => {
+    setSelectedReportIds(prev =>
+      isChecked ? [...prev, reportId] : prev.filter(id => id !== reportId)
+    );
+  };
+
+  const handleSelectAllReports = (isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedReportIds(filteredAndSortedReports.map(report => report.id));
+    } else {
+      setSelectedReportIds([]);
+    }
+  };
+
+  const handleDeleteSelectedReports = () => {
+    if (selectedReportIds.length === 0) {
+      toast.info("Nenhum relatório selecionado", {
+        description: "Por favor, selecione os relatórios que deseja excluir.",
+      });
+      return;
+    }
+    if (window.confirm(`Tem certeza que deseja excluir ${selectedReportIds.length} relatório(s) selecionado(s)?`)) {
+      bulkDeleteReportsMutation.mutate(selectedReportIds);
+    }
+  };
+
+  const allReportsSelected = filteredAndSortedReports.length > 0 && selectedReportIds.length === filteredAndSortedReports.length;
+  const someReportsSelected = selectedReportIds.length > 0 && selectedReportIds.length < filteredAndSortedReports.length;
 
   if (isLoading) {
     return (
@@ -220,10 +287,35 @@ export const GeneratedReportsLog: React.FC = () => {
           </Button>
         </div>
 
+        {selectedReportIds.length > 0 && (
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSelectedReports}
+              disabled={bulkDeleteReportsMutation.isPending}
+            >
+              {bulkDeleteReportsMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              Excluir Selecionados ({selectedReportIds.length})
+            </Button>
+          </div>
+        )}
+
         <div className="overflow-x-auto custom-scrollbar">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allReportsSelected}
+                    indeterminate={someReportsSelected}
+                    onCheckedChange={(checked: boolean) => handleSelectAllReports(checked)}
+                    aria-label="Selecionar todos os relatórios"
+                  />
+                </TableHead>
                 <TableHead onClick={() => handleSort('report_type')} className="cursor-pointer hover:text-primary whitespace-nowrap">
                   <div className="flex items-center">
                     Tipo de Relatório {renderSortIcon('report_type')}
@@ -244,6 +336,7 @@ export const GeneratedReportsLog: React.FC = () => {
                     Data de Geração {renderSortIcon('generated_at')}
                   </div>
                 </TableHead>
+                <TableHead className="whitespace-nowrap">Gerado Via</TableHead> {/* New column */}
                 <TableHead onClick={() => handleSort('start_date')} className="cursor-pointer hover:text-primary whitespace-nowrap">
                   <div className="flex items-center">
                     Período (Início) {renderSortIcon('start_date')}
@@ -261,10 +354,18 @@ export const GeneratedReportsLog: React.FC = () => {
               {filteredAndSortedReports.length > 0 ? (
                 filteredAndSortedReports.map((report) => (
                   <TableRow key={report.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedReportIds.includes(report.id)}
+                        onCheckedChange={(checked: boolean) => handleSelectReport(report.id, checked)}
+                        aria-label={`Selecionar relatório ${report.file_name}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{getReportTypeLabel(report.report_type)}</TableCell>
                     <TableCell>{report.file_name || '-'}</TableCell>
                     <TableCell>{report.profile_full_name || report.profile_username || 'Usuário Desconhecido'}</TableCell>
                     <TableCell>{format(parseISO(report.generated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
+                    <TableCell>{getGeneratedViaLabel(report.metadata)}</TableCell> {/* Display generated via */}
                     <TableCell>{report.start_date ? format(parseISO(report.start_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
                     <TableCell>{report.end_date ? format(parseISO(report.end_date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</TableCell>
                     <TableCell className="text-right">
@@ -293,7 +394,7 @@ export const GeneratedReportsLog: React.FC = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8"> {/* Adjusted colspan */}
                     <Calendar className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                     <p>Nenhum relatório gerado encontrado.</p>
                   </TableCell>
