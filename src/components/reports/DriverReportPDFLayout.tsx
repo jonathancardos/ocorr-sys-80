@@ -96,10 +96,13 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
                     CNH / Validade
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Omnilink Status
-                  </th>
+                    Data de Cadastro
+                  </th> {/* NEW COLUMN */}
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Indicação Status
+                    Status Indicação
+                  </th> {/* NEW COLUMN */}
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Omnilink Status
                   </th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Telefone
@@ -119,10 +122,13 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
                       {driver.cnh || 'N/A'} / {getCnhStatusLabel(driver.cnh_expiry)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                      {getOmnilinkStatusLabel(driver.omnilink_score_registration_date)}
-                    </td>
+                      {driver.created_at ? format(parseISO(driver.created_at), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
+                    </td> {/* NEW CELL */}
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                       {getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null)}
+                    </td> {/* NEW CELL */}
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                      {getOmnilinkStatusLabel(driver.omnilink_score_registration_date)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                       {driver.phone || 'N/A'}
