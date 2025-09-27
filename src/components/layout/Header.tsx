@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/theme/ThemeToggle"; // Importar ThemeToggle
 
 interface HeaderProps {
   navigationItems?: { id: string; label: string; icon: React.ElementType; path?: string }[];
@@ -32,11 +33,6 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
       .toUpperCase()
       .slice(0, 2);
   };
-
-  // A função signOut será chamada pelo botão no sidebar agora.
-  // const handleSignOut = async () => {
-  //   await signOut();
-  // };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-gradient-header shadow-card">
@@ -72,7 +68,7 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
                           "w-full justify-start text-left py-2 transition-all duration-200",
                           isActive 
                             ? "bg-primary text-primary-foreground shadow-md" 
-                            : "hover:bg-primary/10 hover:text-primary hover:translate-x-1" // Alterado para hover:bg-primary/10 e hover:text-primary
+                            : "hover:bg-primary/10 hover:text-primary hover:translate-x-1"
                         )}
                         onClick={() => onNavigate(item.id)}
                       >
@@ -85,7 +81,7 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
                   <DropdownMenuSeparator />
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-left py-2 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:translate-x-1" // Alterado para hover:bg-primary/10 e hover:text-primary
+                    className="w-full justify-start text-left py-2 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:translate-x-1"
                     onClick={signOut}
                   >
                     <LogOut className="mr-3 h-4 w-4" />
@@ -138,7 +134,8 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
             </Badge>
           </Button>
           
-          {/* Removido o DropdownMenu de usuário do cabeçalho */}
+          {/* Botão de alternância de tema */}
+          <ThemeToggle />
         </div>
       </div>
     </header>
