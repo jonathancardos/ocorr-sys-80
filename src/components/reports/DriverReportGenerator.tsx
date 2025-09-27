@@ -7,9 +7,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import useMutation and useQueryClient
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables, TablesInsert } from '@/integrations/supabase/types'; // Import TablesInsert
+import { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -17,7 +17,7 @@ import { createRoot } from 'react-dom/client';
 import { DriverReportPDFLayout } from './DriverReportPDFLayout';
 import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils';
 import { PdfPreviewDialog } from './PdfPreviewDialog';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext';
 
 type Driver = Tables<'drivers'>;
 
@@ -26,8 +26,8 @@ interface DriverReportGeneratorProps {
 }
 
 export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ onClose }) => {
-  const { user } = useAuth(); // Get current user
-  const queryClient = useQueryClient(); // Get query client for invalidation
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -67,7 +67,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['generatedReports'] }); // Invalidate the log to show new entry
+      queryClient.invalidateQueries({ queryKey: ['generatedReports'] });
     },
     onError: (err: any) => {
       console.error('Error logging report:', err);
@@ -87,6 +87,15 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     setIsPdfPreviewOpen(true);
   };
 
+  const getIndicacaoStatusLabel = (status: 'indicado' | 'retificado' | 'nao_indicado' | null) => {
+    switch (status) {
+      case 'indicado': return 'Indicado';
+      case 'retificado': return 'Retificado';
+      case 'nao_indicado': return 'Não Indicado';
+      default: return 'N/A';
+    }
+  };
+
   const handleShareWhatsapp = () => {
     if (!drivers || drivers.length === 0) {
       toast.info("Nenhum motorista encontrado", {
@@ -103,21 +112,27 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
       let message = `*Relatório de Motoristas Cadastrados*\n`;
       message += `Período: ${formattedStartDate} a ${formattedEndDate}\n\n`;
       message += `*Total de Motoristas:* ${drivers.length}\n\n`;
-      message += `*Detalhes dos Motoristas:*\n`;
+      message += `---`; // Separador inicial
 
-      drivers.slice(0, 5).forEach((driver, index) => { // Limit to first 5 for brevity in WhatsApp
+      drivers.forEach((driver, index) => {
         const cnhStatus = getCnhStatus(driver.cnh_expiry);
         const omnilinkStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
-        message += `\n*${index + 1}. ${driver.full_name}*\n`;
-        message += `  CPF: ${driver.cpf}\n`;
+        const indicacaoStatus = getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null);
+
+        message += `\n\n*${index + 1}. ${driver.full_name}*\n`;
+        message += `  CPF: ${driver.cpf || 'N/A'}\n`;
+        message += `  Tipo: ${driver.type || 'N/A'}\n`;
         message += `  CNH: ${driver.cnh || 'N/A'} (Validade: ${cnhStatus.message})\n`;
-        message += `  Omnilink: ${omnilinkStatus.message}\n`;
-        message += `  Indicação: ${driver.status_indicacao === 'indicado' ? 'Indicado' : driver.status_indicacao === 'retificado' ? 'Retificado' : 'Não Indicado'}\n`;
+        message += `  Telefone: ${driver.phone || 'N/A'}\n`;
+        message += `  Omnilink Score: ${driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'} (Vencimento: ${driver.omnilink_score_expiry_date ? format(parseISO(driver.omnilink_score_expiry_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'})\n`;
+        message += `  Status Omnilink: ${omnilinkStatus.message}\n`;
+        message += `  Status Indicação: ${indicacaoStatus}\n`;
+        if (driver.status_indicacao === 'nao_indicado' && driver.reason_nao_indicacao) {
+          message += `  Motivo Não Indicação: ${driver.reason_nao_indicacao}\n`;
+        }
+        message += `\n---`; // Separador entre motoristas
       });
 
-      if (drivers.length > 5) {
-        message += `\n...e mais ${drivers.length - 5} motoristas.`;
-      }
       message += `\n\nGerado pelo Sistema de Gestão Karne & Keijo.`;
 
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -133,7 +148,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         generated_by: user?.id || null,
         start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
         end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
-        file_name: `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.txt`, // Use .txt for WhatsApp summary
+        file_name: `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.txt`,
         metadata: { sharedVia: 'whatsapp', driverCount: drivers.length },
       });
 
@@ -148,8 +163,6 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
   };
 
   const handleDownloadPdfFromPreview = async () => {
-    // This function will be called from PdfPreviewDialog, which handles the actual download.
-    // Here, we just log the event.
     logReportMutation.mutate({
       report_type: 'driver_report',
       generated_by: user?.id || null,
@@ -284,7 +297,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         drivers={drivers || []}
         startDate={startDate}
         endDate={endDate}
-        onDownloadSuccess={handleDownloadPdfFromPreview} // Pass the logging function
+        onDownloadSuccess={handleDownloadPdfFromPreview}
       />
     </div>
   );
