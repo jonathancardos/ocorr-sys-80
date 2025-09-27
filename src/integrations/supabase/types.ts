@@ -218,6 +218,7 @@ export type Database = {
       incidents: {
         Row: {
           assigned_to: string | null
+          bo_number: string | null
           corrective_actions: string | null
           cost_estimate: number | null
           created_at: string
@@ -241,6 +242,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          bo_number?: string | null
           corrective_actions?: string | null
           cost_estimate?: number | null
           created_at?: string
@@ -264,6 +266,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          bo_number?: string | null
           corrective_actions?: string | null
           cost_estimate?: number | null
           created_at?: string
@@ -338,6 +341,50 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_reports: {
+        Row: {
+          end_date: string | null
+          file_name: string | null
+          file_url: string | null
+          generated_at: string | null
+          generated_by: string | null
+          id: string
+          metadata: Json | null
+          report_type: string
+          start_date: string | null
+        }
+        Insert: {
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type: string
+          start_date?: string | null
+        }
+        Update: {
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_page_permissions: {
         Row: {
           created_at: string | null
@@ -400,6 +447,7 @@ export type Database = {
           plate: string
           technology: string[] | null
           updated_at: string | null
+          uploaded_by: string | null
         }
         Insert: {
           created_at?: string | null
@@ -408,6 +456,7 @@ export type Database = {
           plate: string
           technology?: string[] | null
           updated_at?: string | null
+          uploaded_by?: string | null
         }
         Update: {
           created_at?: string | null
@@ -416,8 +465,71 @@ export type Database = {
           plate?: string
           technology?: string[] | null
           updated_at?: string | null
+          uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles_pending_approval: {
+        Row: {
+          created_at: string | null
+          id: string
+          model: string
+          original_vehicle_id: string | null
+          plate: string
+          reason: string | null
+          status: string
+          technology: string[] | null
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          model: string
+          original_vehicle_id?: string | null
+          plate: string
+          reason?: string | null
+          status?: string
+          technology?: string[] | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          model?: string
+          original_vehicle_id?: string | null
+          plate?: string
+          reason?: string | null
+          status?: string
+          technology?: string[] | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_pending_approval_original_vehicle_id_fkey"
+            columns: ["original_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_pending_approval_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

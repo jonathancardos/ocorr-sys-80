@@ -12,6 +12,7 @@ import { Tables, TablesInsert } from '@/integrations/supabase/types'; // Import 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
 interface NewVehicleFormProps {
   onVehicleCreated: (vehicleId: string) => void;
@@ -27,7 +28,7 @@ const predefinedTechnologies = [
 ];
 
 const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClose }) => {
-  // Removido: const { toast } = useToast();
+  const { user } = useAuth(); // Get current user
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTechnologyInput, setNewTechnologyInput] = useState('');
@@ -71,7 +72,7 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
       if (currentTechnologies.includes(selectedTech)) {
         return { ...prev, technology: currentTechnologies.filter(tech => tech !== selectedTech) };
       } else {
-        return { ...currentTechnologies, selectedTech };
+        return { ...prev, technology: [...currentTechnologies, selectedTech] };
       }
     });
   };
@@ -98,7 +99,7 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
     mutationFn: async (vehicleData: VehicleInsert) => {
       const { data, error } = await supabase
         .from('vehicles')
-        .insert(vehicleData)
+        .insert({ ...vehicleData, uploaded_by: user?.id || null }) // Add uploaded_by
         .select('id')
         .single();
       if (error) throw error;
