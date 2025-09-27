@@ -66,6 +66,8 @@ const DriverManagement = () => {
   const [filterType, setFilterType] = useState<'all' | 'registered' | 'pending' | 'duplicates'>('all');
   const [filterOmnilinkStatus, setFilterOmnilinkStatus] = useState<'all' | 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown'>('all'); // UPDATED: granular statuses
   const [filterIndicacaoStatus, setFilterIndicacaoStatus] = useState<'all' | 'indicado' | 'retificado' | 'nao_indicado'>('all');
+  const [sortColumn, setSortColumn] = useState<SortColumn>('full_name'); // Changed default sort to full_name
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
     full_name: '',
@@ -304,24 +306,25 @@ const DriverManagement = () => {
 
     // Apply sorting
     if (sortColumn) {
+      const currentSortColumn = sortColumn; // Capture sortColumn in a local const
       currentList.sort((a, b) => {
         let valA: any;
         let valB: any;
 
-        if (sortColumn === 'status') {
+        if (currentSortColumn === 'status') {
           valA = a._itemType === 'registered' ? 'ativo' : 'pendente';
           valB = b._itemType === 'registered' ? 'ativo' : 'pendente';
-        } else if (sortColumn === 'omnilink_score_status') {
+        } else if (currentSortColumn === 'omnilink_score_status') {
           // Use detailed status for sorting if desired, or keep simple DB status
           valA = getDetailedOmnilinkStatus(a.omnilink_score_registration_date).status;
           valB = getDetailedOmnilinkStatus(b.omnilink_score_registration_date).status;
-        } else if (sortColumn === 'status_indicacao') {
+        } else if (currentSortColumn === 'status_indicacao') {
           valA = a.status_indicacao || '';
           valB = b.status_indicacao || '';
         }
         else {
-          valA = a[sortColumn as keyof (Driver | DriverPendingApproval)] || '';
-          valB = b[sortColumn as keyof (Driver | DriverPendingApproval)] || '';
+          valA = (a as any)[currentSortColumn] || '';
+          valB = (b as any)[currentSortColumn] || '';
         }
 
         if (typeof valA === 'string' && typeof valB === 'string') {
@@ -740,9 +743,9 @@ const DriverManagement = () => {
       if (id === 'omnilink_score_registration_date') {
         const regDate = value === '' ? null : value;
         const expiryDate = calculateOmnilinkScoreExpiry(regDate);
-        const statusForDb = calculateOmnilinkScoreStatus(regDate);
+        const status = calculateOmnilinkScoreStatus(regDate);
         newState.omnilink_score_expiry_date = expiryDate;
-        newState.omnilink_score_status = statusForDb;
+        newState.omnilink_score_status = status;
       }
       return newState;
     });
