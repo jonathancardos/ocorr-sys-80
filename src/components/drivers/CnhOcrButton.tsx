@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client'; // Import supabase client for Edge Function call
 
 interface CnhOcrButtonProps {
-  onOcrComplete: (cnhNumber: string, cnhExpiry: string) => void;
+  onOcrComplete: (cnhNumber: string, cnhExpiry: string, fullName: string) => void; // UPDATED: Adicionado fullName
   disabled?: boolean;
 }
 
@@ -63,13 +63,13 @@ export const CnhOcrButton: React.FC<CnhOcrButtonProps> = ({ onOcrComplete, disab
         }
 
         const { cnhData } = responseData;
-        if (cnhData && cnhData.cnh_number && cnhData.cnh_expiry_date) {
-          onOcrComplete(cnhData.cnh_number, cnhData.cnh_expiry_date);
+        if (cnhData && cnhData.cnh_number && cnhData.cnh_expiry_date && cnhData.full_name) { // UPDATED: Verificando full_name
+          onOcrComplete(cnhData.cnh_number, cnhData.cnh_expiry_date, cnhData.full_name); // UPDATED: Passando full_name
           toast.success("OCR concluído!", {
             description: "Dados da CNH preenchidos automaticamente.",
           });
         } else {
-          throw new Error("Dados da CNH não encontrados na resposta do OCR.");
+          throw new Error("Dados da CNH (número, validade ou nome) não encontrados na resposta do OCR."); // UPDATED: Mensagem de erro mais detalhada
         }
       };
       reader.onerror = (error) => {

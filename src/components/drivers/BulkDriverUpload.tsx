@@ -9,7 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload, FileText, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
 import * as XLSX from 'xlsx';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, parse } from 'date-fns'; // Importado 'parse'
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -158,7 +158,7 @@ const BulkDriverUpload: React.FC<BulkDriverUploadProps> = ({ onUploadComplete, o
         };
 
         const parseDateValue = (value: any): string | null => {
-          let dateObj: Date | null = null; // Renamed to dateObj to avoid confusion with parsedDate from XLSX.SSF
+          let dateObj: Date | null = null;
 
           if (typeof value === 'number') {
             // Assume it's an Excel date serial number
@@ -168,15 +168,21 @@ const BulkDriverUpload: React.FC<BulkDriverUploadProps> = ({ onUploadComplete, o
               dateObj = new Date(excelDate.y, excelDate.m - 1, excelDate.d, excelDate.H, excelDate.M, excelDate.S);
             }
           } else if (typeof value === 'string' && value.trim() !== '') {
-            // Try parsing as ISO first (yyyy-MM-dd)
+            // Try ISO format first (YYYY-MM-DD, YYYY/MM/DD, etc.)
             dateObj = parseISO(value);
+
             if (isNaN(dateObj.getTime())) {
-              // If ISO fails, try parsing common Brazilian format (dd/MM/yyyy)
-              const parts = value.split('/');
-              if (parts.length === 3) {
-                // Note: Month is 0-indexed in Date constructor
-                dateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-              }
+              // Try MM/DD/YYYY
+              try {
+                dateObj = parse(value, 'MM/dd/yyyy', new Date());
+              } catch (e) { /* ignore */ }
+            }
+            
+            if (isNaN(dateObj.getTime())) {
+              // Try DD/MM/YYYY
+              try {
+                dateObj = parse(value, 'dd/MM/yyyy', new Date());
+              } catch (e) { /* ignore */ }
             }
           }
 

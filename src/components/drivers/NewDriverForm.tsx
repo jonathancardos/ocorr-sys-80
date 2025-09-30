@@ -20,6 +20,7 @@ interface NewDriverFormProps {
   initialFormData?: { // NEW: Optional initial form data
     cnh?: string;
     cnh_expiry?: string;
+    full_name?: string; // NEW: Adicionado full_name
   };
 }
 
@@ -28,7 +29,7 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
-    full_name: '',
+    full_name: initialFormData?.full_name || '', // Initialize with OCR data
     cpf: '',
     cnh: initialFormData?.cnh || null, // Initialize with OCR data
     cnh_expiry: initialFormData?.cnh_expiry || null, // Initialize with OCR data

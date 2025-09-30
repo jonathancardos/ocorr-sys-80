@@ -14,7 +14,7 @@ import { ptBR } from 'date-fns/locale';
 interface CnhOcrInputAndPreviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onOcrDataConfirmed: (cnhNumber: string, cnhExpiry: string) => void;
+  onOcrDataConfirmed: (cnhNumber: string, cnhExpiry: string, fullName: string) => void; // UPDATED: Adicionado fullName
 }
 
 export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogProps> = ({
@@ -24,24 +24,26 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
 }) => {
   const [cnhNumber, setCnhNumber] = useState<string>('');
   const [cnhExpiry, setCnhExpiry] = useState<string>('');
+  const [fullName, setFullName] = useState<string>(''); // NEW: Estado para o nome completo
   const [ocrProcessed, setOcrProcessed] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const handleOcrComplete = (number: string, expiry: string) => {
+  const handleOcrComplete = (number: string, expiry: string, name: string) => { // UPDATED: Recebendo name
     setCnhNumber(number);
     setCnhExpiry(expiry);
+    setFullName(name); // NEW: Definindo o nome completo
     setOcrProcessed(true);
   };
 
   const handleConfirm = () => {
-    if (!cnhNumber || !cnhExpiry) {
+    if (!cnhNumber || !cnhExpiry || !fullName) { // UPDATED: Validando fullName
       toast.error("Dados incompletos", {
-        description: "Por favor, preencha o número da CNH e a data de validade.",
+        description: "Por favor, preencha o número da CNH, a data de validade e o nome completo.", // UPDATED: Mensagem mais detalhada
       });
       return;
     }
     setIsConfirming(true);
-    onOcrDataConfirmed(cnhNumber, cnhExpiry);
+    onOcrDataConfirmed(cnhNumber, cnhExpiry, fullName); // UPDATED: Passando fullName
     onClose(); // Close this dialog
     setIsConfirming(false);
   };
@@ -49,6 +51,7 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
   const handleCloseDialog = () => {
     setCnhNumber('');
     setCnhExpiry('');
+    setFullName(''); // NEW: Limpando o nome completo
     setOcrProcessed(false);
     onClose();
   };
@@ -83,6 +86,15 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
                 Revise os dados abaixo e, se estiverem corretos, clique em "Continuar para Cadastro".
               </p>
               <div className="space-y-2">
+                <Label htmlFor="ocr-full-name">Nome Completo</Label> {/* NEW: Campo para nome completo */}
+                <Input
+                  id="ocr-full-name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Nome Completo do Motorista"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="ocr-cnh-number">Número da CNH</Label>
                 <Input
                   id="ocr-cnh-number"
@@ -110,7 +122,7 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
             Cancelar
           </Button>
           {ocrProcessed && (
-            <Button onClick={handleConfirm} disabled={isConfirming || !cnhNumber || !cnhExpiry}>
+            <Button onClick={handleConfirm} disabled={isConfirming || !cnhNumber || !cnhExpiry || !fullName}> {/* UPDATED: Desabilitar se fullName estiver vazio */}
               {isConfirming ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

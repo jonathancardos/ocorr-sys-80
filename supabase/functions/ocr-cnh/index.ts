@@ -52,6 +52,7 @@ serve(async (req) => {
     const mockCnhData = {
       cnh_number: '12345678901', // Exemplo de número de CNH
       cnh_expiry_date: '2028-12-31', // Exemplo de data de validade (YYYY-MM-DD)
+      full_name: 'Nome do Motorista Exemplo', // NEW: Adicionado nome completo
     };
 
     return new Response(JSON.stringify({ message: 'OCR processado com sucesso (dados simulados).', cnhData: mockCnhData }), {
