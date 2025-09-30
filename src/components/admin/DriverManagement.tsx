@@ -26,9 +26,11 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils';
-import { DriverCnhOmnilinkStatsCard } from '@/components/drivers/DriverCnhOmnilinkStatsCard'; // NEW: Import the new stats card
-import { DriverReportGenerator } from '@/components/reports/DriverReportGenerator'; // NEW: Import DriverReportGenerator
-import { CnhOcrButton } from '@/components/drivers/CnhOcrButton'; // NEW: Import CnhOcrButton
+import { DriverCnhOmnilinkStatsCard } from '@/components/drivers/DriverCnhOmnilinkStatsCard';
+import { DriverReportGenerator } from '@/components/reports/DriverReportGenerator';
+import NewDriverForm from '@/components/drivers/NewDriverForm'; // Ensure this is imported
+import { NewDriverMethodSelectionDialog } from '@/components/drivers/NewDriverMethodSelectionDialog'; // NEW
+import { CnhOcrInputAndPreviewDialog } from '@/components/drivers/CnhOcrInputAndPreviewDialog'; // NEW
 
 type Driver = Tables<'drivers'>;
 type DriverPendingApproval = Tables<'drivers_pending_approval'>;
@@ -55,21 +57,24 @@ const DriverManagement = () => {
   const { profile, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewDriverMethodSelectionOpen, setIsNewDriverMethodSelectionOpen] = useState(false); // NEW
+  const [isCnhOcrInputAndPreviewOpen, setIsCnhOcrInputAndPreviewOpen] = useState(false); // NEW
+  const [ocrPrefillData, setOcrPrefillData] = useState<{ cnh?: string; cnh_expiry?: string } | undefined>(undefined); // NEW
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // For NewDriverForm
   const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
-  const [isReportGeneratorDialogOpen, setIsReportGeneratorDialogOpen] = useState(false); // NEW: State for report generator dialog
+  const [isReportGeneratorDialogOpen, setIsReportGeneratorDialogOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRegisteredDriverIds, setSelectedRegisteredDriverIds] = useState<string[]>([]);
   const [selectedPendingDriverIds, setSelectedPendingDriverIds] = useState<string[]>([]);
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(null);
 
-  // New state for filters and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'registered' | 'pending' | 'duplicates'>('all');
-  const [filterOmnilinkStatus, setFilterOmnilinkStatus] = useState<'all' | 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown'>('all'); // UPDATED: granular statuses
+  const [filterOmnilinkStatus, setFilterOmnilinkStatus] = useState<'all' | 'em_dia' | 'prest_vencer' | 'vencido' | 'unknown'>('all');
   const [filterIndicacaoStatus, setFilterIndicacaoStatus] = useState<'all' | 'indicado' | 'retificado' | 'nao_indicado'>('all');
-  const [sortColumn, setSortColumn] = useState<SortColumn>('full_name'); // Changed default sort to full_name
+  const [sortColumn, setSortColumn] = useState<SortColumn>('full_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
@@ -86,7 +91,6 @@ const DriverManagement = () => {
     reason_nao_indicacao: null,
   });
 
-  // State for the DuplicateDriverDialog
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const [currentDuplicateData, setCurrentDuplicateData] = useState<{
     pendingDriver: DriverPendingApprovalWithInfo;
@@ -113,7 +117,6 @@ const DriverManagement = () => {
     );
   }
 
-  // Fetch registered drivers
   const { data: drivers, isLoading: isLoadingRegisteredDrivers, error: registeredDriversError } = useQuery<Driver[], Error>({
     queryKey: ['drivers'],
     queryFn: async () => {
@@ -123,7 +126,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Fetch drivers pending approval
   const { data: pendingDrivers, isLoading: isLoadingPendingDrivers, error: pendingDriversError } = useQuery<DriverPendingApproval[], Error>({
     queryKey: ['driversPendingApproval'],
     queryFn: async () => {
@@ -139,7 +141,6 @@ const DriverManagement = () => {
     enabled: profile.role === 'admin',
   });
 
-  // Extract unique original_driver_ids from pendingDrivers
   const originalDriverIds = useMemo(() => {
     if (!pendingDrivers) return [];
     const ids = new Set<string>();
@@ -149,7 +150,6 @@ const DriverManagement = () => {
     return Array.from(ids);
   }, [pendingDrivers]);
 
-  // Fetch details of original drivers for duplication info
   const { data: originalDriversDetails, isLoading: isLoadingOriginalDriversDetails } = useQuery<
     Pick<Driver, 'id' | 'full_name' | 'cpf' | 'cnh' | 'cnh_expiry' | 'phone' | 'type' | 'omnilink_score_registration_date' | 'omnilink_score_expiry_date' | 'omnilink_score_status' | 'status_indicacao' | 'reason_nao_indicacao'>[],
     Error
@@ -167,10 +167,8 @@ const DriverManagement = () => {
     enabled: originalDriverIds.length > 0,
   });
 
-  // Combine pendingDrivers with originalDriversDetails
   const pendingDriversWithDuplicateInfo = useMemo(() => {
     if (!pendingDrivers) return [];
-    // Ensure originalDriversDetails is an array before creating the map
     const safeOriginalDriversDetails = originalDriversDetails || [];
     const originalDriversMap = new Map(safeOriginalDriversDetails.map(d => [d.id, d]) || []);
 
@@ -179,14 +177,12 @@ const DriverManagement = () => {
         ? originalDriversMap.get(pending.original_driver_id)
         : null;
       
-      // --- NEW LOGS ---
       if (pending.original_driver_id && !duplicateDriver) {
         console.warn(`DriverManagement: Original driver ID ${pending.original_driver_id} not found in originalDriversDetails for pending driver ${pending.id}. This might indicate a data inconsistency.`);
       }
       if (duplicateDriver && !duplicateDriver.id) {
         console.error(`DriverManagement: Found duplicate driver but its ID is missing!`, duplicateDriver);
       }
-      // --- END NEW LOGS ---
 
       return {
         ...pending,
@@ -195,7 +191,6 @@ const DriverManagement = () => {
     });
   }, [pendingDrivers, originalDriversDetails]);
 
-  // Combined and structured list for display, with grouping and initial sorting
   const combinedDisplayList = useMemo(() => {
     const list: CombinedDriverItem[] = [];
     const pendingByOriginalId = new Map<string, CombinedDriverItem[]>();
@@ -212,34 +207,28 @@ const DriverManagement = () => {
       }
     });
 
-    // Sort registered drivers alphabetically
     const sortedRegisteredDrivers = [...(drivers || [])].sort((a, b) =>
       a.full_name.localeCompare(b.full_name)
     );
 
-    // Build the combined list, interleaving duplicates
     sortedRegisteredDrivers.forEach(regDriver => {
       list.push({ ...regDriver, _itemType: 'registered' } as CombinedDriverItem);
       const duplicates = pendingByOriginalId.get(regDriver.id);
       if (duplicates) {
-        // Sort duplicates by full_name for consistent display
         duplicates.sort((a, b) => a.full_name.localeCompare(b.full_name));
         list.push(...duplicates);
       }
     });
 
-    // Add any remaining standalone pending drivers, sorted alphabetically
     standalonePending.sort((a, b) => a.full_name.localeCompare(b.full_name));
     list.push(...standalonePending);
 
     return list;
   }, [drivers, pendingDriversWithDuplicateInfo]);
 
-  // Filtered and sorted list based on all criteria
   const filteredAndSortedList = useMemo(() => {
     let currentList = [...combinedDisplayList];
 
-    // Apply search term
     if (searchTerm) {
       currentList = currentList.filter(item =>
         item.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -249,7 +238,6 @@ const DriverManagement = () => {
       );
     }
 
-    // Apply filter type
     if (filterType !== 'all') {
       if (filterType === 'registered') {
         currentList = currentList.filter(item => item._itemType === 'registered');
@@ -259,14 +247,12 @@ const DriverManagement = () => {
         const duplicateItemIds = new Set<string>();
 
         pendingDriversWithDuplicateInfo.forEach(p => {
-          // If a pending driver is a duplicate of an existing registered driver
           if (p.original_driver_id) {
-            duplicateItemIds.add(p.id); // Add the pending driver's ID
-            duplicateItemIds.add(p.original_driver_id); // Add the original registered driver's ID
+            duplicateItemIds.add(p.id);
+            duplicateItemIds.add(p.original_driver_id);
           }
-          // If a pending driver is a batch duplicate (e.g., multiple entries in the same upload)
           else if (p.reason && (p.reason.includes('batch_duplicate_cpf') || p.reason.includes('batch_duplicate_cnh'))) {
-            duplicateItemIds.add(p.id); // Add the pending driver's ID
+            duplicateItemIds.add(p.id);
           }
         });
 
@@ -274,7 +260,6 @@ const DriverManagement = () => {
       }
     }
 
-    // Apply Omnilink status filter (UPDATED LOGIC)
     if (filterOmnilinkStatus !== 'all') {
       currentList = currentList.filter(item => {
         const detailedStatus = getDetailedOmnilinkStatus(item.omnilink_score_registration_date);
@@ -282,15 +267,12 @@ const DriverManagement = () => {
       });
     }
 
-    // Apply Indicacao status filter
     if (filterIndicacaoStatus !== 'all') {
       currentList = currentList.filter(item => {
-        // Both registered and pending drivers can have status_indicacao
         return item.status_indicacao === filterIndicacaoStatus;
       });
     }
 
-    // Apply specific filter criteria (e.g., from clicking a duplicate badge)
     if (filterCriteria) {
       currentList = currentList.filter(item => {
         if (filterCriteria.type === 'original_driver_id' && item._itemType !== 'registered' && 'original_driver_id' in item && item.original_driver_id) {
@@ -299,7 +281,6 @@ const DriverManagement = () => {
         if (filterCriteria.type === 'reason' && item._itemType !== 'registered' && 'reason' in item && item.reason) {
           return item.reason.includes(filterCriteria.value);
         }
-        // Also show the original registered driver if filtering by its ID
         if (filterCriteria.type === 'original_driver_id' && item._itemType === 'registered' && item.id === filterCriteria.value) {
           return true;
         }
@@ -307,9 +288,8 @@ const DriverManagement = () => {
       });
     }
 
-    // Apply sorting
     if (sortColumn) {
-      const currentSortColumn = sortColumn; // Capture sortColumn in a local const
+      const currentSortColumn = sortColumn;
       currentList.sort((a, b) => {
         let valA: any;
         let valB: any;
@@ -318,7 +298,6 @@ const DriverManagement = () => {
           valA = a._itemType === 'registered' ? 'ativo' : 'pendente';
           valB = b._itemType === 'registered' ? 'ativo' : 'pendente';
         } else if (currentSortColumn === 'omnilink_score_status') {
-          // Use detailed status for sorting if desired, or keep simple DB status
           valA = getDetailedOmnilinkStatus(a.omnilink_score_registration_date).status;
           valB = getDetailedOmnilinkStatus(b.omnilink_score_registration_date).status;
         } else if (currentSortColumn === 'status_indicacao') {
@@ -344,7 +323,6 @@ const DriverManagement = () => {
   }, [combinedDisplayList, searchTerm, filterType, filterOmnilinkStatus, filterIndicacaoStatus, sortColumn, sortDirection, filterCriteria, pendingDriversWithDuplicateInfo]);
 
 
-  // Add/Update registered driver mutation
   const upsertDriverMutation = useMutation({
     mutationFn: async (driverData: TablesInsert<'drivers'> | TablesUpdate<'drivers'>) => {
       if (editingDriver) {
@@ -385,7 +363,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Delete single registered driver mutation
   const deleteDriverMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('drivers').delete().eq('id', id);
@@ -406,7 +383,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Bulk delete registered drivers mutation
   const bulkDeleteRegisteredDriversMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { error } = await supabase.from('drivers').delete().in('id', ids);
@@ -427,7 +403,6 @@ const DriverManagement = () => {
     },
   });
 
-  // New mutation for resolving duplication (called by the custom toast)
   const resolveDuplicationMutation = useMutation({
     mutationFn: async ({ choice, pendingDriverId, existingDriverId, pendingDriverData }: {
       choice: 'keepExisting' | 'keepNew';
@@ -457,7 +432,6 @@ const DriverManagement = () => {
           throw new Error(errorMessage);
         }
 
-        // 1. Atualizar o motorista existente na tabela 'drivers' com os dados do motorista pendente
         const driverToUpdate: TablesUpdate<'drivers'> = {
           full_name: pendingDriverData.full_name,
           cpf: pendingDriverData.cpf,
@@ -483,7 +457,6 @@ const DriverManagement = () => {
         }
         console.log('resolveDuplicationMutation: Motorista existente atualizado com sucesso:', existingDriverId);
 
-        // 2. Excluir a entrada pendente da tabela 'drivers_pending_approval'
         console.log('resolveDuplicationMutation: Excluindo entrada pendente da tabela drivers_pending_approval:', pendingDriverId);
         const { error: deletePendingError } = await supabase
           .from('drivers_pending_approval')
@@ -514,10 +487,8 @@ const DriverManagement = () => {
     },
   });
 
-  // Mutation to approve a pending driver (now handles duplication check)
   const approvePendingDriverMutation = useMutation({
     mutationFn: async (driverToApprove: DriverPendingApprovalWithInfo) => {
-      // Case 1: No original_driver_id, so it's a truly new pending driver.
       if (!driverToApprove.original_driver_id) {
         console.log('DriverManagement: Aprovação de novo motorista sem duplicação detectada.');
         const driverData: TablesInsert<'drivers'> = {
@@ -552,12 +523,9 @@ const DriverManagement = () => {
         }
         return { message: 'Motorista aprovado e adicionado ao sistema.' };
       }
-      // Case 2: original_driver_id exists, and we found its details (actual duplication)
       else if (driverToApprove.original_driver_id && driverToApprove.duplicateDriverInfo && driverToApprove.duplicateDriverInfo.id) {
         console.log('DriverManagement: Duplicação detectada. Abrindo diálogo de resolução.');
-        // --- NEW LOG ---
         console.log('DriverManagement: duplicateDriverInfo.id antes de setCurrentDuplicateData:', driverToApprove.duplicateDriverInfo.id);
-        // --- END NEW LOG ---
         setCurrentDuplicateData({
           pendingDriver: driverToApprove,
           duplicateDriverInfo: driverToApprove.duplicateDriverInfo,
@@ -565,7 +533,6 @@ const DriverManagement = () => {
         setIsDuplicateDialogOpen(true);
         return Promise.reject(new Error("Duplicação detectada. Ação requerida no diálogo."));
       }
-      // Case 3: original_driver_id exists, but duplicateDriverInfo is null or missing ID (original driver not found or invalid)
       else {
         console.error('DriverManagement: Inconsistência de dados: original_driver_id existe, mas o motorista original não foi encontrado ou está inválido na tabela drivers.', driverToApprove);
         throw new Error("Inconsistência de dados: O motorista original referenciado não foi encontrado ou está inválido. Por favor, rejeite esta entrada pendente ou verifique a integridade dos dados.");
@@ -589,7 +556,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Bulk approve pending drivers mutation
   const bulkApprovePendingDriversMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const pendingDriversToApprove = pendingDriversWithDuplicateInfo.filter(d => ids.includes(d.id));
@@ -658,7 +624,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Mutation to reject a pending driver
   const rejectPendingDriverMutation = useMutation({
     mutationFn: async (driverId: string) => {
       const { error } = await supabase
@@ -682,7 +647,6 @@ const DriverManagement = () => {
     },
   });
 
-  // Bulk reject pending drivers mutation
   const bulkRejectPendingDriversMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { error } = await supabase.from('drivers_pending_approval').delete().in('id', ids);
@@ -719,6 +683,7 @@ const DriverManagement = () => {
       reason_nao_indicacao: null,
     });
     setEditingDriver(null);
+    setOcrPrefillData(undefined); // NEW: Clear OCR prefill data
   };
 
   const handleEditDriver = (driver: Driver) => {
@@ -757,21 +722,11 @@ const DriverManagement = () => {
   const handleFormSelectChange = (id: keyof TablesInsert<'drivers'>, value: string) => {
     setFormData(prev => {
       const newState = { ...prev, [id]: value === '' ? null : value };
-      // Clear reason_nao_indicacao if status is not 'nao_indicado'
       if (id === 'status_indicacao' && value !== 'nao_indicado') {
         newState.reason_nao_indicacao = null;
       }
       return newState;
     });
-  };
-
-  // NEW: Handle OCR completion
-  const handleOcrComplete = (cnhNumber: string, cnhExpiry: string) => {
-    setFormData(prev => ({
-      ...prev,
-      cnh: cnhNumber,
-      cnh_expiry: cnhExpiry,
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -931,15 +886,15 @@ const DriverManagement = () => {
     switch (detailedStatus.status) {
       case 'em_dia':
         variant = 'success';
-        label = 'Em Dia'; // Simplified label for badge
+        label = 'Em Dia';
         break;
       case 'prest_vencer':
         variant = 'warning';
-        label = 'Prest. Vencer'; // Simplified label for badge
+        label = 'Prest. Vencer';
         break;
       case 'vencido':
         variant = 'destructive';
-        label = 'Vencido'; // Simplified label for badge
+        label = 'Vencido';
         break;
       case 'unknown':
       default:
@@ -978,6 +933,28 @@ const DriverManagement = () => {
   const allRegisteredDriversSelected = allRegisteredDriversInFilteredList.length > 0 && selectedRegisteredDriverIds.length === allRegisteredDriversInFilteredList.length;
   const someRegisteredDriversSelected = selectedRegisteredDriverIds.length > 0 && selectedRegisteredDriverIds.length < allRegisteredDriversInFilteredList.length;
 
+  // NEW: Handlers for the new driver registration flow
+  const handleSelectManualRegistration = () => {
+    setIsNewDriverMethodSelectionOpen(false);
+    resetForm(); // Ensure form is clean for manual entry
+    setIsDialogOpen(true); // Open the NewDriverForm
+  };
+
+  const handleSelectOcrRegistration = () => {
+    setIsNewDriverMethodSelectionOpen(false);
+    setIsCnhOcrInputAndPreviewOpen(true); // Open the OCR dialog
+  };
+
+  const handleOcrDataConfirmed = (cnhNumber: string, cnhExpiry: string) => {
+    setOcrPrefillData({ cnh: cnhNumber, cnh_expiry: cnhExpiry });
+    setIsCnhOcrInputAndPreviewOpen(false); // Close OCR dialog
+    setIsDialogOpen(true); // Open NewDriverForm with pre-filled data
+  };
+
+  const handleNewDriverFormClose = () => {
+    setIsDialogOpen(false);
+    setOcrPrefillData(undefined); // Clear prefill data on close
+  };
 
   if (isLoadingAny) {
     return (
@@ -1057,7 +1034,7 @@ const DriverManagement = () => {
                 Upload em Massa
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
+            <DialogContent className="sm:max-w-[600px] bg-card/20 backdrop-blur-md border border-border/50">
               <DialogHeader>
                 <DialogTitle>Upload em Massa de Motoristas</DialogTitle>
                 <DialogDescription>
@@ -1074,7 +1051,7 @@ const DriverManagement = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isReportGeneratorDialogOpen} onOpenChange={setIsReportGeneratorDialogOpen}> {/* NEW: Report Generator Dialog */}
+          <Dialog open={isReportGeneratorDialogOpen} onOpenChange={setIsReportGeneratorDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Download className="mr-2 h-4 w-4" />
@@ -1092,194 +1069,54 @@ const DriverManagement = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Novo Motorista
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
-              <DialogHeader>
-                <DialogTitle>
-                  {editingDriver ? 'Editar Motorista' : 'Cadastrar Novo Motorista'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingDriver 
-                    ? 'Atualize as informações do motorista'
-                    : 'Preencha os dados para cadastrar um novo motorista'
-                  }
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Nome Completo *</Label>
-                  <Input
-                    id="full_name"
-                    value={formData.full_name || ''}
-                    onChange={handleFormInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    value={formData.cpf || ''}
-                    onChange={handleFormInputChange}
-                    required
-                    disabled={!!editingDriver} 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">Tipo</Label>
-                  <Select
-                    value={formData.type || ''}
-                    onValueChange={(value) => handleFormSelectChange('type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="motorista">Motorista</SelectItem>
-                      <SelectItem value="agregado">Agregado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cnh">CNH</Label>
-                    <Input
-                      id="cnh"
-                      value={formData.cnh || ''}
-                      onChange={(e) => handleFormInputChange(e)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="cnh_expiry">Validade CNH</Label>
-                    <Input
-                      id="cnh_expiry"
-                      type="date"
-                      value={formData.cnh_expiry || ''}
-                      onChange={(e) => handleFormInputChange(e)}
-                    />
-                  </div>
-                </div>
-                {/* NEW: CNH OCR Button */}
-                <CnhOcrButton onOcrComplete={handleOcrComplete} disabled={isSubmitting} />
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone || ''}
-                    onChange={(e) => handleFormInputChange(e)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="omnilink_score_registration_date">Data de Cadastro Omnilink Score</Label>
-                  <Input
-                    id="omnilink_score_registration_date"
-                    type="date"
-                    value={formData.omnilink_score_registration_date || ''}
-                    onChange={(e) => {
-                      const regDate = e.target.value === '' ? null : e.target.value;
-                      const expiryDate = calculateOmnilinkScoreExpiry(regDate);
-                      const status = calculateOmnilinkScoreStatus(regDate);
-                      setFormData(prev => ({
-                        ...prev,
-                        omnilink_score_registration_date: regDate,
-                        omnilink_score_expiry_date: expiryDate,
-                        omnilink_score_status: status,
-                      }));
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="omnilink_score_expiry_date">Vencimento Omnilink Score</Label>
-                    <Input
-                      id="omnilink_score_expiry_date"
-                      type="date"
-                      value={formData.omnilink_score_expiry_date || ''}
-                      readOnly
-                      className="bg-muted/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="omnilink_score_status">Status Omnilink Score</Label>
-                    <Input
-                      id="omnilink_score_status"
-                      value={getDetailedOmnilinkStatus(formData.omnilink_score_registration_date).message || ''} // Display detailed message
-                      readOnly
-                      className="bg-muted/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status_indicacao">Status de Indicação</Label>
-                  <Select
-                    value={formData.status_indicacao || ''}
-                    onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => handleFormSelectChange('status_indicacao', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status de indicação" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="indicado">Indicado</SelectItem>
-                      <SelectItem value="retificado">Retificado</SelectItem>
-                      <SelectItem value="nao_indicado">Não Indicado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.status_indicacao === 'nao_indicado' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="reason_nao_indicacao">Motivo de Não Indicação (Opcional)</Label>
-                    <Textarea
-                      id="reason_nao_indicacao"
-                      value={formData.reason_nao_indicacao || ''}
-                      onChange={handleFormInputChange}
-                      placeholder="Descreva o motivo pelo qual o motorista não foi indicado..."
-                      className="min-h-[80px]"
-                    />
-                  </div>
-                )}
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {editingDriver ? 'Atualizando...' : 'Cadastrando...'}
-                      </>
-                    ) : (
-                      editingDriver ? 'Atualizar' : 'Cadastrar'
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          {/* NEW: Trigger for the method selection dialog */}
+          <Button onClick={() => setIsNewDriverMethodSelectionOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Novo Motorista
+          </Button>
         </div>
       </div>
 
-      {/* NEW: Driver CNH and Omnilink Stats Card */}
+      {/* NEW: Method Selection Dialog */}
+      <NewDriverMethodSelectionDialog
+        isOpen={isNewDriverMethodSelectionOpen}
+        onClose={() => setIsNewDriverMethodSelectionOpen(false)}
+        onSelectManual={handleSelectManualRegistration}
+        onSelectOcr={handleSelectOcrRegistration}
+      />
+
+      {/* NEW: CNH OCR Input and Preview Dialog */}
+      <CnhOcrInputAndPreviewDialog
+        isOpen={isCnhOcrInputAndPreviewOpen}
+        onClose={() => setIsCnhOcrInputAndPreviewOpen(false)}
+        onOcrDataConfirmed={handleOcrDataConfirmed}
+      />
+
+      {/* Existing New/Edit Driver Dialog, now potentially pre-filled */}
+      <Dialog open={isDialogOpen} onOpenChange={handleNewDriverFormClose}>
+        <DialogContent className="sm:max-w-[500px] bg-card/20 backdrop-blur-md border border-border/50">
+          <DialogHeader>
+            <DialogTitle>
+              {editingDriver ? 'Editar Motorista' : 'Cadastrar Novo Motorista'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingDriver
+                ? 'Atualize as informações do motorista'
+                : 'Preencha os dados para cadastrar um novo motorista'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <NewDriverForm
+            onDriverCreated={() => {
+              setIsDialogOpen(false);
+              setOcrPrefillData(undefined); // Clear prefill data after creation
+            }}
+            onClose={handleNewDriverFormClose}
+            initialFormData={ocrPrefillData} // Pass OCR prefill data
+          />
+        </DialogContent>
+      </Dialog>
+
       <div className="col-span-full sm:col-span-2 lg:col-span-2 flex flex-col gap-4">
         <DriverCnhOmnilinkStatsCard
           allDrivers={drivers || []}
@@ -1519,8 +1356,8 @@ const DriverManagement = () => {
                         {item.status_indicacao ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge 
-                                variant={getIndicacaoStatusBadgeVariant(item.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado')} 
+                              <Badge
+                                variant={getIndicacaoStatusBadgeVariant(item.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado')}
                                 className="cursor-pointer"
                               >
                                 {item.status_indicacao === 'indicado' ? 'Indicado' : item.status_indicacao === 'retificado' ? 'Retificado' : 'Não Indicado'}

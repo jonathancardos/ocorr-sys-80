@@ -13,40 +13,35 @@ import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import from new utility
-import { CnhOcrButton } from './CnhOcrButton'; // NEW: Import CnhOcrButton
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
   onClose: () => void;
+  initialFormData?: { // NEW: Optional initial form data
+    cnh?: string;
+    cnh_expiry?: string;
+  };
 }
 
-const predefinedTechnologies = [
-  "Bloqueador Duplo",
-  "Bloqueio",
-  "Rastreio",
-  "2G",
-  "4G",
-];
-
-const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose }) => {
+const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose, initialFormData }) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
     full_name: '',
     cpf: '',
-    cnh: null, // Default to null as per schema
-    cnh_expiry: null, // Default to null as per schema
-    phone: null, // Default to null as per schema
-    type: null, // New field
-    omnilink_score_registration_date: null, // New field
-    omnilink_score_expiry_date: null, // New field
-    omnilink_score_status: null, // New field
-    status_indicacao: 'nao_indicado', // NEW FIELD: Default to 'nao_indicado'
-    reason_nao_indicacao: null, // NEW FIELD
+    cnh: initialFormData?.cnh || null, // Initialize with OCR data
+    cnh_expiry: initialFormData?.cnh_expiry || null, // Initialize with OCR data
+    phone: null,
+    type: null,
+    omnilink_score_registration_date: null,
+    omnilink_score_expiry_date: null,
+    omnilink_score_status: null,
+    status_indicacao: 'nao_indicado',
+    reason_nao_indicacao: null,
   });
 
-  const [detailedOmnilinkStatus, setDetailedOmnilinkStatus] = useState<OmnilinkDetailedStatus | null>(null); // NEW STATE
+  const [detailedOmnilinkStatus, setDetailedOmnilinkStatus] = useState<OmnilinkDetailedStatus | null>(null);
 
   useEffect(() => {
     if (formData.omnilink_score_registration_date) {
@@ -56,40 +51,30 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
     }
   }, [formData.omnilink_score_registration_date]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { // Updated to handle Textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value === '' ? null : value })); // Set to null if empty string
+    setFormData(prev => ({ ...prev, [id]: value === '' ? null : value }));
   };
 
   const handleOmnilinkRegDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const regDate = e.target.value === '' ? null : e.target.value;
     const expiryDate = calculateOmnilinkScoreExpiry(regDate);
-    const statusForDb = calculateOmnilinkScoreStatus(regDate); // For DB storage
-    const detailedStatus = getDetailedOmnilinkStatus(regDate); // For UI display
+    const statusForDb = calculateOmnilinkScoreStatus(regDate);
+    const detailedStatus = getDetailedOmnilinkStatus(regDate);
     setFormData(prev => ({
       ...prev,
       omnilink_score_registration_date: regDate,
       omnilink_score_expiry_date: expiryDate,
-      omnilink_score_status: statusForDb, // Store 'em_dia' or 'inapto' in DB
+      omnilink_score_status: statusForDb,
     }));
-    setDetailedOmnilinkStatus(detailedStatus); // Update detailed status for UI
+    setDetailedOmnilinkStatus(detailedStatus);
   };
 
   const handleSelectChange = (id: keyof TablesInsert<'drivers'>, value: string) => {
     setFormData(prev => ({ ...prev, [id]: value === '' ? null : value }));
-    // Clear reason_nao_indicacao if status is not 'nao_indicado'
     if (id === 'status_indicacao' && value !== 'nao_indicado') {
       setFormData(prev => ({ ...prev, reason_nao_indicacao: null }));
     }
-  };
-
-  // NEW: Handle OCR completion
-  const handleOcrComplete = (cnhNumber: string, cnhExpiry: string) => {
-    setFormData(prev => ({
-      ...prev,
-      cnh: cnhNumber,
-      cnh_expiry: cnhExpiry,
-    }));
   };
 
   const createDriverMutation = useMutation({
@@ -103,14 +88,14 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['drivers'] }); // Invalidate to refetch drivers list
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
       toast.success("Motorista cadastrado!", {
         description: `${formData.full_name} foi adicionado com sucesso.`,
       });
-      if (data) { // Add null check for data
-        onDriverCreated(data.id); // Pass the new driver's ID back
+      if (data) {
+        onDriverCreated(data.id);
       }
-      onClose(); // Close the dialog
+      onClose();
     },
     onError: (err: any) => {
       console.error('Error creating driver:', err);
@@ -187,8 +172,6 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
           />
         </div>
       </div>
-      {/* NEW: CNH OCR Button */}
-      <CnhOcrButton onOcrComplete={handleOcrComplete} disabled={isSubmitting} />
       
       <div className="space-y-2">
         <Label htmlFor="phone">Telefone</Label>
@@ -223,15 +206,14 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
         <div className="space-y-2">
           <Label htmlFor="omnilink_score_status_display">Status Omnilink Score</Label>
           <Input
-            id="omnilink_score_status_display" // Changed ID to avoid conflict with formData.omnilink_score_status
-            value={detailedOmnilinkStatus?.message || ''} // Display detailed message
+            id="omnilink_score_status_display"
+            value={detailedOmnilinkStatus?.message || ''}
             readOnly
             className="bg-muted/50"
           />
         </div>
       </div>
 
-      {/* NEW FIELD: Status de Indicação */}
       <div className="space-y-2">
         <Label htmlFor="status_indicacao">Status de Indicação</Label>
         <Select
@@ -249,7 +231,6 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
         </Select>
       </div>
 
-      {/* NEW CONDITIONAL FIELD: Motivo de Não Indicação */}
       {formData.status_indicacao === 'nao_indicado' && (
         <div className="space-y-2">
           <Label htmlFor="reason_nao_indicacao">Motivo de Não Indicação (Opcional)</Label>
