@@ -37,7 +37,8 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   uploadingFiles,
   handleRemoveAttachment,
 }) => {
-  console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', omnilinkPhoto); // ADDED LOG
+  console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', omnilinkPhoto);
+  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload); // ADDED LOG
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error("Failed to load image in preview:", e.currentTarget.src);
@@ -50,7 +51,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp)$/i);
     const isPdf = file.name.match(/\.pdf$/i);
 
-    console.log(`renderAttachmentItem for ${file.name}: isImage=${isImage}, isPdf=${isPdf}, url=${file.url}`); // ADDED LOG
+    console.log(`renderAttachmentItem for ${file.name}: isImage=${isImage}, isPdf=${isPdf}, url=${file.url}`);
 
     return (
       <div key={index} className="flex items-center justify-between bg-muted/50 p-2 rounded-md border border-border">
@@ -60,7 +61,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               src={file.url} 
               alt={file.name} 
               className="h-8 w-8 object-cover rounded-sm" 
-              onError={handleImageError} // ADDED onError handler
+              onError={handleImageError}
             />
           ) : isPdf ? (
             <FileText className="h-8 w-8 text-muted-foreground" />
@@ -83,7 +84,6 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   };
 
   const renderFileList = (files: AttachmentItem[] | null | undefined, fieldName: keyof IncidentAttachmentsFormData) => {
-    // Explicitly check if it's an array before calling .map or .length
     if (!Array.isArray(files) || files.length === 0) return null;
     return (
       <div className="mt-2 space-y-2">
@@ -96,7 +96,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     if (!file) return null;
     return (
       <div className="mt-2 space-y-2">
-        {renderAttachmentItem(file, fieldName, 0)} {/* Single file, so index is 0 */}
+        {renderAttachmentItem(file, fieldName, 0)}
       </div>
     );
   };

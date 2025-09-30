@@ -747,6 +747,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           />
         );
       case "attachments":
+        console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload); // ADDED LOG
         return (
           <IncidentAttachmentsSection
             boFiles={formData.boFiles}
@@ -855,8 +856,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </div>
-                    </AccordionTrigger>
+                      </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
                     </AccordionContent>
