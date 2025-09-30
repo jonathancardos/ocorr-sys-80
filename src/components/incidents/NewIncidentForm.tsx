@@ -835,7 +835,11 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                 const IconComponent = FileText; // Default icon, replace with actual icons if available
                 
                 return (
-                  <AccordionItem key={section.id} value={section.id} className="modern-card border-none">
+                  <AccordionItem 
+                    key={section.id} 
+                    value={section.id} 
+                    className="border-none bg-card/20 border-border/50 backdrop-blur-md shadow-card hover:shadow-elevated transition-shadow rounded-2xl"
+                  >
                     <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-foreground hover:no-underline">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-primary/10">
@@ -848,7 +852,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </div
+                      </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
@@ -879,7 +883,11 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
               {sections.map((section) => (
                 <TabsContent key={section.id} value={section.id} className="space-y-8">
-                  {renderSectionContent(section.id)}
+                  <ScrollArea className="h-[calc(100vh-300px)] p-8 bg-card/20 border-border/50 backdrop-blur-xl rounded-2xl overflow-hidden">
+                    <div className="pr-4">
+                      {renderSectionContent(section.id)}
+                    </div>
+                  </ScrollArea>
                 </TabsContent>
               ))}
             </Tabs>
