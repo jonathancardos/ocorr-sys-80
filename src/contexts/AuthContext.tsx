@@ -388,17 +388,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('AuthContext: Error signing out from Supabase:', error);
-      toast.error("Erro ao sair", {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('AuthContext: Error signing out from Supabase:', error);
+        toast.error("Erro ao sair", {
+          description: error.message,
+        });
+      } else {
+        console.log('AuthContext: Supabase signOut successful. Clearing local state.');
+        // Add a small delay to allow the logout request to complete before clearing local state
+        await new Promise(resolve => setTimeout(resolve, 100)); 
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+      }
+    } catch (error: any) {
+      console.error('AuthContext: Unexpected error during signOut:', error);
+      toast.error("Erro inesperado ao sair", {
         description: error.message,
       });
-    } else {
-      console.log('AuthContext: Supabase signOut successful. Clearing local state.');
-      setUser(null);
-      setSession(null);
-      setProfile(null);
+    } finally {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['drivers'] });

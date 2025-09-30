@@ -319,10 +319,10 @@ export const DriverRegistrationHeatmap: React.FC = () => {
   return (
     <div className="dashboard-card-new h-full flex flex-col">
       <h2 className="dashboard-title-new">
-        <Calendar className="h-5 w-5" /> Status de Indicação e Validade Omnilink
+        <Calendar className="h-5 w-5" /> Mapa de Calor de Registro de Motoristas
       </h2>
       <p className="text-sm text-muted-foreground mt-1">
-        Distribuição de motoristas por status de indicação e validade do Omnilink Score.
+        Visualização da distribuição de registros de motoristas ao longo do tempo.
       </p>
 
       <div className="flex items-center justify-end mt-4 mb-4">
@@ -363,12 +363,17 @@ export const DriverRegistrationHeatmap: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 w-full h-64">
+      <div className="flex-1 w-full min-h-[300px] sm:h-64">
         {processedChartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={processedChartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ 
+                top: 20, 
+                right: 10, 
+                left: 0, 
+                bottom: 60 
+              }}
               barCategoryGap="20%"
             >
               <defs>
@@ -392,27 +397,51 @@ export const DriverRegistrationHeatmap: React.FC = () => {
               <XAxis
                 dataKey="name"
                 stroke="#ddd"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                angle={-45}
+                angle={-35}
                 textAnchor="end"
-                height={60}
+                height={80}
+                interval={0}
+                tick={{ 
+                  dy: 10,
+                  fontSize: '0.7rem'
+                }}
               />
               <YAxis
                 stroke="#ddd"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                label={{ value: 'Nº de Motoristas', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#ddd' } }}
+                width={45}
+                label={{ 
+                  value: 'Nº de Motoristas', 
+                  angle: -90, 
+                  position: 'insideLeft', 
+                  style: { 
+                    textAnchor: 'middle', 
+                    fill: '#ddd',
+                    fontSize: '0.75rem'
+                  },
+                  dx: -10
+                }}
               />
               <Tooltip
                 cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 content={CustomTooltip}
               />
               <Legend 
-                wrapperStyle={{ paddingTop: '10px' }}
+                wrapperStyle={{ 
+                  paddingTop: '10px',
+                  fontSize: '0.75rem',
+                  marginBottom: '10px'
+                }}
                 iconType="circle"
+                iconSize={8}
+                align="center"
+                verticalAlign="bottom"
+                height={36}
               />
               <Bar
                 dataKey="indicado"
@@ -423,8 +452,8 @@ export const DriverRegistrationHeatmap: React.FC = () => {
                 animationDuration={1000}
                 animationEasing="ease-out"
                 filter="drop-shadow(0 0 4px rgba(40, 167, 69, 0.5))"
-                onClick={(data: any) => handleBarClick(data.payload, 'indicado')} // NEW: onClick handler
-                className="cursor-pointer" // NEW: Add cursor pointer
+                onClick={(data: any) => handleBarClick(data.payload, 'indicado')}
+                className="cursor-pointer"
               />
               <Bar
                 dataKey="retificado"
@@ -435,8 +464,8 @@ export const DriverRegistrationHeatmap: React.FC = () => {
                 animationDuration={1000}
                 animationEasing="ease-out"
                 filter="drop-shadow(0 0 4px rgba(255, 193, 7, 0.5))"
-                onClick={(data: any) => handleBarClick(data.payload, 'retificado')} // NEW: onClick handler
-                className="cursor-pointer" // NEW: Add cursor pointer
+                onClick={(data: any) => handleBarClick(data.payload, 'retificado')}
+                className="cursor-pointer"
               />
               <Bar
                 dataKey="nao_indicado"
@@ -447,8 +476,8 @@ export const DriverRegistrationHeatmap: React.FC = () => {
                 animationDuration={1000}
                 animationEasing="ease-out"
                 filter="drop-shadow(0 0 4px rgba(220, 53, 69, 0.5))"
-                onClick={(data: any) => handleBarClick(data.payload, 'nao_indicado')} // NEW: onClick handler
-                className="cursor-pointer" // NEW: Add cursor pointer
+                onClick={(data: any) => handleBarClick(data.payload, 'nao_indicado')}
+                className="cursor-pointer"
               />
             </BarChart>
           </ResponsiveContainer>

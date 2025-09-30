@@ -27,6 +27,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tables } from "@/integrations/supabase/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import modular sections
 import { IncidentIdentificationSection } from './IncidentIdentificationSection';
@@ -340,7 +342,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[], Error>({
     queryKey: ['vehicles'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('vehicles').select('*').order('plate', { ascending: true });
+      const { data, error } = await supabase.from('vehicles').select('id, plate, model, technology, created_at, updated_at').order('plate', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -379,15 +381,18 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     });
   };
 
+  console.log('NewIncidentForm: Type of uploadFile before useCallback:', typeof uploadFile, uploadFile);
+  console.log('NewIncidentForm: Type of uploadFiles before useCallback:', typeof uploadFiles, uploadFiles);
+
   const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
+    console.log('handleFileUpload: Inside useCallback. formData.incidentNumber:', formData.incidentNumber);
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
-      console.log('NewIncidentForm: handleFileUpload - Cleared/No files for', field); // ADDED LOG
       return;
     }
 
     setUploadingFiles(prev => ({ ...prev, [field]: true }));
-    const incidentNum = formData.incidentNumber || 'temp'; // Use temp if incident number not yet generated
+    const incidentNum = formData.incidentNumber || 'temp';
     const pathPrefix = `incidents/${incidentNum}/${field}/`;
 
     try {
@@ -395,7 +400,6 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         const file = files as File;
         const url = await uploadFile(file, `${pathPrefix}${file.name}`);
         setFormData(prev => ({ ...prev, [field]: { name: file.name, url } }));
-        console.log('NewIncidentForm: handleFileUpload - omnilinkPhoto updated in state:', { name: file.name, url }); // ADDED LOG
         toast.success("Upload concluído", { description: `Foto Omnilink carregada.` });
       } else {
         const fileList = files as FileList;
@@ -404,17 +408,17 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           name: file.name,
           url: urls[index]
         }));
-        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] })); // Append new files
-        console.log('NewIncidentForm: handleFileUpload - Multiple files updated in state for', field, newAttachments); // ADDED LOG
+        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] }));
         toast.success("Upload concluído", { description: `${urls.length} arquivo(s) carregado(s).` });
       }
     } catch (error: any) {
       console.error('Erro durante o upload:', error);
+      toast.error("Erro durante o upload", { description: error.message || "Ocorreu um erro ao carregar o arquivo." });
       toast.error("Erro no upload", { description: error.message || `Falha ao carregar arquivos.` });
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
+  }, [setFormData, setUploadingFiles, formData.incidentNumber, uploadFile, uploadFiles]);
 
   const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
@@ -747,16 +751,16 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           />
         );
       case "attachments":
-        console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload); // ADDED LOG
+        console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload, handleFileUpload);
         return (
           <IncidentAttachmentsSection
             boFiles={formData.boFiles}
             sapScreenshots={formData.sapScreenshots}
             riskReports={formData.riskReports}
             omnilinkPhoto={formData.omnilinkPhoto}
-            handleFileUpload={handleFileUpload} {/* Corrected: Pass the handleFileUpload directly */}
-            uploadingFiles={uploadingFiles} // Pass uploading state
-            handleRemoveAttachment={handleRemoveAttachment} // Pass remove function
+            handleFileUpload={handleFileUpload}
+            uploadingFiles={uploadingFiles}
+            handleRemoveAttachment={handleRemoveAttachment}
           />
         );
       case "pdf-customization":
@@ -856,7 +860,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </AccordionTrigger>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
                     </AccordionContent>

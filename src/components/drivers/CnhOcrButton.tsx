@@ -12,7 +12,7 @@ interface CnhOcrButtonProps {
   disabled?: boolean;
 }
 
-export const CnhOcrButton: React.FC<CnhOcrButtonProps> = ({ onOcrComplete, disabled }) => {
+export const CnhOcrButton = React.forwardRef<HTMLDivElement, CnhOcrButtonProps>(({ onOcrComplete, disabled }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -91,7 +91,7 @@ export const CnhOcrButton: React.FC<CnhOcrButtonProps> = ({ onOcrComplete, disab
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div ref={ref} className="flex items-center gap-2">
       <Input
         type="file"
         accept="image/*"
@@ -116,4 +116,6 @@ export const CnhOcrButton: React.FC<CnhOcrButtonProps> = ({ onOcrComplete, disab
       </Button>
     </div>
   );
-};
+});
+
+CnhOcrButton.displayName = "CnhOcrButton";

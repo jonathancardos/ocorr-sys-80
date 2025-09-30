@@ -2,15 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveChart } from "./InteractiveChart";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Activity, TrendingUp, BarChart3, Zap } from "lucide-react";
+import { Activity, TrendingUp, BarChart3, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, subDays, subMonths, subYears, startOfDay } from 'date-fns'; // Import date-fns utilities
 import { DoubleBlockerProgressChart } from './DoubleBlockerProgressChart'; // NEW: Import the new chart
 import { DriverRegistrationHeatmap } from './DriverRegistrationHeatmap'; // NEW: Import the new heatmap chart
 // REMOVIDO: import { DriverIndicacaoChart } from './DriverIndicacaoChart'; // NEW: Import DriverIndicacaoChart
-// REMOVIDO: import { OmnilinkStatusPieChart } from './OmnilinkStatusPieChart'; // NEW: Import OmnilinkStatusPieChart
+import { OmnilinkStatusPieChart } from './OmnilinkStatusPieChart'; // NEW: Import OmnilinkStatusPieChart
 import { getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // NEW: Import getDetailedOmnilinkStatus
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const ModernChartsSection = () => {
   // Fetch real data from Supabase
@@ -31,6 +32,8 @@ export const ModernChartsSection = () => {
       return data || [];
     },
   });
+
+  const [selectedPeriod, setSelectedPeriod] = useState<"day" | "month" | "year">("month"); // Default to month
 
   // Process incident data for charts
   const incidentChartData = incidents?.map(incident => ({
@@ -57,7 +60,31 @@ export const ModernChartsSection = () => {
     let vencido = 0;
     let unknownOmnilink = 0;
 
+    const now = new Date();
+    let dateFilter: Date;
+
+    switch (selectedPeriod) {
+      case "day":
+        dateFilter = subDays(now, 1);
+        break;
+      case "month":
+        dateFilter = subMonths(now, 1);
+        break;
+      case "year":
+        dateFilter = subYears(now, 1);
+        break;
+      default:
+        dateFilter = subMonths(now, 1); // Default to month
+    }
+
     drivers?.forEach(driver => {
+      const driverRegistrationDate = new Date(driver.created_at); // Assuming 'created_at' is the registration date
+
+      // Only consider drivers registered within the selected period
+      if (driverRegistrationDate < dateFilter) {
+        return;
+      }
+
       // Counts for Indication Status
       if (driver.status_indicacao === 'indicado') {
         indicados++;
@@ -94,7 +121,7 @@ export const ModernChartsSection = () => {
       omnilinkVencidoCount: vencido,
       omnilinkUnknownCount: unknownOmnilink,
     };
-  }, [drivers]);
+  }, [drivers, selectedPeriod]);
 
 
   // Generate mock data with dates for other charts
@@ -157,13 +184,7 @@ export const ModernChartsSection = () => {
           naoIndicados={naoIndicadosCount}
         /> */}
 
-        {/* REMOVIDO: NEW: Omnilink Status Pie Chart */}
-        {/* REMOVIDO: <OmnilinkStatusPieChart
-          emDia={omnilinkEmDiaCount}
-          prestVencer={omnilinkPrestVencerCount}
-          vencido={omnilinkVencidoCount}
-          unknown={omnilinkUnknownCount}
-        /> */}
+
       </div>
 
       {/* Secondary Charts - This section remains as is, or can be removed if no other charts are needed */}

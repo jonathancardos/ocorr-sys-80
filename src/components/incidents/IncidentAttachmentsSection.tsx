@@ -30,16 +30,16 @@ interface IncidentAttachmentsSectionProps {
 }
 
 export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({
-  boFiles,
-  sapScreenshots,
-  riskReports,
+  boFiles = [],
+  sapScreenshots = [],
+  riskReports = [],
   omnilinkPhoto,
   handleFileUpload,
   uploadingFiles,
   handleRemoveAttachment,
 }) => {
   console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', omnilinkPhoto);
-  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload); // This log is already there.
+  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload);
 
   // ADDING THIS NEW LOG TO BE SURE
   console.log('IncidentAttachmentsSection (inside component): Type of handleFileUpload prop:', typeof handleFileUpload);
@@ -138,6 +138,11 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             {uploadingFiles.boFiles && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
           {renderFileList(boFiles, "boFiles")}
+          {boFiles.length > 0 && boFiles[0].url && boFiles[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
+            <div className="mt-2">
+              <img src={boFiles[0].url} alt="Preview" className="max-h-40 rounded-md" onError={handleImageError} />
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -161,6 +166,11 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             {uploadingFiles.sapScreenshots && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
           {renderFileList(sapScreenshots, "sapScreenshots")}
+          {sapScreenshots.length > 0 && sapScreenshots[0].url && sapScreenshots[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
+            <div className="mt-2">
+              <img src={sapScreenshots[0].url} alt="Preview" className="max-h-40 rounded-md" onError={handleImageError} />
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">

@@ -13,9 +13,6 @@ import { toast } from 'sonner';
 import ParticlesBackground from '@/components/ParticlesBackground'; // Import the new component
 
 const backgroundImages = [
-  'https://images.unsplash.com/photo-1587385789092-070703cca005?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDBMHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  'https://images.unsplash.com/photo-1621996384072-119171111111?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDBMHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  'https://images.unsplash.com/photo-1556740738-b6a63e62c1d5?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDBMHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   './login-background.jpg',
 ];
 
