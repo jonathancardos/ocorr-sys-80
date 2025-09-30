@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils';
 import { DriverCnhOmnilinkStatsCard } from '@/components/drivers/DriverCnhOmnilinkStatsCard'; // NEW: Import the new stats card
 import { DriverReportGenerator } from '@/components/reports/DriverReportGenerator'; // NEW: Import DriverReportGenerator
+import { CnhOcrButton } from '@/components/drivers/CnhOcrButton'; // NEW: Import CnhOcrButton
 
 type Driver = Tables<'drivers'>;
 type DriverPendingApproval = Tables<'drivers_pending_approval'>;
@@ -764,6 +765,15 @@ const DriverManagement = () => {
     });
   };
 
+  // NEW: Handle OCR completion
+  const handleOcrComplete = (cnhNumber: string, cnhExpiry: string) => {
+    setFormData(prev => ({
+      ...prev,
+      cnh: cnhNumber,
+      cnh_expiry: cnhExpiry,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -1160,6 +1170,8 @@ const DriverManagement = () => {
                     />
                   </div>
                 </div>
+                {/* NEW: CNH OCR Button */}
+                <CnhOcrButton onOcrComplete={handleOcrComplete} disabled={isSubmitting} />
                 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefone</Label>

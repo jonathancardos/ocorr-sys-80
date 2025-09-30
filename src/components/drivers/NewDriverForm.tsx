@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +13,7 @@ import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import from new utility
+import { CnhOcrButton } from './CnhOcrButton'; // NEW: Import CnhOcrButton
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
@@ -78,6 +81,15 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
     if (id === 'status_indicacao' && value !== 'nao_indicado') {
       setFormData(prev => ({ ...prev, reason_nao_indicacao: null }));
     }
+  };
+
+  // NEW: Handle OCR completion
+  const handleOcrComplete = (cnhNumber: string, cnhExpiry: string) => {
+    setFormData(prev => ({
+      ...prev,
+      cnh: cnhNumber,
+      cnh_expiry: cnhExpiry,
+    }));
   };
 
   const createDriverMutation = useMutation({
@@ -175,6 +187,8 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose 
           />
         </div>
       </div>
+      {/* NEW: CNH OCR Button */}
+      <CnhOcrButton onOcrComplete={handleOcrComplete} disabled={isSubmitting} />
       
       <div className="space-y-2">
         <Label htmlFor="phone">Telefone</Label>
