@@ -855,8 +855,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <Progress value={completion} className="w-20 h-2" />
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
-                        </div>
-                    </AccordionTrigger>
+                        </div></AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
                     </AccordionContent>
