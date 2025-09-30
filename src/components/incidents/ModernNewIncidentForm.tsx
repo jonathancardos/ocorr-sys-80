@@ -414,7 +414,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
+  }, [formData.incidentNumber]); // Dependency on formData.incidentNumber
 
   const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
@@ -856,7 +856,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </AccordionTrigger>
+                    </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
                     </AccordionContent>
