@@ -428,9 +428,14 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       const success = await deleteFile(pathInStorage);
       if (success) {
         setFormData(prev => {
-          const newAttachments = Array.isArray(prev[field])
-            ? (prev[field] as {name: string, url: string}[]).filter((_, i) => i !== index)
-            : null;
+          let newAttachments: typeof prev['boFiles'] | typeof prev['omnilinkPhoto'];
+
+          if (field === 'omnilinkPhoto') {
+            newAttachments = null; // Single file, set to null
+          } else {
+            // For array fields, filter the array
+            newAttachments = (prev[field] as {name: string, url: string}[]).filter((_, i) => i !== index);
+          }
           return { ...prev, [field]: newAttachments };
         });
         toast.success("Anexo removido", { description: `${attachmentToRemove.name} foi removido.` });
