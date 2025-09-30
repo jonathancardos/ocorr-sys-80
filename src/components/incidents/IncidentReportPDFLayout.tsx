@@ -50,7 +50,7 @@ const fieldLabels: { [key: string]: string } = {
   prolongedStopJustification: "Justificativa",
 
   followedInstructions: "Seguiu instruções?", reportedAnomalies: "Comunicou anormalidades?", contradictions: "Há contradições?",
-  keyToThird: "Entregou chave a terceiros?", doorsOpen: "Deixou portas abertas ou vidros abaixados?", leftVehicleTime: "Afastou-se por mais de 5 min?",
+  keyToThird: "Entregou chave a terceiros não autorizados?", doorsOpen: "Deixou portas abertas ou vidros abaixados?", leftVehicleTime: "Afastou-se por mais de 5 min?",
   vehicleLocked: "Veículo trancado?", driverNearVehicle: "Motorista próximo?", authorizedParking: "Estacionado em local autorizado?",
   vehicleRunning: "Veículo ligado sem vigilância?", stoppedInSafePlace: "Parou em local seguro?", activatedPanicButton: "Acionou botão de pânico?",
   driverScore: "Pontuação Total", riskLevel: "Nível de Risco",
@@ -80,16 +80,15 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
   const isExecutiveSummary = pdfConfig.templateName === "Resumo Executivo";
 
   const [loadedImagesCount, setLoadedImagesCount] = React.useState(0);
+  const [erroredImagesCount, setErroredImagesCount] = React.useState(0);
   const totalImagesToLoad = React.useRef(0);
 
   React.useEffect(() => {
-    // Ensure all attachment props are arrays before using them
     const safeBoAttachments = Array.isArray(boAttachments) ? boAttachments : [];
     const safeSapScreenshotAttachments = Array.isArray(sapScreenshotAttachments) ? sapScreenshotAttachments : [];
     const safeRiskReportAttachments = Array.isArray(riskReportAttachments) ? riskReportAttachments : [];
     const safeOmnilinkPhotoAttachment = Array.isArray(omnilinkPhotoAttachment) ? omnilinkPhotoAttachment : [];
 
-    // Calculate total images to load once on mount or if attachments change
     const allAttachments = [
       ...safeBoAttachments,
       ...safeSapScreenshotAttachments,
@@ -97,22 +96,30 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
       ...safeOmnilinkPhotoAttachment,
     ];
     totalImagesToLoad.current = allAttachments.filter(att => att.url).length;
+    setLoadedImagesCount(0); // Reset counts on new render
+    setErroredImagesCount(0);
 
-    // If there are no images, signal completion immediately
     if (totalImagesToLoad.current === 0 && onRenderComplete) {
       onRenderComplete();
     }
   }, [boAttachments, sapScreenshotAttachments, riskReportAttachments, omnilinkPhotoAttachment, onRenderComplete]);
 
   React.useEffect(() => {
-    // Signal completion only when all images are loaded (if there are any)
-    if (totalImagesToLoad.current > 0 && loadedImagesCount === totalImagesToLoad.current && onRenderComplete) {
+    if (totalImagesToLoad.current > 0 && (loadedImagesCount + erroredImagesCount) === totalImagesToLoad.current && onRenderComplete) {
       onRenderComplete();
     }
-  }, [loadedImagesCount, totalImagesToLoad.current, onRenderComplete]);
+  }, [loadedImagesCount, erroredImagesCount, totalImagesToLoad.current, onRenderComplete]);
 
   const handleImageLoad = () => {
     setLoadedImagesCount(prev => prev + 1);
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error("Failed to load image:", e.currentTarget.src);
+    e.currentTarget.src = '/placeholder.svg'; // Fallback to a generic placeholder image
+    e.currentTarget.alt = 'Imagem não carregada';
+    e.currentTarget.classList.add('bg-gray-200', 'p-2'); // Add some styling for placeholder
+    setErroredImagesCount(prev => prev + 1);
   };
 
   const renderField = (label: string, value: any, className?: string) => {
@@ -212,7 +219,13 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
               isExecutiveSummary ? "border-gray-200 bg-gray-100" : "border-gray-200 bg-gray-50"
             )}>
               <p className={cn("text-xs font-semibold mb-2", isExecutiveSummary ? "text-gray-700" : "text-gray-800")}>{attachment.name}</p>
-              <img src={attachment.url} alt={attachment.name} className="max-w-full h-auto rounded-sm object-contain" onLoad={handleImageLoad} />
+              <img 
+                src={attachment.url} 
+                alt={attachment.name} 
+                className="max-w-full h-auto rounded-sm object-contain" 
+                onLoad={handleImageLoad} 
+                onError={handleImageError} // Add onError handler
+              />
             </div>
           ))}
         </div>
@@ -267,8 +280,8 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
                   {isFieldVisible('identification', 'establishmentName') && renderField("Nome do Estabelecimento", formData.establishmentName)}
                   {isFieldVisible('identification', 'establishmentAddress') && renderField("Endereço do Estabelecimento", formData.establishmentAddress)}
                   {isFieldVisible('identification', 'establishmentCircumstances') && renderField("Circunstâncias no Estabelecimento", formData.establishmentCircumstances, "col-span-full")}
-                  {isFieldVisible('identification', 'hasDock') && renderField("Existe doca no estabelecimento?", formData.hasDock)}
-                  {isFieldVisible('identification', 'hasParking') && renderField("Tem estacionamento disponível?", formData.hasParking)}
+                  {isFieldVisible('identification', 'hasDock') && renderField("Existe doca?", formData.hasDock)}
+                  {isFieldVisible('identification', 'hasParking') && renderField("Tem estacionamento?", formData.hasParking)}
                 </>
               )}
 
