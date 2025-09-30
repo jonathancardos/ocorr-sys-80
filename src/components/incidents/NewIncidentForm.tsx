@@ -753,7 +753,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             sapScreenshots={formData.sapScreenshots}
             riskReports={formData.riskReports}
             omnilinkPhoto={formData.omnilinkPhoto}
-            handleFileUpload={handleFileUpload} // Pass the correct function directly
+            handleFileUpload={handleFileUpload} {/* Corrected: Pass the handleFileUpload directly */}
             uploadingFiles={uploadingFiles} // Pass uploading state
             handleRemoveAttachment={handleRemoveAttachment} // Pass remove function
           />
