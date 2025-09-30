@@ -826,7 +826,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       </div>
 
       <div className="flex-1 bg-gradient-to-br from-background to-muted/20 p-4 sm:p-8">
-        <div className="mx-auto w-full space-y-8" id="incident-form">
+        <div className="w-full space-y-8" id="incident-form"> {/* Removido mx-auto e max-w-7xl */}
           {isMobile ? (
             // Mobile Accordion View
             <Accordion type="single" collapsible className="w-full space-y-4">
