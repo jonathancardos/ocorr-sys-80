@@ -379,16 +379,15 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     });
   };
 
-  // REMOVED useCallback from handleFileUpload
-  const handleFileUpload = async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
+  const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
-      console.log('NewIncidentForm: handleFileUpload - Cleared/No files for', field);
+      console.log('NewIncidentForm: handleFileUpload - Cleared/No files for', field); // ADDED LOG
       return;
     }
 
     setUploadingFiles(prev => ({ ...prev, [field]: true }));
-    const incidentNum = formData.incidentNumber || 'temp';
+    const incidentNum = formData.incidentNumber || 'temp'; // Use temp if incident number not yet generated
     const pathPrefix = `incidents/${incidentNum}/${field}/`;
 
     try {
@@ -396,7 +395,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         const file = files as File;
         const url = await uploadFile(file, `${pathPrefix}${file.name}`);
         setFormData(prev => ({ ...prev, [field]: { name: file.name, url } }));
-        console.log('NewIncidentForm: handleFileUpload - omnilinkPhoto updated in state:', { name: file.name, url });
+        console.log('NewIncidentForm: handleFileUpload - omnilinkPhoto updated in state:', { name: file.name, url }); // ADDED LOG
         toast.success("Upload concluído", { description: `Foto Omnilink carregada.` });
       } else {
         const fileList = files as FileList;
@@ -405,8 +404,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           name: file.name,
           url: urls[index]
         }));
-        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] }));
-        console.log('NewIncidentForm: handleFileUpload - Multiple files updated in state for', field, newAttachments);
+        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] })); // Append new files
+        console.log('NewIncidentForm: handleFileUpload - Multiple files updated in state for', field, newAttachments); // ADDED LOG
         toast.success("Upload concluído", { description: `${urls.length} arquivo(s) carregado(s).` });
       }
     } catch (error: any) {
@@ -415,7 +414,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }; // Removed useCallback and its dependency array
+  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
 
   const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
@@ -489,8 +488,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         omnilinkScoreRegistrationDate: null, // NEW
         omnilinkScoreExpiryDate: null, // NEW
         omnilinkScoreStatus: null, // NEW
-        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null }), // Recalculate score
-        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null })), // Recalculate risk
+        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', omnilinkScoreRegistrationDate: null }), // Recalculate score
+        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', omnilinkScoreRegistrationDate: null })), // Recalculate risk
       }));
     }
   };
@@ -748,14 +747,14 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           />
         );
       case "attachments":
-        console.log('NewIncidentForm: Before passing handleFileUpload to IncidentAttachmentsSection. Type:', typeof handleFileUpload); // ADDED LOG
+        console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload); // ADDED LOG
         return (
           <IncidentAttachmentsSection
             boFiles={formData.boFiles}
             sapScreenshots={formData.sapScreenshots}
             riskReports={formData.riskReports}
             omnilinkPhoto={formData.omnilinkPhoto}
-            handleFileUpload={handleFileUpload} {/* Corrected: Pass the handleFileUpload directly */}
+            handleFileUpload={handleFileUpload} 
             uploadingFiles={uploadingFiles} // Pass uploading state
             handleRemoveAttachment={handleRemoveAttachment} // Pass remove function
           />
@@ -857,8 +856,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </Grid.Column>
-                    </AccordionTrigger>
+                      </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
                     </AccordionContent>
