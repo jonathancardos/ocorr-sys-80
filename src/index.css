@@ -1,0 +1,497 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Karne & Keijo Corporate Design System - Modernizado */
+
+@layer base {
+  :root {
+    /* Paleta de Cores Corporativa Modernizada */
+    --background: 220 20% 98%; /* Off-white para fundo claro */
+    --foreground: 220 25% 10%; /* Texto escuro para fundo claro */
+
+    --card: 0 0% 100%; /* Branco sólido para cards no modo claro */
+    --card-foreground: 220 25% 10%; /* Texto escuro para cards */
+
+    --popover: 0 0% 100%; /* Branco sólido para popovers/menus no modo claro */
+    --popover-foreground: 220 25% 10%; /* Texto escuro para popovers */
+
+    /* Azul Corporativo Moderno - Mais vibrante */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 217 91% 70%;
+    --primary-dark: 217 91% 50%;
+
+    /* Cinza Corporativo Moderno - Mais suave */
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 220 25% 20%;
+
+    --muted: 220 20% 90%; /* Cinza claro para elementos muted */
+    --muted-foreground: 220 15% 40%; /* Cinza médio para texto muted */
+
+    /* Destaque Moderno - Teal mais vibrante */
+    --accent: 192 85% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 192 85% 60%;
+
+    /* Cores de Status Modernizadas */
+    --success: 142 72% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 72% 55%; /* NEW */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 92% 60%; /* NEW */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 84% 70%; /* NEW */
+
+    /* Cores de Nível de Risco Modernizadas - Mais distintas */
+    --risk-low: 142 72% 45%;
+    --risk-moderate: 38 92% 50%;
+    --risk-grave: 27 96% 55%;
+    --risk-critical: 0 84% 60%;
+
+    --border: 220 10% 85%; /* Borda clara */
+    --input: 0 0% 100%; /* Fundo branco para input */
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gradientes Modernos */
+    --gradient-corporate: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 20%, 98%)); /* Gradiente claro para cards */
+    --gradient-header: linear-gradient(90deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%));
+
+    /* Sombras Modernas - Mais suaves e difusas */
+    --shadow-card: 0 4px 20px -6px hsl(220, 25%, 10%, 0.08);
+    --shadow-elevated: 0 8px 30px -8px hsl(220, 25%, 10%, 0.12);
+    --shadow-corporate: 0 10px 40px -10px hsl(217, 91%, 60%, 0.2);
+
+  /* Animações Modernas */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease-out;
+  --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Gradientes Radiais para Efeitos Modernos */
+  --gradient-radial: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  --gradient-glow: radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 50%);
+  }
+
+  .dark {
+    /* Modo Escuro Moderno - Cores mais claras e menos intensas */
+    --background: 220 25% 5%; /* Quase preto */
+    --foreground: 220 15% 95%; /* Texto claro */
+
+    --card: 0 0% 100% / 0.05; /* Base transparente para cards */
+    --card-foreground: 220 15% 95%;
+
+    --popover: 0 0% 100% / 0.05; /* Base transparente para popovers/menus */
+    --popover-foreground: 220 15% 95%;
+
+    /* Azul Corporativo no Escuro - Mais vibrante */
+    --primary: 217 91% 65%;
+    --primary-foreground: 220 25% 15%; /* Ajustado para combinar com o novo background */
+    --primary-light: 217 91% 75%;
+    --primary-dark: 217 91% 55%;
+
+    /* Cinza Corporativo no Escuro - Mais claro */
+    --secondary: 220 25% 25%; /* Aumentado de 20% para 25% */
+    --secondary-foreground: 220 15% 85%; /* Ajustado para ser mais claro */
+
+    --muted: 220 10% 20%; /* Mais escuro para contraste */
+    --muted-foreground: 220 15% 70%; /* Mais claro para contraste */
+
+    /* Destaque no Escuro - Teal mais brilhante */
+    --accent: 192 85% 55%;
+    --accent-foreground: 220 25% 15%; /* Ajustado para combinar com o novo background */
+
+    /* Cores de Status no Escuro - Mais vibrantes */
+    --success: 142 72% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 72% 55%; /* NEW */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 92% 60%; /* NEW */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 84% 70%; /* NEW */
+
+    /* Cores de Nível de Risco no Escuro - Mais intensas */
+    --risk-low: 142 72% 45%;
+    --risk-moderate: 38 92% 50%;
+    --risk-grave: 27 96% 55%;
+    --risk-critical: 0 84% 60%;
+
+    --border: 220 10% 30%; /* Borda mais clara para contraste */
+    --input: 220 10% 30%; /* Input mais claro para contraste */
+    --ring: 217 91% 65%;
+
+    /* Gradientes no Escuro - Ajustados para cores mais claras */
+    --gradient-corporate: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(192, 85%, 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100% / 0.05), hsl(220, 25%, 23% / 0.03)); /* Mais transparente */
+    --gradient-header: linear-gradient(90deg, hsl(217, 91%, 60%), hsl(192, 85%, 50%)); /* Ajustado para ser mais vibrante */
+
+    /* Sombras no Escuro - Mais sutis */
+    --shadow-card: 0 4px 20px -6px hsl(220, 25%, 15%, 0.15);
+    --shadow-elevated: 0 8px 30px -8px hsl(220, 25%, 15%, 0.2);
+    --shadow-corporate: 0 10px 40px -10px hsl(217, 91%, 65%, 0.25);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans; /* font-sans agora é Inter */
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Aprimoramentos de estilo corporativo moderno */
+  .corporate-gradient {
+    @apply bg-gradient-corporate;
+  }
+
+  .corporate-shadow {
+    @apply shadow-corporate;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-card;
+  }
+
+  /* Transições suaves modernas */
+  button, input, select, textarea, a {
+    transition: var(--transition-smooth);
+  }
+
+  /* Estados de foco aprimorados modernos */
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Scrollbar personalizado moderno */
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none; /* Oculta a barra de rolagem para navegadores Webkit */
+  }
+
+  .custom-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /* Melhorias de tipografia moderna */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .bg-risk-low {
+    background-color: hsl(var(--risk-low));
+  }
+  
+  .bg-risk-moderate {
+    background-color: hsl(var(--risk-moderate));
+  }
+  
+  .bg-risk-grave {
+    background-color: hsl(var(--risk-grave));
+  }
+  
+  .bg-risk-critical {
+    background-color: hsl(var(--risk-critical));
+  }
+  
+  .text-risk-low {
+    color: hsl(var(--risk-low));
+  }
+  
+  .text-risk-moderate {
+    color: hsl(var(--risk-moderate));
+  }
+  
+  .text-risk-grave {
+    color: hsl(var(--risk-grave));
+  }
+  
+  .text-risk-critical {
+    color: hsl(var(--risk-critical));
+  }
+  
+  .border-risk-low {
+    border-color: hsl(var(--risk-low));
+  }
+  
+.border-risk-moderate {
+    border-color: hsl(var(--risk-moderate));
+  }
+  
+  .border-risk-grave {
+    border-color: hsl(var(--risk-grave));
+  }
+  
+  .border-risk-critical {
+    border-color: hsl(var(--risk-critical));
+  }
+
+  /* Novos componentes modernos */
+  .glass-effect {
+    @apply bg-white/5 backdrop-blur-md border border-white/10; /* Diminuído a transparência */
+  }
+
+  .modern-card {
+    @apply rounded-xl border bg-card/20 backdrop-blur-md shadow-card hover:shadow-elevated transition-shadow; /* Aplicado glass effect */
+  }
+
+  .modern-button {
+    @apply rounded-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Novos efeitos visuais futuristas */
+  .futuristic-glow {
+    @apply relative before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-r before:from-primary/20 before:via-accent/20 before:to-primary/20 before:blur-xl before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500;
+  }
+
+  .holographic-border {
+    @apply relative before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-r before:from-transparent before:via-primary/50 before:to-transparent before:p-[1px] before:animate-pulse;
+  }
+
+  .data-card {
+    @apply bg-gradient-to-br from-card/20 to-card/10 backdrop-blur-xl border border-border/50 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10; /* Mais transparente */
+  }
+
+  /* Animações CSS personalizadas */
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.1); }
+    50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.3); }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-gradient {
+    background: linear-gradient(-45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)), hsl(var(--accent)));
+    background-size: 400% 400%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animate-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  /* NEW: Animations for placeholder particles */
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+
+  @keyframes pulse-fast {
+    0%, 100% { transform: scale(0.9); opacity: 0.4; }
+    50% { transform: scale(1.05); opacity: 0.6; }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-fast {
+    animation: pulse-fast 4s ease-in-out infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  /* ====== Estilo Geral - Novo Card ====== */
+  .dashboard-card-new {
+    background: hsl(var(--background)); /* Usar variável de fundo */
+    color: hsl(var(--foreground)); /* Usar variável de foreground */
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 0 25px hsl(var(--accent) / 0.15), inset 0 0 10px hsl(var(--accent) / 0.05);
+    /* REMOVIDO: font-family: 'Inter', sans-serif; */ /* Agora herda de body (Inter) */
+    transition: var(--transition-smooth);
+    position: relative; /* Added for glow positioning */
+    overflow: hidden; /* Added to contain glow */
+  }
+  .dashboard-card-new:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 35px hsl(var(--accent) / 0.25), inset 0 0 15px hsl(var(--accent) / 0.1);
+  }
+
+  /* ====== Título - Novo Card ====== */
+  .dashboard-title-new {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: hsl(var(--foreground)); /* Changed to foreground for better contrast */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ====== Gráfico Circular - Novo Card ====== */
+  .progress-container-new {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 25px auto;
+  }
+  .progress-ring-new {
+    transform: rotate(-90deg);
+  }
+  .progress-ring__circle-new {
+    fill: transparent;
+    stroke-width: 8; /* Reduced stroke width for a sleeker look */
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease-in-out;
+  }
+  .progress-ring__circle-bg-new {
+    stroke: hsl(var(--muted)); /* Usar variável de muted */
+  }
+  .progress-ring__circle-glow-new {
+    stroke-width: 12; /* Slightly wider than foreground for a subtle glow */
+    filter: url(#soft-glow); /* Apply the refined glow filter */
+    opacity: 0.6; /* Subtle opacity for the glow */
+  }
+  .progress-ring__circle-fg-new {
+    stroke: url(#gradient-new);
+    /* Removed direct drop-shadow, glow is handled by separate circle */
+  }
+  .progress-text-new {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-weight: bold;
+    color: hsl(var(--foreground)); /* Changed to foreground for better contrast */
+    text-shadow: 0 0 4px hsl(var(--primary) / 0.2); /* Subtle internal shadow */
+  }
+
+  /* ====== Status Detalhado - Novo Card ====== */
+  .status-list-new {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+    font-size: 0.95rem;
+    flex-wrap: wrap; /* Adicionado para responsividade */
+    gap: 10px; /* Espaçamento entre itens */
+  }
+  .status-item-new {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: hsl(var(--foreground) / 0.04); /* Usar variável de foreground com transparência */
+    box-shadow: inset 0 0 8px hsl(var(--accent) / 0.1); /* Usar variável de accent */
+  }
+
+  /* ====== Cards de Prioridade - Novo Card ====== */
+  .priority-cards-new {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 12px;
+    flex-wrap: wrap; /* Adicionado para responsividade */
+  }
+  .priority-card-new {
+    flex: 1;
+    background: linear-gradient(145deg, hsl(var(--card)) / 0.05, hsl(var(--card)) / 0.03); /* Usar variáveis de card com transparência */
+    border-radius: 18px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 0 15px hsl(var(--accent) / 0.08); /* Usar variável de accent */
+    transition: 0.3s ease;
+    min-width: 120px; /* Garante que não fiquem muito pequenos em telas pequenas */
+  }
+  .priority-card-new:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.2); /* Usar variável de accent */
+  }
+  .priority-card-new h3 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+    color: hsl(var(--foreground)); /* Usar variável de foreground */
+  }
+  .priority-card-new span {
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+  .priority-card-new.p1 span {
+    color: hsl(var(--destructive)); /* Usar variável de destructive */
+    text-shadow: 0 0 10px hsl(var(--destructive) / 0.7);
+  }
+  .priority-card-new.p2 span {
+    color: hsl(var(--warning)); /* Usar variável de warning */
+    text-shadow: 0 0 10px hsl(var(--warning) / 0.7);
+  }
+  .priority-card-new.p3 span {
+    color: hsl(var(--primary)); /* Usar variável de primary */
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.7);
+  }
+
+  /* Custom styles for Recharts elements */
+  .recharts-cartesian-axis-tick-value {
+    font-family: 'Inter', sans-serif !important; /* ALTERADO: Agora usa Inter */
+    fill: #ddd !important; /* Soft white for axis labels */
+  }
+
+  .recharts-legend-item-text {
+    font-family: 'Inter', sans-serif !important; /* ALTERADO: Agora usa Inter */
+    fill: #fff !important; /* White for legend text */
+  }
+
+  .recharts-tooltip-label {
+    font-family: 'Inter', sans-serif !important; /* ALTERADO: Agora usa Inter */
+    color: #fff !important;
+  }
+
+  .recharts-tooltip-item-list {
+    font-family: 'Inter', sans-serif !important; /* ALTERADO: Agora usa Inter */
+    color: #ddd !important;
+  }
+
+  /* Responsividade para telas menores que 600px (Tailwind sm breakpoint é 640px) */
+  @media (max-width: 639px) {
+    .status-list-new, .priority-cards-new {
+      flex-direction: column;
+      align-items: center;
+    }
+    .status-item-new, .priority-card-new {
+      width: 100%; /* Ocupa a largura total em mobile */
+    }
+  }
+}
