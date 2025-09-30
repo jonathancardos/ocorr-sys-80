@@ -38,7 +38,10 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   handleRemoveAttachment,
 }) => {
   console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', omnilinkPhoto);
-  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload); // ADDED LOG
+  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload); // This log is already there.
+
+  // ADDING THIS NEW LOG TO BE SURE
+  console.log('IncidentAttachmentsSection (inside component): Type of handleFileUpload prop:', typeof handleFileUpload);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error("Failed to load image in preview:", e.currentTarget.src);
