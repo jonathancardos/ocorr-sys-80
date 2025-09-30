@@ -28,7 +28,7 @@ interface IncidentAttachmentsSectionProps {
   handleRemoveAttachment: (field: keyof IncidentAttachmentsFormData, index: number) => void;
 }
 
-export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({ // Removed React.memo
+export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({
   boFiles,
   sapScreenshots,
   riskReports,
@@ -178,4 +178,4 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
       </div>
     </div>
   );
-});
+};
