@@ -414,7 +414,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [formData.incidentNumber]); // Dependency on formData.incidentNumber
+  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
 
   const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
