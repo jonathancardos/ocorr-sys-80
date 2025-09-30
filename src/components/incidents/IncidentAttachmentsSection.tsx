@@ -1,19 +1,28 @@
+"use client";
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Paperclip, Upload, Loader2, X, FileText, Image } from "lucide-react"; // Adicionado Image e FileText para ícones
 
-interface AttachmentItem {
+export interface AttachmentItem {
   name: string;
   url: string;
 }
 
+export interface IncidentAttachmentsFormData {
+  boFiles: AttachmentItem[];
+  sapScreenshots: AttachmentItem[];
+  riskReports: AttachmentItem[];
+  omnilinkPhoto: AttachmentItem | null;
+}
+
 interface IncidentAttachmentsSectionProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
+  formData: IncidentAttachmentsFormData; // Use specific type
+  handleInputChange: (field: keyof IncidentAttachmentsFormData, value: FileList | File | null) => void; // More specific type for handleInputChange
   uploadingFiles: { [key: string]: boolean };
-  handleRemoveAttachment: (field: string, index: number) => void; // Nova prop para remover anexo
+  handleRemoveAttachment: (field: keyof IncidentAttachmentsFormData, index: number) => void;
 }
 
 export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({
@@ -22,7 +31,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   uploadingFiles,
   handleRemoveAttachment,
 }) => {
-  const renderAttachmentItem = (file: AttachmentItem, fieldName: string, index: number) => {
+  const renderAttachmentItem = (file: AttachmentItem, fieldName: keyof IncidentAttachmentsFormData, index: number) => {
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp)$/i);
     const isPdf = file.name.match(/\.pdf$/i);
 
@@ -51,7 +60,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     );
   };
 
-  const renderFileList = (files: AttachmentItem[], fieldName: string) => {
+  const renderFileList = (files: AttachmentItem[], fieldName: keyof IncidentAttachmentsFormData) => {
     if (!files || files.length === 0) return null;
     return (
       <div className="mt-2 space-y-2">
@@ -60,7 +69,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     );
   };
 
-  const renderSingleFile = (file: AttachmentItem | null, fieldName: string) => {
+  const renderSingleFile = (file: AttachmentItem | null, fieldName: keyof IncidentAttachmentsFormData) => {
     if (!file) return null;
     return (
       <div className="mt-2 space-y-2">
@@ -135,7 +144,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             <Input
               type="file"
               accept="image/*"
-              onChange={(e) => handleInputChange("omnilinkPhoto", e.target.files?.[0])}
+              onChange={(e) => handleInputChange("omnilinkPhoto", e.target.files?.[0] || null)}
               className="h-11"
               disabled={uploadingFiles.omnilinkPhoto}
             />

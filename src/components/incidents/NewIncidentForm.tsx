@@ -37,7 +37,7 @@ import { DriverEvaluationSection } from './DriverEvaluationSection';
 import { CargoEvaluationSection } from './CargoEvaluationSection';
 import { RiskMonitoringSection } from './RiskMonitoringSection';
 import { FinalReportSection } from './FinalReportSection';
-import { IncidentAttachmentsSection } from './IncidentAttachmentsSection';
+import { IncidentAttachmentsSection, IncidentAttachmentsFormData } from './IncidentAttachmentsSection'; // Import the new interface
 
 // Import the new PDF layout component
 import { IncidentReportPDFLayout } from './IncidentReportPDFLayout';
@@ -181,7 +181,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     omnilinkPhoto: null as { name: string, url: string } | null,
   });
 
-  const [uploadingFiles] = useState<{ [key: string]: boolean }>({
+  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({
     boFiles: false,
     sapScreenshots: false,
     riskReports: false,
@@ -377,7 +377,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     });
   };
 
-  const handleFileUpload = async (field: 'boFiles' | 'sapScreenshots' | 'riskReports' | 'omnilinkPhoto', files: FileList | File | null) => {
+  const handleFileUpload = async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
       return;
@@ -411,7 +411,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     }
   };
 
-  const handleRemoveAttachment = async (field: 'boFiles' | 'sapScreenshots' | 'riskReports' | 'omnilinkPhoto', index: number) => {
+  const handleRemoveAttachment = async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as {name: string, url: string}[])[index] : formData[field] as {name: string, url: string} | null;
 
     if (!attachmentToRemove || !attachmentToRemove.url) {
@@ -744,8 +744,13 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       case "attachments":
         return (
           <IncidentAttachmentsSection
-            formData={formData}
-            handleInputChange={(field, value) => handleFileUpload(field as any, value)}
+            formData={{ // Explicitly create object matching IncidentAttachmentsFormData
+              boFiles: formData.boFiles,
+              sapScreenshots: formData.sapScreenshots,
+              riskReports: formData.riskReports,
+              omnilinkPhoto: formData.omnilinkPhoto,
+            }}
+            handleInputChange={handleFileUpload} // Pass the correct function directly
             uploadingFiles={uploadingFiles} // Pass uploading state
             handleRemoveAttachment={handleRemoveAttachment} // Pass remove function
           />
