@@ -188,6 +188,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     omnilinkPhoto: false,
   });
 
+  console.log('NewIncidentForm: Re-rendering. Current formData.omnilinkPhoto:', formData.omnilinkPhoto); // ADDED LOG
+
   const sectionFields = {
     identification: [
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
@@ -380,6 +382,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const handleFileUpload = async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
+      console.log('NewIncidentForm: handleFileUpload - Cleared/No files for', field); // ADDED LOG
       return;
     }
 
@@ -392,6 +395,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         const file = files as File;
         const url = await uploadFile(file, `${pathPrefix}${file.name}`);
         setFormData(prev => ({ ...prev, [field]: { name: file.name, url } }));
+        console.log('NewIncidentForm: handleFileUpload - omnilinkPhoto updated in state:', { name: file.name, url }); // ADDED LOG
         toast.success("Upload concluído", { description: `Foto Omnilink carregada.` });
       } else {
         const fileList = files as FileList;
@@ -401,6 +405,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           url: urls[index]
         }));
         setFormData(prev => ({ ...prev, [field]: [...(prev[field] as {name: string, url: string}[]), ...newAttachments] })); // Append new files
+        console.log('NewIncidentForm: handleFileUpload - Multiple files updated in state for', field, newAttachments); // ADDED LOG
         toast.success("Upload concluído", { description: `${urls.length} arquivo(s) carregado(s).` });
       }
     } catch (error: any) {
@@ -852,7 +857,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </div>
+                      </Button>
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}

@@ -31,6 +31,8 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   uploadingFiles,
   handleRemoveAttachment,
 }) => {
+  console.log('IncidentAttachmentsSection: Re-rendering. Prop formData.omnilinkPhoto:', formData.omnilinkPhoto); // ADDED LOG
+
   const renderAttachmentItem = (file: AttachmentItem, fieldName: keyof IncidentAttachmentsFormData, index: number) => {
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp)$/i);
     const isPdf = file.name.match(/\.pdf$/i);
