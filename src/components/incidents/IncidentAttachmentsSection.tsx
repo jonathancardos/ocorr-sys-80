@@ -19,19 +19,25 @@ export interface IncidentAttachmentsFormData {
 }
 
 interface IncidentAttachmentsSectionProps {
-  formData: IncidentAttachmentsFormData; // Use specific type
-  handleInputChange: (field: keyof IncidentAttachmentsFormData, value: FileList | File | null) => void; // More specific type for handleInputChange
+  boFiles: AttachmentItem[];
+  sapScreenshots: AttachmentItem[];
+  riskReports: AttachmentItem[];
+  omnilinkPhoto: AttachmentItem | null;
+  handleFileUpload: (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => void; // More specific type for handleInputChange
   uploadingFiles: { [key: string]: boolean };
   handleRemoveAttachment: (field: keyof IncidentAttachmentsFormData, index: number) => void;
 }
 
-export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({
-  formData,
-  handleInputChange,
+export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = React.memo(({
+  boFiles,
+  sapScreenshots,
+  riskReports,
+  omnilinkPhoto,
+  handleFileUpload,
   uploadingFiles,
   handleRemoveAttachment,
 }) => {
-  console.log('IncidentAttachmentsSection: Re-rendering. Prop formData.omnilinkPhoto:', formData.omnilinkPhoto); // ADDED LOG
+  console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', omnilinkPhoto); // ADDED LOG
 
   const renderAttachmentItem = (file: AttachmentItem, fieldName: keyof IncidentAttachmentsFormData, index: number) => {
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp)$/i);
@@ -100,13 +106,13 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               type="file"
               accept=".pdf,image/*"
               multiple
-              onChange={(e) => handleInputChange("boFiles", e.target.files)}
+              onChange={(e) => handleFileUpload("boFiles", e.target.files)}
               className="h-11"
               disabled={uploadingFiles.boFiles}
             />
             {uploadingFiles.boFiles && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
-          {renderFileList(formData.boFiles, "boFiles")}
+          {renderFileList(boFiles, "boFiles")}
         </div>
 
         <div className="space-y-3">
@@ -116,13 +122,13 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => handleInputChange("sapScreenshots", e.target.files)}
+              onChange={(e) => handleFileUpload("sapScreenshots", e.target.files)}
               className="h-11"
               disabled={uploadingFiles.sapScreenshots}
             />
             {uploadingFiles.sapScreenshots && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
-          {renderFileList(formData.sapScreenshots, "sapScreenshots")}
+          {renderFileList(sapScreenshots, "sapScreenshots")}
         </div>
 
         <div className="space-y-3">
@@ -132,13 +138,13 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               type="file"
               accept="image/*,application/pdf"
               multiple
-              onChange={(e) => handleInputChange("riskReports", e.target.files)}
+              onChange={(e) => handleFileUpload("riskReports", e.target.files)}
               className="h-11"
               disabled={uploadingFiles.riskReports}
             />
             {uploadingFiles.riskReports && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
-          {renderFileList(formData.riskReports, "riskReports")}
+          {renderFileList(riskReports, "riskReports")}
         </div>
 
         <div className="space-y-3">
@@ -147,15 +153,15 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             <Input
               type="file"
               accept="image/*"
-              onChange={(e) => handleInputChange("omnilinkPhoto", e.target.files?.[0] || null)}
+              onChange={(e) => handleFileUpload("omnilinkPhoto", e.target.files?.[0] || null)}
               className="h-11"
               disabled={uploadingFiles.omnilinkPhoto}
             />
             {uploadingFiles.omnilinkPhoto && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
-          {renderSingleFile(formData.omnilinkPhoto, "omnilinkPhoto")}
+          {renderSingleFile(omnilinkPhoto, "omnilinkPhoto")}
         </div>
       </div>
     </div>
   );
-};
+});

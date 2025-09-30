@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react"; // Added useCallback
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ import { DriverEvaluationSection } from './DriverEvaluationSection';
 import { CargoEvaluationSection } from './CargoEvaluationSection';
 import { RiskMonitoringSection } from './RiskMonitoringSection';
 import { FinalReportSection } from './FinalReportSection';
-import { IncidentAttachmentsSection, IncidentAttachmentsFormData } from './IncidentAttachmentsSection'; // Import the new interface
+import { IncidentAttachmentsSection, IncidentAttachmentsFormData, AttachmentItem } from './IncidentAttachmentsSection'; // Import the new interface and AttachmentItem
 
 // Import the new PDF layout component
 import { IncidentReportPDFLayout } from './IncidentReportPDFLayout';
@@ -175,10 +175,10 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     analystName: "",
     
     // Anexos (agora armazenarão URLs públicas)
-    boFiles: [] as { name: string, url: string }[],
-    sapScreenshots: [] as { name: string, url: string }[],
-    riskReports: [] as { name: string, url: string }[],
-    omnilinkPhoto: null as { name: string, url: string } | null,
+    boFiles: [] as AttachmentItem[],
+    sapScreenshots: [] as AttachmentItem[],
+    riskReports: [] as AttachmentItem[],
+    omnilinkPhoto: null as AttachmentItem | null,
   });
 
   const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({
@@ -379,7 +379,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     });
   };
 
-  const handleFileUpload = async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
+  const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
       console.log('NewIncidentForm: handleFileUpload - Cleared/No files for', field); // ADDED LOG
@@ -404,7 +404,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           name: file.name,
           url: urls[index]
         }));
-        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as {name: string, url: string}[]), ...newAttachments] })); // Append new files
+        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] })); // Append new files
         console.log('NewIncidentForm: handleFileUpload - Multiple files updated in state for', field, newAttachments); // ADDED LOG
         toast.success("Upload concluído", { description: `${urls.length} arquivo(s) carregado(s).` });
       }
@@ -414,10 +414,10 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  };
+  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
 
-  const handleRemoveAttachment = async (field: keyof IncidentAttachmentsFormData, index: number) => {
-    const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as {name: string, url: string}[])[index] : formData[field] as {name: string, url: string} | null;
+  const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
+    const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
 
     if (!attachmentToRemove || !attachmentToRemove.url) {
       toast.error("Erro", { description: "Anexo não encontrado para remoção." });
@@ -439,7 +439,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             newAttachments = null; // Single file, set to null
           } else {
             // For array fields, filter the array
-            newAttachments = (prev[field] as {name: string, url: string}[]).filter((_, i) => i !== index);
+            newAttachments = (prev[field] as AttachmentItem[]).filter((_, i) => i !== index);
           }
           return { ...prev, [field]: newAttachments };
         });
@@ -451,7 +451,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       console.error('Erro ao remover anexo:', error);
       toast.error("Erro", { description: error.message || `Falha ao remover anexo.` });
     }
-  };
+  }, [formData]); // Dependency on formData
 
   const handleDriverSelect = (driverId: string) => {
     const selectedDriver = drivers?.find(d => d.id === driverId);
@@ -749,13 +749,11 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       case "attachments":
         return (
           <IncidentAttachmentsSection
-            formData={{ // Explicitly create object matching IncidentAttachmentsFormData
-              boFiles: formData.boFiles,
-              sapScreenshots: formData.sapScreenshots,
-              riskReports: formData.riskReports,
-              omnilinkPhoto: formData.omnilinkPhoto,
-            }}
-            handleInputChange={handleFileUpload} // Pass the correct function directly
+            boFiles={formData.boFiles}
+            sapScreenshots={formData.sapScreenshots}
+            riskReports={formData.riskReports}
+            omnilinkPhoto={formData.omnilinkPhoto}
+            handleFileUpload={handleFileUpload} // Pass the correct function directly
             uploadingFiles={uploadingFiles} // Pass uploading state
             handleRemoveAttachment={handleRemoveAttachment} // Pass remove function
           />
@@ -857,7 +855,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
                             <span className="text-xs text-slate-400">{completion}%</span>
                           </div>
                         </div>
-                      </Button>
+                      </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-2">
                       {renderSectionContent(section.id)}
