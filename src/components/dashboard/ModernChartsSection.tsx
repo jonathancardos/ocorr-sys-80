@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 import { format, subDays, subMonths, subYears, startOfDay } from 'date-fns'; // Import date-fns utilities
 import { DoubleBlockerProgressChart } from './DoubleBlockerProgressChart'; // NEW: Import the new chart
 import { DriverRegistrationHeatmap } from './DriverRegistrationHeatmap'; // NEW: Import the new heatmap chart
-import { DriverIndicacaoChart } from './DriverIndicacaoChart'; // NEW: Import DriverIndicacaoChart
-import { OmnilinkStatusPieChart } from './OmnilinkStatusPieChart'; // NEW: Import OmnilinkStatusPieChart
+// REMOVIDO: import { DriverIndicacaoChart } from './DriverIndicacaoChart'; // NEW: Import DriverIndicacaoChart
+// REMOVIDO: import { OmnilinkStatusPieChart } from './OmnilinkStatusPieChart'; // NEW: Import OmnilinkStatusPieChart
 import { getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // NEW: Import getDetailedOmnilinkStatus
 import { useMemo } from "react";
 
@@ -150,20 +150,20 @@ export const ModernChartsSection = () => {
         {/* Driver Registration Heatmap */}
         <DriverRegistrationHeatmap />
 
-        {/* NEW: Driver Indication Status Chart */}
-        <DriverIndicacaoChart
+        {/* REMOVIDO: NEW: Driver Indication Status Chart */}
+        {/* REMOVIDO: <DriverIndicacaoChart
           indicados={indicadosCount}
           retificados={retificadosCount}
           naoIndicados={naoIndicadosCount}
-        />
+        /> */}
 
-        {/* NEW: Omnilink Status Pie Chart */}
-        <OmnilinkStatusPieChart
+        {/* REMOVIDO: NEW: Omnilink Status Pie Chart */}
+        {/* REMOVIDO: <OmnilinkStatusPieChart
           emDia={omnilinkEmDiaCount}
           prestVencer={omnilinkPrestVencerCount}
           vencido={omnilinkVencidoCount}
           unknown={omnilinkUnknownCount}
-        />
+        /> */}
       </div>
 
       {/* Secondary Charts - This section remains as is, or can be removed if no other charts are needed */}
