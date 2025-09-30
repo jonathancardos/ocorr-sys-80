@@ -60,8 +60,9 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     );
   };
 
-  const renderFileList = (files: AttachmentItem[], fieldName: keyof IncidentAttachmentsFormData) => {
-    if (!files || files.length === 0) return null;
+  const renderFileList = (files: AttachmentItem[] | null | undefined, fieldName: keyof IncidentAttachmentsFormData) => {
+    // Explicitly check if it's an array before calling .map or .length
+    if (!Array.isArray(files) || files.length === 0) return null;
     return (
       <div className="mt-2 space-y-2">
         {files.map((file, index) => renderAttachmentItem(file, fieldName, index))}
