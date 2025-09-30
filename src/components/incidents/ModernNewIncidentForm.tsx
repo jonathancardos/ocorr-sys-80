@@ -414,7 +414,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [formData.incidentNumber]); // Dependency on formData.incidentNumber
+  }, [formData.incidentNumber])); // Dependency on formData.incidentNumber
 
   const handleRemoveAttachment = useCallback(async (field: keyof IncidentAttachmentsFormData, index: number) => {
     const attachmentToRemove = Array.isArray(formData[field]) ? (formData[field] as AttachmentItem[])[index] : formData[field] as AttachmentItem | null;
@@ -488,8 +488,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         omnilinkScoreRegistrationDate: null, // NEW
         omnilinkScoreExpiryDate: null, // NEW
         omnilinkScoreStatus: null, // NEW
-        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', omnilinkScoreRegistrationDate: null }), // Recalculate score
-        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', omnilinkScoreRegistrationDate: null })), // Recalculate risk
+        driverScore: calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null }), // Recalculate score
+        riskLevel: getRiskLevel(calculateDriverScore({ ...prev, driverId: null, driverName: '', driverCpf: '', driverPhone: '', driverLicense: '', licenseExpiry: '', omnilinkScoreRegistrationDate: null })), // Recalculate risk
       }));
     }
   };
