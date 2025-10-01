@@ -1,8 +1,14 @@
-import { useState } from "react";
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Save, Download, AlertTriangle, Truck, Shield, MapPin, CheckCircle, Package, AlertCircleIcon, Paperclip, MoreVertical, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from 'sonner';
+import { IncidentAttachmentsFormData, AttachmentItem } from './IncidentAttachmentsSection';
+import { ArrowLeft, FileText, Save, Download, AlertTriangle, Truck, Shield, MapPin, CheckCircle, Package, AlertCircleIcon, Paperclip, MoreVertical, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -140,15 +146,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     riskReports: [] as { name: string, url: string }[],
     omnilinkPhoto: null as { name: string, url: string } | null,
   });
-
-  const [uploadingFiles] = useState<{ [key: string]: boolean }>({
-    boFiles: false,
-    sapScreenshots: false,
-    riskReports: false,
-    omnilinkPhoto: false,
-  });
-
-  const sectionFields = {
+const sectionFields = {
     identification: [
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
       'locationType',
@@ -192,6 +190,54 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({});
+
+  // Placeholder for file upload utility - replace with actual implementation
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    console.log(`Uploading single file: ${file.name} to ${path}`);
+    // Simulate upload delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return `http://example.com/uploads/${path}/${file.name}`;
+  };
+
+  // Placeholder for multiple file upload utility - replace with actual implementation
+  const uploadFiles = async (files: FileList, path: string): Promise<AttachmentItem[]> => {
+    const uploaded: AttachmentItem[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(`Uploading multiple file: ${file.name} to ${path}`);
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      uploaded.push({ name: file.name, url: `http://example.com/uploads/${path}/${file.name}` });
+    }
+    return uploaded;
+  };
+
+  const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
+    if (!files) return;
+
+    setUploadingFiles(prev => ({ ...prev, [field]: true }));
+
+    try {
+      const incidentNum = formData.incidentNumber || 'temp'; // Use incidentNumber for path
+      const path = `incidents/${incidentNum}/${field}`;
+
+      if (field === 'omnilinkPhoto' && files instanceof File) {
+        const url = await uploadFile(files, path);
+        setFormData(prev => ({ ...prev, [field]: { name: files.name, url } }));
+      } else if (files instanceof FileList) {
+        const newAttachments = await uploadFiles(files, path);
+        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] }));
+      }
+      toast.success("Arquivo(s) enviado(s) com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar arquivo(s):", error);
+      toast.error("Erro ao enviar arquivo(s)", { description: "Por favor, tente novamente." });
+    } finally {
+      setUploadingFiles(prev => ({ ...prev, [field]: false }));
+    }
+  }, [setFormData, setUploadingFiles, formData.incidentNumber, uploadFile, uploadFiles]);
 
   const handleSave = () => {
     if (!formData.incidentNumber || !formData.incidentDate || !formData.locationType) {
@@ -290,8 +336,12 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       case "attachments":
         return (
           <IncidentAttachmentsSection
+            handleFileUpload={handleFileUpload}
+
             formData={formData}
-            handleInputChange={(field, value) => handleInputChange(field as any, value)}
+            onFormDataChange={(updatedAttachments: Partial<typeof formData>) => {
+              return setFormData(prev => ({ ...prev, ...updatedAttachments }));
+            }}
             uploadingFiles={uploadingFiles}
             handleRemoveAttachment={() => {}}
           />
@@ -315,7 +365,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Modern Header with Gradient */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-slate-800 to-slate-700 border-b border-slate-600/50 backdrop-blur-xl">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-700 border-b border-slate-600/50 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6"> {/* Ajustado para h-16 e px-4 */}
           <div className="flex items-center gap-3">
             <Button
@@ -422,7 +472,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             <div className="space-y-6">
               {/* Enhanced Tab Navigation */}
               <div className="bg-card/20 rounded-2xl p-2 backdrop-blur-xl border border-border/50">
-                <div className="flex overflow-x-auto scrollbar-hide gap-2">
+                <div className="flex flex-wrap scrollbar-hide gap-2">
                   {sections.map((section) => {
                     const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
                     const IconComponent = section.icon;
@@ -456,12 +506,10 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
               {/* Content Area */}
               <Card className="bg-card/20 border-border/50 backdrop-blur-xl rounded-2xl overflow-hidden">
-                <CardContent className="p-8">
-                  <ScrollArea className="h-[calc(100vh-300px)]">
-                    <div className="pr-4">
-                      {renderSectionContent(activeTab)}
-                    </div>
-                  </ScrollArea>
+                <CardContent className="py-8 px-6">
+                  <div className="pr-4">
+                    {renderSectionContent(activeTab)}
+                  </div>
                 </CardContent>
               </Card>
             </div>

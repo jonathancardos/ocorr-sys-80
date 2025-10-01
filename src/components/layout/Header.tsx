@@ -34,7 +34,7 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-gradient-header shadow-card">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between">
         {/* Seção Esquerda: Gatilho do Menu Mobile + Logo/Título */}
         <div className="flex items-center space-x-3">
           {/* Gatilho do Menu Mobile (visível apenas em mobile) */}

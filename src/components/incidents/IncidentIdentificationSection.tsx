@@ -42,7 +42,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 placeholder="Ex: OC001"
                 value={isIncidentNumberLoading ? "Carregando..." : formData.incidentNumber}
                 onChange={(e) => handleInputChange("incidentNumber", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isIncidentNumberLoading}
               />
             </div>
@@ -56,7 +56,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 type="date"
                 value={formData.incidentDate}
                 onChange={(e) => handleInputChange("incidentDate", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -69,7 +69,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 type="time"
                 value={formData.incidentTime}
                 onChange={(e) => handleInputChange("incidentTime", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -102,7 +102,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Ex: Centro de Distribuição X"
                     value={formData.establishmentName}
                     onChange={(e) => handleInputChange("establishmentName", e.target.value)}
-                    className="h-11"
+                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3">
@@ -114,7 +114,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Ex: Rua das Flores, 123, Bairro, Cidade/UF"
                     value={formData.establishmentAddress}
                     onChange={(e) => handleInputChange("establishmentAddress", e.target.value)}
-                    className="h-11"
+                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">
@@ -126,7 +126,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Descreva o que aconteceu nas dependências do estabelecimento..."
                     value={formData.establishmentCircumstances}
                     onChange={(e) => handleInputChange("establishmentCircumstances", e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3">
@@ -178,7 +178,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Ex: BR-116, KM 250, próximo ao posto de gasolina 'X', sentido Sul."
                     value={formData.roadDetailedLocation}
                     onChange={(e) => handleInputChange("roadDetailedLocation", e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">
@@ -190,7 +190,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Descreva qualquer veículo ou pessoa suspeita observada..."
                     value={formData.roadSuspicions}
                     onChange={(e) => handleInputChange("roadSuspicions", e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3">
@@ -202,7 +202,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Ex: Trânsito intenso, fluxo normal, parado, etc."
                     value={formData.roadTrafficConditions}
                     onChange={(e) => handleInputChange("roadTrafficConditions", e.target.value)}
-                    className="h-11"
+                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3">
@@ -214,7 +214,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                     placeholder="Nomes e contatos de possíveis testemunhas..."
                     value={formData.roadWitnesses}
                     onChange={(e) => handleInputChange("roadWitnesses", e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </>
@@ -235,7 +235,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 placeholder="Ex: 123456789"
                 value={formData.boNumber}
                 onChange={(e) => handleInputChange("boNumber", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -248,7 +248,7 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 type="date"
                 value={formData.boDate}
                 onChange={(e) => handleInputChange("boDate", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -279,7 +279,20 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
                 placeholder="Nome completo"
                 value={formData.responsible}
                 onChange={(e) => handleInputChange("responsible", e.target.value)}
-                className="h-11"
+                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="space-y-3 md:col-span-2">
+              <Label htmlFor="policeReportObservations" className="text-sm font-medium">
+                Observações do Registro Policial
+              </Label>
+              <Textarea
+                id="policeReportObservations"
+                placeholder="Descreva quaisquer observações relevantes sobre o registro policial..."
+                value={formData.policeReportObservations}
+                onChange={(e) => handleInputChange("policeReportObservations", e.target.value)}
+                className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>

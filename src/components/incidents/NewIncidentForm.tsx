@@ -754,10 +754,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload, handleFileUpload);
         return (
           <IncidentAttachmentsSection
-            boFiles={formData.boFiles}
-            sapScreenshots={formData.sapScreenshots}
-            riskReports={formData.riskReports}
-            omnilinkPhoto={formData.omnilinkPhoto}
+            formData={formData}
             handleFileUpload={handleFileUpload}
             uploadingFiles={uploadingFiles}
             handleRemoveAttachment={handleRemoveAttachment}
