@@ -314,7 +314,7 @@ const DriverManagement = () => {
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         }
         if (typeof valA === 'number' && typeof valB === 'number') {
-          return sortDirection === 'asc' ? valA - valB : valB - a.value;
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
         }
         return 0;
       });
