@@ -1,82 +1,95 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
-import { toast } from 'sonner'; // Importar toast do sonner
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea'; // Import Textarea
-import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import from new utility
+import { Textarea } from '@/components/ui/textarea';
+import { calculateOmnilinkScoreStatus, calculateOmnilinkScoreExpiry, OmnilinkDetailedStatus, getDetailedOmnilinkStatus, formatDate } from '@/lib/driver-utils';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import InputMask from 'react-input-mask';
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
   onClose: () => void;
-  initialFormData?: { // NEW: Optional initial form data
+  initialFormData?: {
     cnh?: string;
     cnh_expiry?: string;
-    full_name?: string; // NEW: Adicionado full_name
+    full_name?: string;
   };
 }
 
+const formSchema = z.object({
+  full_name: z.string().min(1, { message: "Nome completo é obrigatório." }),
+  cpf: z.string().min(14, { message: "CPF é obrigatório e deve ter 14 dígitos (incluindo máscara)." }).max(14, { message: "CPF inválido." }),
+  cnh: z.string().nullable().optional(),
+  cnh_expiry: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  omnilink_score_registration_date: z.string().nullable().optional(),
+  omnilink_score_expiry_date: z.string().nullable().optional(),
+  omnilink_score_status: z.string().nullable().optional(),
+  status_indicacao: z.enum(['indicado', 'retificado', 'nao_indicado'], { message: "Status de indicação é obrigatório." }),
+  reason_nao_indicacao: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (data.status_indicacao === 'nao_indicado' && !data.reason_nao_indicacao) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Motivo de não indicação é obrigatório quando o status é 'Não Indicado'.",
+      path: ['reason_nao_indicacao'],
+    });
+  }
+});
+
+type DriverFormValues = z.infer<typeof formSchema>;
+
 const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose, initialFormData }) => {
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState<TablesInsert<'drivers'>>({
-    full_name: initialFormData?.full_name || '', // Initialize with OCR data
-    cpf: '',
-    cnh: initialFormData?.cnh || null, // Initialize with OCR data
-    cnh_expiry: initialFormData?.cnh_expiry || null, // Initialize with OCR data
-    phone: null,
-    type: null,
-    omnilink_score_registration_date: null,
-    omnilink_score_expiry_date: null,
-    omnilink_score_status: null,
-    status_indicacao: 'nao_indicado',
-    reason_nao_indicacao: null,
+  const form = useForm<DriverFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      full_name: initialFormData?.full_name || '',
+      cpf: '',
+      cnh: initialFormData?.cnh || null,
+      cnh_expiry: initialFormData?.cnh_expiry || null,
+      phone: null,
+      type: null,
+      omnilink_score_registration_date: null,
+      omnilink_score_expiry_date: null,
+      omnilink_score_status: null,
+      status_indicacao: 'nao_indicado',
+      reason_nao_indicacao: null,
+    },
   });
 
-  const [detailedOmnilinkStatus, setDetailedOmnilinkStatus] = useState<OmnilinkDetailedStatus | null>(null);
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = form;
+
+  const omnilinkRegDate = watch('omnilink_score_registration_date');
+  const statusIndicacao = watch('status_indicacao');
+
+  const detailedOmnilinkStatus = omnilinkRegDate ? getDetailedOmnilinkStatus(omnilinkRegDate) : null;
 
   useEffect(() => {
-    if (formData.omnilink_score_registration_date) {
-      setDetailedOmnilinkStatus(getDetailedOmnilinkStatus(formData.omnilink_score_registration_date));
+    if (omnilinkRegDate) {
+      const expiryDate = calculateOmnilinkScoreExpiry(omnilinkRegDate);
+      const statusForDb = calculateOmnilinkScoreStatus(omnilinkRegDate);
+      setValue('omnilink_score_expiry_date', expiryDate);
+      setValue('omnilink_score_status', statusForDb);
     } else {
-      setDetailedOmnilinkStatus(null);
+      setValue('omnilink_score_expiry_date', null);
+      setValue('omnilink_score_status', null);
     }
-  }, [formData.omnilink_score_registration_date]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value === '' ? null : value }));
-  };
-
-  const handleOmnilinkRegDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const regDate = e.target.value === '' ? null : e.target.value;
-    const expiryDate = calculateOmnilinkScoreExpiry(regDate);
-    const statusForDb = calculateOmnilinkScoreStatus(regDate);
-    const detailedStatus = getDetailedOmnilinkStatus(regDate);
-    setFormData(prev => ({
-      ...prev,
-      omnilink_score_registration_date: regDate,
-      omnilink_score_expiry_date: expiryDate,
-      omnilink_score_status: statusForDb,
-    }));
-    setDetailedOmnilinkStatus(detailedStatus);
-  };
-
-  const handleSelectChange = (id: keyof TablesInsert<'drivers'>, value: string) => {
-    setFormData(prev => ({ ...prev, [id]: value === '' ? null : value }));
-    if (id === 'status_indicacao' && value !== 'nao_indicado') {
-      setFormData(prev => ({ ...prev, reason_nao_indicacao: null }));
-    }
-  };
+  }, [omnilinkRegDate, setValue]);
 
   const createDriverMutation = useMutation({
     mutationFn: async (driverData: TablesInsert<'drivers'>) => {
@@ -91,7 +104,7 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       toast.success("Motorista cadastrado!", {
-        description: `${formData.full_name} foi adicionado com sucesso.`,
+        description: `${form.getValues('full_name')} foi adicionado com sucesso.`,
       });
       if (data) {
         onDriverCreated(data.id);
@@ -104,44 +117,48 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
         description: err.message || "Não foi possível cadastrar o motorista.",
       });
     },
-    onSettled: () => {
-      setIsSubmitting(false);
-    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    await createDriverMutation.mutateAsync(formData);
+  const onSubmit = async (data: DriverFormValues) => {
+    await createDriverMutation.mutateAsync(data as TablesInsert<'drivers'>);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-xl mx-auto p-2">
       <div className="space-y-2">
         <Label htmlFor="full_name">Nome Completo *</Label>
         <Input
           id="full_name"
-          value={formData.full_name || ''}
-          onChange={handleInputChange}
+          {...register('full_name')}
           required
         />
+        {errors.full_name && <p className="text-red-500 text-sm">{errors.full_name.message}</p>}
       </div>
       
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label htmlFor="cpf">CPF *</Label>
-        <Input
-          id="cpf"
-          value={formData.cpf || ''}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
+        <InputMask
+          mask="999.999.999-99"
+          value={watch('cpf')}
+          onChange={(e) => setValue('cpf', e.target.value, { shouldValidate: true })}
+        >
+          {(inputProps: any) => (
+            <Input
+              id="cpf"
+              {...inputProps}
+              {...register('cpf')}
+              required
+            />
+          )}
+        </InputMask>
+        {errors.cpf && <p className="text-red-500 text-sm">{errors.cpf.message}</p>}
+      </div> */}
 
       <div className="space-y-2">
         <Label htmlFor="type">Tipo</Label>
         <Select
-          value={formData.type || ''}
-          onValueChange={(value) => handleSelectChange('type', value)}
+          onValueChange={(value) => setValue('type', value, { shouldValidate: true })}
+          value={watch('type') || ''}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
@@ -151,6 +168,7 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
             <SelectItem value="agregado">Agregado</SelectItem>
           </SelectContent>
         </Select>
+        {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,9 +176,9 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
           <Label htmlFor="cnh">CNH</Label>
           <Input
             id="cnh"
-            value={formData.cnh || ''}
-            onChange={handleInputChange}
+            {...register('cnh')}
           />
+          {errors.cnh && <p className="text-red-500 text-sm">{errors.cnh.message}</p>}
         </div>
         
         <div className="space-y-2">
@@ -168,9 +186,9 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
           <Input
             id="cnh_expiry"
             type="date"
-            value={formData.cnh_expiry || ''}
-            onChange={handleInputChange}
+            {...register('cnh_expiry')}
           />
+          {errors.cnh_expiry && <p className="text-red-500 text-sm">{errors.cnh_expiry.message}</p>}
         </div>
       </div>
       
@@ -178,9 +196,9 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
         <Label htmlFor="phone">Telefone</Label>
         <Input
           id="phone"
-          value={formData.phone || ''}
-          onChange={handleInputChange}
+          {...register('phone')}
         />
+        {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -188,9 +206,9 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
         <Input
           id="omnilink_score_registration_date"
           type="date"
-          value={formData.omnilink_score_registration_date || ''}
-          onChange={handleOmnilinkRegDateChange}
+          {...register('omnilink_score_registration_date')}
         />
+        {errors.omnilink_score_registration_date && <p className="text-red-500 text-sm">{errors.omnilink_score_registration_date.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -199,7 +217,7 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
           <Input
             id="omnilink_score_expiry_date"
             type="date"
-            value={formData.omnilink_score_expiry_date || ''}
+            value={detailedOmnilinkStatus?.expiryDate ? formatDate(detailedOmnilinkStatus.expiryDate) : ''}
             readOnly
             className="bg-muted/50"
           />
@@ -218,8 +236,8 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
       <div className="space-y-2">
         <Label htmlFor="status_indicacao">Status de Indicação</Label>
         <Select
-          value={formData.status_indicacao || ''}
-          onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => handleSelectChange('status_indicacao', value)}
+          onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => setValue('status_indicacao', value, { shouldValidate: true })}
+          value={statusIndicacao || ''}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o status de indicação" />
@@ -230,18 +248,19 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
             <SelectItem value="nao_indicado">Não Indicado</SelectItem>
           </SelectContent>
         </Select>
+        {errors.status_indicacao && <p className="text-red-500 text-sm">{errors.status_indicacao.message}</p>}
       </div>
 
-      {formData.status_indicacao === 'nao_indicado' && (
+      {statusIndicacao === 'nao_indicado' && (
         <div className="space-y-2">
           <Label htmlFor="reason_nao_indicacao">Motivo de Não Indicação (Opcional)</Label>
           <Textarea
             id="reason_nao_indicacao"
-            value={formData.reason_nao_indicacao || ''}
-            onChange={handleInputChange}
+            {...register('reason_nao_indicacao')}
             placeholder="Descreva o motivo pelo qual o motorista não foi indicado..."
             className="min-h-[80px]"
           />
+          {errors.reason_nao_indicacao && <p className="text-red-500 text-sm">{errors.reason_nao_indicacao.message}</p>}
         </div>
       )}
       

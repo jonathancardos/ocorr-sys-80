@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,13 +146,29 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     riskReports: [] as { name: string, url: string }[],
     omnilinkPhoto: null as { name: string, url: string } | null,
   });
+
+  // Load form data from localStorage on initial render
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('incidentFormData');
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+  }, []);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('incidentFormData', JSON.stringify(formData));
+  }, [formData]);
+
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
+
 const sectionFields = {
     identification: [
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
       'locationType',
     ],
-    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
     omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict'],
+    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
     tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop'],
     cargo: ['totalCargoValue', 'stolenCargoValue', 'cargoObservations'],
     risk: ['riskObservations'],
@@ -190,8 +206,6 @@ const sectionFields = {
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({});
 
   // Placeholder for file upload utility - replace with actual implementation
   const uploadFile = async (file: File, path: string): Promise<string> => {

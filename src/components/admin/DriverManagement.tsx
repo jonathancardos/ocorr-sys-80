@@ -57,6 +57,15 @@ const DriverManagement = () => {
   const { profile, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
+  // Ensure profile and user are not null/undefined before proceeding
+  if (authLoading || !profile || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const [isNewDriverMethodSelectionOpen, setIsNewDriverMethodSelectionOpen] = useState(false); // NEW
   const [isCnhOcrInputAndPreviewOpen, setIsCnhOcrInputAndPreviewOpen] = useState(false); // NEW
   const [ocrPrefillData, setOcrPrefillData] = useState<{ cnh?: string; cnh_expiry?: string } | undefined>(undefined); // NEW
@@ -96,14 +105,6 @@ const DriverManagement = () => {
     pendingDriver: DriverPendingApprovalWithInfo;
     duplicateDriverInfo: Pick<Driver, 'id' | 'full_name' | 'cpf' | 'cnh' | 'cnh_expiry' | 'phone' | 'type' | 'omnilink_score_registration_date' | 'omnilink_score_expiry_date' | 'omnilink_score_status' | 'status_indicacao' | 'reason_nao_indicacao'>;
   } | null>(null);
-
-  if (authLoading || !profile) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   if (profile.role !== 'admin') {
     return (
