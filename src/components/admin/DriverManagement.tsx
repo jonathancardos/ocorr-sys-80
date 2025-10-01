@@ -1113,7 +1113,7 @@ const DriverManagement = () => {
               setOcrPrefillData(undefined); // Clear prefill data after creation
             }}
             onClose={handleNewDriverFormClose}
-            initialFormData={ocrPrefillData} // Pass OCR prefill data
+            initialFormData={editingDriver ? {...formData, id: editingDriver.id} : ocrPrefillData} // Pass editing driver data with ID or OCR prefill data
           />
         </DialogContent>
       </Dialog>

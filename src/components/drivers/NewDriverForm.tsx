@@ -27,9 +27,18 @@ interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
   onClose: () => void;
   initialFormData?: {
+    id?: string;
+    full_name?: string;
+    cpf?: string;
     cnh?: string;
     cnh_expiry?: string;
-    full_name?: string;
+    phone?: string;
+    type?: string;
+    omnilink_score_registration_date?: string;
+    omnilink_score_expiry_date?: string;
+    omnilink_score_status?: string;
+    status_indicacao?: string;
+    reason_nao_indicacao?: string;
   };
 }
 
@@ -66,16 +75,16 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: initialFormData?.full_name || '',
-      cpf: '',
+      cpf: initialFormData?.cpf || '',
       cnh: initialFormData?.cnh || null,
       cnh_expiry: initialFormData?.cnh_expiry || null,
-      phone: null,
-      type: null,
-      omnilink_score_registration_date: null,
-      omnilink_score_expiry_date: null,
-      omnilink_score_status: null,
-      status_indicacao: 'nao_indicado',
-      reason_nao_indicacao: null,
+      phone: initialFormData?.phone || null,
+      type: initialFormData?.type || null,
+      omnilink_score_registration_date: initialFormData?.omnilink_score_registration_date || null,
+      omnilink_score_expiry_date: initialFormData?.omnilink_score_expiry_date || null,
+      omnilink_score_status: initialFormData?.omnilink_score_status || null,
+      status_indicacao: initialFormData?.status_indicacao || 'nao_indicado',
+      reason_nao_indicacao: initialFormData?.reason_nao_indicacao || null,
     },
   });
 
@@ -120,18 +129,34 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
 
   const createDriverMutation = useMutation({
     mutationFn: async (driverData: TablesInsert<'drivers'>) => {
-      const { data, error } = await supabase
-        .from('drivers')
-        .insert(driverData)
-        .select('id')
-        .single();
-      if (error) throw error;
-      return data;
+      // Se temos um ID, é uma edição
+      if (initialFormData?.id) {
+        const { data, error } = await supabase
+          .from('drivers')
+          .update(driverData)
+          .eq('id', initialFormData.id)
+          .select('id')
+          .single();
+        if (error) throw error;
+        return data;
+      } else {
+        // Caso contrário, é uma inserção
+        const { data, error } = await supabase
+          .from('drivers')
+          .insert(driverData)
+          .select('id')
+          .single();
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
-      toast.success("Motorista cadastrado!", {
-        description: `${form.getValues('full_name')} foi adicionado com sucesso.`,
+      const isEditing = !!initialFormData?.id;
+      toast.success(isEditing ? "Motorista atualizado!" : "Motorista cadastrado!", {
+        description: isEditing 
+          ? `${form.getValues('full_name')} foi atualizado com sucesso.`
+          : `${form.getValues('full_name')} foi adicionado com sucesso.`,
       });
       if (data) {
         onDriverCreated(data.id);
@@ -139,9 +164,9 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
       onClose();
     },
     onError: (err: any) => {
-      console.error('Error creating driver:', err);
-      toast.error("Erro ao cadastrar motorista", {
-        description: err.message || "Não foi possível cadastrar o motorista.",
+      console.error('Error creating/updating driver:', err);
+      toast.error("Erro ao salvar motorista", {
+        description: err.message || "Não foi possível salvar os dados do motorista.",
       });
     },
   });
