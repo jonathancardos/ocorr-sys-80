@@ -17,6 +17,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
+interface PdfConfig {
+  includeCoverPage: boolean;
+  includeTableOfContents: boolean;
+  includeAttachments: boolean;
+  includeDriverInfo: boolean;
+  includeVehicleInfo: boolean;
+  includeOmnilinkReport: boolean;
+  includeTrackingReport: boolean;
+  includeDriverEvaluation: boolean;
+  includeCargoEvaluation: boolean;
+  includeRiskMonitoring: boolean;
+  includeFinalReport: boolean;
+}
+
 
 // Import modular sections
 import { IncidentIdentificationSection } from './IncidentIdentificationSection';
@@ -37,10 +51,42 @@ import NewVehicleForm from '@/components/vehicles/NewVehicleForm';
 // Import from new driver-utils
 import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpiry, calculateOmnilinkScoreStatus } from '@/lib/driver-utils';
 
+interface IncidentFormData {
+  id?: string;
+  incidentNumber: string;
+  incidentDate: string;
+  incidentTime: string;
+  locationType: string;
+  locationDetails: string;
+  incidentType: string;
+  incidentDescription: string;
+  vehicleId: string;
+  vehiclePlate: string;
+  vehicleModel: string;
+  vehicleYear: string;
+  driverId: string;
+  driverName: string;
+  driverDocument: string;
+  licenseNumber: string;
+  licenseCategory: string;
+  licenseExpiry: string;
+  finalConclusion: string;
+  recommendations: string;
+  analystName: string;
+  boFiles: AttachmentItem[];
+  sapScreenshots: AttachmentItem[];
+  riskReports: AttachmentItem[];
+  omnilinkPhoto: AttachmentItem | null;
+  pdfConfig: PdfConfig;
+  driverScore: number;
+  riskLevel: string;
+  isDraft: boolean;
+}
+
 
 interface NewIncidentFormProps {
   onClose: () => void;
-  onSave: (data: any, isDraft?: boolean) => void;
+  onSave: (data: IncidentFormData, isDraft?: boolean) => void;
   initialData?: any; // Add this line
 }
 
@@ -66,87 +112,72 @@ export const NewIncidentForm = ({ onClose, onSave, initialData }: NewIncidentFor
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false);
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
 
+  // Usando a interface IncidentFormData já definida
   const [formData, setFormData] = useState<IncidentFormData>(initialData || {
     incidentNumber: "",
-    incidentDate: new Date(),
+    incidentDate: "",
     incidentTime: "",
     locationType: "",
-    locationDescription: "",
-    establishmentName: "",
-    establishmentAddress: "",
-    establishmentCircumstances: "",
-    hasDock: "" as "yes" | "no" | "",
-    hasParking: "" as "yes" | "no" | "",
-    roadDetailedLocation: "",
-    roadSuspicions: "",
-    roadTrafficConditions: "",
-    roadWitnesses: "",
-    boNumber: "",
-    boDate: "",
-    sameDay: "" as "yes" | "no" | "",
-    responsible: "",
-    
-    vehicleId: "" as string | null,
+    locationDetails: "",
+    incidentType: "",
+    incidentDescription: "",
+    vehicleId: "",
     vehiclePlate: "",
     vehicleModel: "",
-    vehicleTechnology: [] as string[],
-    driverId: "" as string | null,
+    vehicleYear: "",
+    driverId: "",
     driverName: "",
-    driverCpf: "",
-    driverPhone: "",
-    driverLicense: "",
+    driverDocument: "",
+    licenseNumber: "",
+    licenseCategory: "",
     licenseExpiry: "",
-    omnilinkScoreRegistrationDate: "" as string | null, // NEW
-    omnilinkScoreExpiryDate: "" as string | null, // NEW
-    omnilinkScoreStatus: "" as string | null, // NEW
-    
-    omnilinkStatus: "" as "yes" | "no" | "",
-    omnilinkObservations: "",
-    omnilinkAnalystVerdict: "",
-    
-    signalLoss: "" as "yes" | "no" | "",
-    signalLossTime: "",
-    unauthorizedStop: "" as "yes" | "no" | "",
-    unauthorizedStopLocation: "",
-    prolongedStop: "" as "yes" | "no" | "",
-    prolongedStopTime: "",
-    prolongedStopJustification: "",
-    
-    vehicleLocked: "" as "yes" | "no" | "",
-    driverNearVehicle: "" as "yes" | "no" | "",
-    authorizedParking: "" as "yes" | "no" | "",
-    leftVehicleTime: "" as "yes" | "no" | "",
-    vehicleRunning: "" as "yes" | "no" | "",
-    keyToThird: "" as "yes" | "no" | "",
-    doorsOpen: "" as "yes" | "no" | "",
-    followedInstructions: "" as "yes" | "no" | "",
-    reportedAnomalies: "" as "yes" | "no" | "",
-    contradictions: "" as "yes" | "no" | "",
-    stoppedInSafePlace: "" as "yes" | "no" | "",
-    activatedPanicButton: "" as "yes" | "no" | "",
-    driverScore: 0,
-    riskLevel: "",
-    
-    totalCargoValue: "",
-    stolenCargoValue: "",
-    cargoObservations: "",
-    
-    riskObservations: "",
-    
-    omnilinkSummary: "",
-    driverSummary: "",
-    trackingSummary: "",
-    cargoSummary: "",
-    riskSummary: "",
     finalConclusion: "",
     recommendations: "",
     analystName: "",
-    
-    boFiles: [] as { name: string, url: string }[],
-    sapScreenshots: [] as { name: string, url: string }[],
-    riskReports: [] as { name: string, url: string }[],
-    omnilinkPhoto: null as { name: string, url: string } | null,
+    boFiles: [],
+    sapScreenshots: [],
+    riskReports: [],
+    omnilinkPhoto: null,
+    pdfConfig: {
+      includeCoverPage: true,
+      includeTableOfContents: true,
+      includeAttachments: true,
+      includeDriverInfo: true,
+      includeVehicleInfo: true,
+      includeOmnilinkReport: true,
+      includeTrackingReport: true,
+      includeDriverEvaluation: true,
+      includeCargoEvaluation: true,
+      includeRiskMonitoring: true,
+      includeFinalReport: true
+    },
+    driverScore: 0,
+    riskLevel: "Baixo",
+    isDraft: false
   });
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      
+      // Recalcular pontuação do motorista e nível de risco quando certos campos mudam
+      if (field === 'driverScore') {
+        const score = value;
+        let riskLevel = 'Baixo';
+        
+        if (score < 60) {
+          riskLevel = 'Alto';
+        } else if (score < 80) {
+          riskLevel = 'Médio';
+        }
+        
+        return { ...newData, riskLevel };
+      }
+      
+      return newData;
+    });
+  };
+  
 
   // Load form data from localStorage on initial render
   useEffect(() => {
@@ -204,50 +235,7 @@ const sectionFields = {
     return totalCount === 0 ? 100 : Math.round((filledCount / totalCount) * 100);
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Placeholder for file upload utility - replace with actual implementation
-  const uploadFile = async (file: File, path: string): Promise<string> => {
-    console.log(`Uploading single file: ${file.name} to ${path}`);
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (file.type.startsWith('image/')) {
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-    } else {
-      return `/uploads/${path}/${file.name}`;
-    }
-  };
-
-  // Placeholder for multiple file upload utility - replace with actual implementation
-  const uploadFiles = async (files: FileList, path: string): Promise<AttachmentItem[]> => {
-    const uploaded: AttachmentItem[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      console.log(`Uploading multiple file: ${file.name} to ${path}`);
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      if (file.type.startsWith('image/')) {
-        const dataUrl: string = await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        uploaded.push({ name: file.name, url: dataUrl });
-      } else {
-        uploaded.push({ name: file.name, url: `/uploads/${path}/${file.name}` });
-      }
-    }
-    return uploaded;
-  };
-
+    // Função de upload de arquivos
   const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files) return;
 
@@ -258,11 +246,40 @@ const sectionFields = {
       const path = `incidents/${incidentNum}/${field}`;
 
       if (field === 'omnilinkPhoto' && files instanceof File) {
-        const url = await uploadFile(files, path);
+        // Implementação inline para evitar problemas com Hooks
+        let url = '';
+        if (files.type.startsWith('image/')) {
+          url = await new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(files);
+          });
+        } else {
+          url = `/uploads/${path}/${files.name}`;
+        }
+        
         setFormData(prev => ({ ...prev, [field]: { name: files.name, url } }));
       } else if (files instanceof FileList) {
-        const newAttachments = await uploadFiles(files, path);
-        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...newAttachments] }));
+        // Implementação inline para evitar problemas com Hooks
+        const uploaded: AttachmentItem[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          // Simulate upload delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          if (file.type.startsWith('image/')) {
+            const dataUrl: string = await new Promise(resolve => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+            uploaded.push({ name: file.name, url: dataUrl });
+          } else {
+            uploaded.push({ name: file.name, url: `/uploads/${path}/${file.name}` });
+          }
+        }
+        
+        setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...uploaded] }));
       }
       toast.success("Arquivo(s) enviado(s) com sucesso!");
     } catch (error) {
@@ -271,7 +288,7 @@ const sectionFields = {
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [setFormData, setUploadingFiles, formData.incidentNumber, uploadFile, uploadFiles]);
+  }, [formData.incidentNumber]);
 
   const handleSaveAsDraft = () => {
     onSave(formData, true);
@@ -306,15 +323,24 @@ const sectionFields = {
       case "identification":
         return (
           <IncidentIdentificationSection
-            formData={formData}
+            formData={{
+              boFiles: formData.boFiles,
+              sapScreenshots: formData.sapScreenshots,
+              riskReports: formData.riskReports,
+              omnilinkPhoto: formData.omnilinkPhoto,
+            }}
             handleInputChange={handleInputChange}
-            isIncidentNumberLoading={false}
           />
         );
       case "vehicle":
         return (
           <VehicleDriverSection
-            formData={formData}
+            formData={{
+              boFiles: formData.boFiles,
+              sapScreenshots: formData.sapScreenshots,
+              riskReports: formData.riskReports,
+              omnilinkPhoto: formData.omnilinkPhoto,
+            }}
             handleInputChange={handleInputChange}
             isLoadingDrivers={false}
             drivers={[]}
@@ -334,7 +360,12 @@ const sectionFields = {
       case "omnilink":
         return (
           <OmnilinkReportSection
-            formData={formData}
+            formData={{
+              boFiles: formData.boFiles,
+              sapScreenshots: formData.sapScreenshots,
+              riskReports: formData.riskReports,
+              omnilinkPhoto: formData.omnilinkPhoto,
+            }}
             handleInputChange={handleInputChange}
           />
         );
@@ -378,7 +409,12 @@ const sectionFields = {
           <IncidentAttachmentsSection
             handleFileUpload={handleFileUpload}
 
-            formData={formData}
+            formData={{
+              boFiles: formData.boFiles,
+              sapScreenshots: formData.sapScreenshots,
+              riskReports: formData.riskReports,
+              omnilinkPhoto: formData.omnilinkPhoto,
+            }}
             // onFormDataChange={(updatedAttachments: Partial<typeof formData>) => {
             //   return setFormData(prev => ({ ...prev, ...updatedAttachments }));
             // }}

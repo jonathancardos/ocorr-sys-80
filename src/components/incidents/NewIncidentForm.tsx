@@ -89,6 +89,16 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const isMobile = useIsMobile();
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false); // State for new driver dialog
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false); // State for new vehicle dialog
+  
+  // Define PdfConfig interface
+  interface PdfConfig {
+    showLogo: boolean;
+    showHeader: boolean;
+    showFooter: boolean;
+    showSignature: boolean;
+    customTitle?: string;
+  }
+  
   const [pdfConfig, setPdfConfig] = useState<PdfConfig | null>(null); // State to hold PDF configuration
 
   const [formData, setFormData] = useState(() => {
@@ -405,11 +415,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     });
   };
 
-  console.log('NewIncidentForm: Type of uploadFile before useCallback:', typeof uploadFile, uploadFile);
-  console.log('NewIncidentForm: Type of uploadFiles before useCallback:', typeof uploadFiles, uploadFiles);
-
   const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
-    console.log('handleFileUpload: Inside useCallback. formData.incidentNumber:', formData.incidentNumber);
+    // Removido console.log que causava problemas com a ordem dos Hooks
     if (!files || (files instanceof FileList && files.length === 0)) {
       setFormData(prev => ({ ...prev, [field]: field === 'omnilinkPhoto' ? null : [] }));
       return;
@@ -704,7 +711,6 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       return;
     }
     onSave(formData, false);
-  };
     toast.success("Ocorrência salva!", {
       description: "A ocorrência foi registrada com sucesso.",
     });
@@ -713,7 +719,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const cnhStatus = getCnhStatus(formData.licenseExpiry);
 
   // Helper to render each section's content
-  const renderSectionContent = useCallback((sectionId: string) => {
+  const renderSectionContent = (sectionId: string) => {
     switch (sectionId) {
       case "identification":
         return (
@@ -799,23 +805,9 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       default:
         return null;
     }
-  }, [
-    formData,
-    handleInputChange,
-    isLoadingDrivers,
-    drivers,
-    handleDriverSelect,
-    setIsNewDriverDialogOpen,
-    isLoadingVehicles,
-    vehicles,
-    handleVehicleSelect,
-    setIsNewVehicleDialogOpen,
-    cnhStatus,
-    handleFileUpload,
-    uploadingFiles,
-    handleRemoveAttachment,
-    generatePDF,
-  ]);
+  };
+
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
