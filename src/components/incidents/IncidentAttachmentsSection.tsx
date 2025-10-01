@@ -25,7 +25,6 @@ interface IncidentAttachmentsSectionProps {
   handleFileUpload: (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => void;
   uploadingFiles: { [key: string]: boolean };
   handleRemoveAttachment: (field: keyof IncidentAttachmentsFormData, index: number) => void;
-  onFormDataChange?: (updatedAttachments: Partial<IncidentAttachmentsFormData>) => void;
 }
 
 export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProps> = ({
@@ -33,15 +32,14 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   handleFileUpload,
   uploadingFiles,
   handleRemoveAttachment,
-  onFormDataChange,
 }) => {
   const [viewerOpen, setViewerOpen] = React.useState(false);
   const [currentImage, setCurrentImage] = React.useState<AttachmentItem | null>(null);
-  console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', formData.omnilinkPhoto);
-  console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload);
+  // console.log('IncidentAttachmentsSection: Re-rendering. Prop omnilinkPhoto:', formData.omnilinkPhoto);
+  // console.log('IncidentAttachmentsSection: Received handleFileUpload prop type:', typeof handleFileUpload);
 
   // ADDING THIS NEW LOG TO BE SURE
-  console.log('IncidentAttachmentsSection (inside component): Type of handleFileUpload prop:', typeof handleFileUpload);
+  // console.log('IncidentAttachmentsSection (inside component): Type of handleFileUpload prop:', typeof handleFileUpload);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error("Failed to load image in preview:", e.currentTarget.src);
@@ -54,7 +52,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp)$/i);
     const isPdf = file.name.match(/\.pdf$/i);
 
-    console.log(`renderAttachmentItem for ${file.name}: isImage=${isImage}, isPdf=${isPdf}, url=${file.url}`);
+    // console.log(`renderAttachmentItem for ${file.name}: isImage=${isImage}, isPdf=${isPdf}, url=${file.url}`);
 
     return (
       <div key={index} className="flex items-center justify-between bg-muted/50 p-2 rounded-md border border-border">
@@ -63,9 +61,10 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             <img 
               src={file.url} 
               alt={file.name} 
-              className="h-8 w-8 object-cover rounded-sm cursor-pointer" 
+              className="h-12 w-12 object-cover rounded-md border border-gray-300 cursor-pointer shadow-sm" 
               onError={handleImageError}
               onClick={() => {
+                console.log("Image clicked, setting currentImage and viewerOpen:", file);
                 setCurrentImage(file);
                 setViewerOpen(true);
               }}
@@ -84,15 +83,6 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
           className="h-auto p-0.5 ml-1 text-destructive hover:bg-destructive/10"
           onClick={() => {
             handleRemoveAttachment(fieldName, index);
-            if (onFormDataChange) {
-              const updatedFormData = { ...formData };
-              if (fieldName === "omnilinkPhoto") {
-                updatedFormData.omnilinkPhoto = null;
-              } else {
-                (updatedFormData[fieldName] as AttachmentItem[]).splice(index, 1);
-              }
-              onFormDataChange(updatedFormData);
-            }
           }}
         >
           <X className="h-4 w-4" />
@@ -101,20 +91,24 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
     );
   };
 
-  const renderFileList = (files: AttachmentItem[] | null | undefined, fieldName: keyof IncidentAttachmentsFormData) => {
-    if (!Array.isArray(files) || files.length === 0) return null;
+  const renderFileList = (files: AttachmentItem[], field: keyof IncidentAttachmentsFormData) => {
+    // console.log(`renderFileList for ${field}:`, files);
+    if (!files || files.length === 0) {
+      return null;
+    }
     return (
       <div className="mt-2 space-y-2">
-        {files.map((file, index) => renderAttachmentItem(file, fieldName, index))}
+        {files.map((file, index) => renderAttachmentItem(file, field, index))}
       </div>
     );
   };
 
-  const renderSingleFile = (file: AttachmentItem | null, fieldName: keyof IncidentAttachmentsFormData) => {
+  const renderSingleFile = (file: AttachmentItem | null, field: keyof IncidentAttachmentsFormData) => {
+    // console.log(`renderSingleFile for ${field}:`, file);
     if (!file) return null;
     return (
       <div className="mt-2 space-y-2">
-        {renderAttachmentItem(file, fieldName, 0)}
+        {renderAttachmentItem(file, field, 0)}
       </div>
     );
   };
@@ -139,14 +133,9 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               accept=".pdf,image/*"
               multiple
               onChange={async (e) => {
+                // console.log("Input onChange - e.target.files:", e.target.files);
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("boFiles", e.target.files);
-                  if (onFormDataChange) {
-                    // Assuming handleFileUpload updates the formData internally or returns the updated files
-                    // For now, we'll just trigger a re-render with the current formData
-                    // A more robust solution would involve handleFileUpload returning the new state
-                    onFormDataChange({ boFiles: formData.boFiles });
-                  }
                 } else {
                   console.error("handleFileUpload is not a function when trying to upload boFiles:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
@@ -158,11 +147,11 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             {uploadingFiles.boFiles && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
           {renderFileList(formData.boFiles, "boFiles")}
-          {formData.boFiles.length > 0 && formData.boFiles[0].url && formData.boFiles[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
+          {/* formData.boFiles.length > 0 && formData.boFiles[0].url && formData.boFiles[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
             <div className="mt-2">
               <img src={formData.boFiles[0].url} alt="Preview" className="max-h-40 rounded-md" onError={handleImageError} />
             </div>
-          )}
+          ) */}
         </div>
 
         <div className="space-y-3">
@@ -175,9 +164,6 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               onChange={async (e) => {
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("sapScreenshots", e.target.files);
-                  if (onFormDataChange) {
-                    onFormDataChange({ sapScreenshots: formData.sapScreenshots });
-                  }
                 } else {
                   console.error("handleFileUpload is not a function when trying to upload sapScreenshots:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
@@ -189,11 +175,11 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
             {uploadingFiles.sapScreenshots && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
           </div>
           {renderFileList(formData.sapScreenshots, "sapScreenshots")}
-          {formData.sapScreenshots.length > 0 && formData.sapScreenshots[0].url && formData.sapScreenshots[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
+          {/* formData.sapScreenshots.length > 0 && formData.sapScreenshots[0].url && formData.sapScreenshots[0].name.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
             <div className="mt-2">
               <img src={formData.sapScreenshots[0].url} alt="Preview" className="max-h-40 rounded-md" onError={handleImageError} />
             </div>
-          )}
+          ) */}
         </div>
 
         <div className="space-y-3">
@@ -206,9 +192,6 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               onChange={async (e) => {
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("riskReports", e.target.files);
-                  if (onFormDataChange) {
-                    onFormDataChange({ riskReports: formData.riskReports });
-                  }
                 } else {
                   console.error("handleFileUpload is not a function when trying to upload riskReports:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
@@ -231,9 +214,6 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
               onChange={async (e) => {
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("omnilinkPhoto", e.target.files?.[0] || null);
-                  if (onFormDataChange) {
-                    onFormDataChange({ omnilinkPhoto: formData.omnilinkPhoto });
-                  }
                 } else {
                   console.error("handleFileUpload is not a function when trying to upload omnilinkPhoto:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });

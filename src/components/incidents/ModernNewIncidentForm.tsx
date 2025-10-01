@@ -212,7 +212,16 @@ const sectionFields = {
     console.log(`Uploading single file: ${file.name} to ${path}`);
     // Simulate upload delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    return `http://example.com/uploads/${path}/${file.name}`;
+
+    if (file.type.startsWith('image/')) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    } else {
+      return `/uploads/${path}/${file.name}`;
+    }
   };
 
   // Placeholder for multiple file upload utility - replace with actual implementation
@@ -223,7 +232,17 @@ const sectionFields = {
       console.log(`Uploading multiple file: ${file.name} to ${path}`);
       // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      uploaded.push({ name: file.name, url: `http://example.com/uploads/${path}/${file.name}` });
+
+      if (file.type.startsWith('image/')) {
+        const dataUrl: string = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        uploaded.push({ name: file.name, url: dataUrl });
+      } else {
+        uploaded.push({ name: file.name, url: `/uploads/${path}/${file.name}` });
+      }
     }
     return uploaded;
   };
@@ -353,9 +372,9 @@ const sectionFields = {
             handleFileUpload={handleFileUpload}
 
             formData={formData}
-            onFormDataChange={(updatedAttachments: Partial<typeof formData>) => {
-              return setFormData(prev => ({ ...prev, ...updatedAttachments }));
-            }}
+            // onFormDataChange={(updatedAttachments: Partial<typeof formData>) => {
+            //   return setFormData(prev => ({ ...prev, ...updatedAttachments }));
+            // }}
             uploadingFiles={uploadingFiles}
             handleRemoveAttachment={() => {}}
           />
