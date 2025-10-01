@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: null };
       } else {
         console.warn("AuthContext: Admin 'cardoso' not found or login failed, attempting to create via Edge Function...");
-        const edgeFunctionUrl = `https://iywrcosymxjynxspzjmi.supabase.co/functions/v1/create-admin-user`;
+        const edgeFunctionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-admin-user`;
 
         let edgeFunctionResponse;
         let edgeFunctionError = null;
@@ -204,7 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5d3Jjb3N5bXhqeW54c3B6am1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMDM1NjksImV4cCI6MjA3Mzg3OTU2OX0.4vAHFMTGs0oz3zmAq1WvhaJhwm_rhxc7NuBqE_Z0_lE`,
+              'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
               email: ADMIN_EMAIL,

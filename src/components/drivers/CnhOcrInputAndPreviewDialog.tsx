@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Scan, CheckCircle, X, Loader2, ArrowRight } from 'lucide-react';
 import { CnhOcrButton } from './CnhOcrButton';
 import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import InputMask from 'react-input-mask';
 
 interface CnhOcrInputAndPreviewDialogProps {
   isOpen: boolean;
@@ -27,6 +28,38 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
   const [fullName, setFullName] = useState<string>(''); // NEW: Estado para o nome completo
   const [ocrProcessed, setOcrProcessed] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleCnhExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    // Remove non-digits for parsing
+    const digitsOnly = input.replace(/\D/g, '');
+
+    // Apply mask for display: DD/MM/YYYY
+    let formattedInput = '';
+    if (digitsOnly.length > 0) {
+      formattedInput = digitsOnly.substring(0, 2);
+      if (digitsOnly.length > 2) {
+        formattedInput += '/' + digitsOnly.substring(2, 4);
+      }
+      if (digitsOnly.length > 4) {
+        formattedInput += '/' + digitsOnly.substring(4, 8);
+      }
+    }
+
+    // Update the input field value directly for masked display
+    e.target.value = formattedInput;
+
+    // Parse to yyyy-MM-dd for internal state if valid
+    if (digitsOnly.length === 8) {
+      const day = digitsOnly.substring(0, 2);
+      const month = digitsOnly.substring(2, 4);
+      const year = digitsOnly.substring(4, 8);
+      const isoDate = `${year}-${month}-${day}`;
+      setCnhExpiry(isoDate);
+    } else {
+      setCnhExpiry(input); // Keep original input for partial or invalid dates
+    }
+  };
 
   const handleOcrComplete = (number: string, expiry: string, name: string) => { // UPDATED: Recebendo name
     setCnhNumber(number);
@@ -107,10 +140,10 @@ export const CnhOcrInputAndPreviewDialog: React.FC<CnhOcrInputAndPreviewDialogPr
                 <Label htmlFor="ocr-cnh-expiry">Validade da CNH</Label>
                 <Input
                   id="ocr-cnh-expiry"
-                  type="date"
-                  value={cnhExpiry}
-                  onChange={(e) => setCnhExpiry(e.target.value)}
-                  placeholder="YYYY-MM-DD"
+                  value={cnhExpiry ? format(parseISO(cnhExpiry), 'dd/MM/yyyy') : ''}
+                  onChange={handleCnhExpiryChange}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10} // DD/MM/YYYY
                 />
               </div>
             </div>

@@ -132,7 +132,7 @@ export const VehiclePdfPreviewDialog: React.FC<VehiclePdfPreviewDialogProps> = (
 
     setIsDownloading(true);
     try {
-      const fileName = `relatorio-veiculos-${filterType}-${format(new Date(), 'dd-MM-yyyy')}.pdf`;
+      const fileName = `relatorio-veiculos-${filterType}-${format(new Date(), 'dd/MM/yyyy')}.pdf`;
       
       const pdfFile = new File([generatedPdfBlob], fileName, { type: 'application/pdf' });
 

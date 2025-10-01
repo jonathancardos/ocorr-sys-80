@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar as CalendarIcon, Loader2, Download, Share2, CheckCircle, XCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,10 +47,10 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
     queryFn: async () => {
       let query = supabase.from('drivers').select('*');
 
-      if (startDate) {
+      if (startDate && isValid(startDate)) {
         query = query.gte('omnilink_score_registration_date', format(startDate, 'yyyy-MM-dd'));
       }
-      if (endDate) {
+      if (endDate && isValid(endDate)) {
         query = query.lte('omnilink_score_registration_date', format(endDate, 'yyyy-MM-dd'));
       }
 
@@ -129,7 +129,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
         message += `\n\n*${index + 1}. ${driver.full_name}*\n`;
         message += `  CPF: ${driver.cpf || 'N/A'}\n`;
         message += `  Tipo: ${driver.type || 'N/A'}\n`;
-        message += `  Omnilink Score: ${driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'} (Vencimento: ${driver.omnilink_score_expiry_date ? format(parseISO(driver.omnilink_score_expiry_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'})\n`;
+        message += `  Omnilink Score: ${driver.omnilink_score_registration_date && isValid(parseISO(driver.omnilink_score_registration_date)) ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'} (Vencimento: ${driver.omnilink_score_expiry_date && isValid(parseISO(driver.omnilink_score_expiry_date)) ? format(parseISO(driver.omnilink_score_expiry_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'})\n`;
         message += `  Status Omnilink: ${omnilinkStatus.message}\n`;
         message += `  Status Indicação: ${indicacaoStatus}\n`;
         if (driver.status_indicacao === 'nao_indicado' && driver.reason_nao_indicacao) {
@@ -199,7 +199,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
                 {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data de início</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
+            <PopoverContent className="w-auto p-0 bg-card shadow-lg border"> {/* Adjusted for visibility */}
               <Calendar
                 mode="single"
                 selected={startDate}
@@ -226,7 +226,7 @@ export const DriverReportGenerator: React.FC<DriverReportGeneratorProps> = ({ on
                 {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data de fim</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adjusted transparency */}
+            <PopoverContent className="w-auto p-0 bg-card shadow-lg border"> {/* Adjusted for visibility */}
               <Calendar
                 mode="single"
                 selected={endDate}

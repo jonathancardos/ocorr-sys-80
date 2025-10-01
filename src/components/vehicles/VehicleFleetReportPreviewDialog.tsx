@@ -157,7 +157,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
 
     setIsDownloading(true);
     try {
-      const fileName = `relatorio-frota-${format(new Date(), 'dd-MM-yyyy_HH-mm')}.pdf`;
+      const fileName = `relatorio-frota-${format(new Date(), 'dd/MM/yyyy_HH-mm')}.pdf`;
       
       const pdfFile = new File([generatedPdfBlob], fileName, { type: 'application/pdf' });
 
@@ -184,7 +184,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       logReportMutation.mutate({
         report_type: 'fleet_report',
         generated_by: user?.id || null,
-        file_name: fileName,
+        file_name: `relatorio-frota-${format(new Date(), 'dd/MM/yyyy_HH-mm')}.txt`,
         file_url: fileUrl,
         metadata: { vehicleCount: vehicles.length, sharedVia: 'pdf_download' },
       });
@@ -292,7 +292,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       logReportMutation.mutate({
         report_type: 'fleet_report',
         generated_by: user?.id || null,
-        file_name: `relatorio-frota-${format(new Date(), 'dd-MM-yyyy_HH-mm')}.txt`,
+        file_name: `relatorio-frota-${format(new Date(), 'dd/MM/yyyy_HH-mm')}.txt`,
         metadata: { vehicleCount: vehicles.length, sharedVia: 'whatsapp' },
       });
 

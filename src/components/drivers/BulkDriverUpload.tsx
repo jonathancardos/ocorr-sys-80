@@ -172,13 +172,6 @@ const BulkDriverUpload: React.FC<BulkDriverUploadProps> = ({ onUploadComplete, o
             dateObj = parseISO(value);
 
             if (isNaN(dateObj.getTime())) {
-              // Try MM/DD/YYYY
-              try {
-                dateObj = parse(value, 'MM/dd/yyyy', new Date());
-              } catch (e) { /* ignore */ }
-            }
-            
-            if (isNaN(dateObj.getTime())) {
               // Try DD/MM/YYYY
               try {
                 dateObj = parse(value, 'dd/MM/yyyy', new Date());

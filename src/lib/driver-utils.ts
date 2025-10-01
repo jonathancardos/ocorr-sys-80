@@ -188,7 +188,7 @@ export const getDetailedOmnilinkStatus = (registrationDateString: string | null)
     return { status: 'unknown', message: 'Data de cadastro Omnilink inválida.', monthsDifference: 0, daysDifference: 0, expiryDate: null };
   }
 
-  const expiryDate = addMonths(parsedRegDate, 6);
+  const expiryDate = addMonths(parsedRegDate, 6); // Omnilink expires after 6 months
   const today = startOfDay(new Date());
 
   const daysDiff = differenceInDays(expiryDate, today); // Positive if expiry is in the future, negative if in the past

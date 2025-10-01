@@ -41,6 +41,7 @@ import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpi
 interface NewIncidentFormProps {
   onClose: () => void;
   onSave: (data: any, isDraft?: boolean) => void;
+  initialData?: any; // Add this line
 }
 
 const sections = [
@@ -59,18 +60,18 @@ const sections = [
 // Helper function to get CNH status
 export const getCnhStatus = getCnhStatusUtil;
 
-export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
+export const NewIncidentForm = ({ onClose, onSave, initialData }: NewIncidentFormProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("identification");
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false);
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<IncidentFormData>(initialData || {
     incidentNumber: "",
-    incidentDate: "",
+    incidentDate: new Date(),
     incidentTime: "",
-    location: "",
-    locationType: "" as "establishment" | "public_road" | "",
+    locationType: "",
+    locationDescription: "",
     establishmentName: "",
     establishmentAddress: "",
     establishmentCircumstances: "",

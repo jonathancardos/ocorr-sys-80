@@ -166,7 +166,7 @@ export const PdfPreviewPanel: React.FC<PdfPreviewPanelProps> = ({
 
     setIsDownloading(true);
     try {
-      const fileName = `relatorio-motoristas-${format(startDate || new Date(), 'dd-MM-yyyy')}-${format(endDate || new Date(), 'dd-MM-yyyy')}.pdf`;
+      const fileName = `relatorio-motoristas-${format(startDate || new Date(), 'dd/MM/yyyy')}-${format(endDate || new Date(), 'dd/MM/yyyy')}.pdf`;
       
       const pdfFile = new File([generatedPdfBlob], fileName, { type: 'application/pdf' });
 

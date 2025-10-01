@@ -17,8 +17,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import InputMask from 'react-input-mask';
+import { format, parseISO, isValid } from 'date-fns'; // Importar format, parse e isValid aqui
+import { ptBR } from 'date-fns/locale'; // Importar ptBR aqui
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { DateInput } from '@/components/ui/date-input';
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
@@ -40,7 +43,7 @@ const formSchema = z.object({
   omnilink_score_registration_date: z.string().nullable().optional(),
   omnilink_score_expiry_date: z.string().nullable().optional(),
   omnilink_score_status: z.string().nullable().optional(),
-  status_indicacao: z.enum(['indicado', 'retificado', 'nao_indicado'], { message: "Status de indicação é obrigatório." }),
+  status_indicacao: z.string().nullable().optional(),
   reason_nao_indicacao: z.string().nullable().optional(),
 }).superRefine((data, ctx) => {
   if (data.status_indicacao === 'nao_indicado' && !data.reason_nao_indicacao) {
@@ -79,7 +82,27 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = form;
 
   const omnilinkRegDate = watch('omnilink_score_registration_date');
+  const cnhExpiryDate = watch('cnh_expiry');
   const statusIndicacao = watch('status_indicacao');
+
+  const [displayCnhExpiry, setDisplayCnhExpiry] = useState('');
+  const [displayOmnilinkRegDate, setDisplayOmnilinkRegDate] = useState('');
+
+  useEffect(() => {
+    if (cnhExpiryDate && isValid(parseISO(cnhExpiryDate))) {
+      setDisplayCnhExpiry(format(parseISO(cnhExpiryDate), 'dd/MM/yyyy'));
+    } else {
+      setDisplayCnhExpiry('');
+    }
+  }, [cnhExpiryDate]);
+
+  useEffect(() => {
+    if (omnilinkRegDate && isValid(parseISO(omnilinkRegDate))) {
+      setDisplayOmnilinkRegDate(format(parseISO(omnilinkRegDate), 'dd/MM/yyyy'));
+    } else {
+      setDisplayOmnilinkRegDate('');
+    }
+  }, [omnilinkRegDate]);
 
   const detailedOmnilinkStatus = omnilinkRegDate ? getDetailedOmnilinkStatus(omnilinkRegDate) : null;
 
@@ -218,22 +241,31 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
 
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF *</Label>
-                    <InputMask
-                      mask="999.999.999-99"
+                    <Input
+                      id="cpf"
                       value={watch('cpf')}
-                      onChange={(e) => setValue('cpf', e.target.value, { shouldValidate: true })}
-                    >
-                      {(inputProps: any) => (
-                        <Input
-                          id="cpf"
-                          {...inputProps}
-                          type="text"
-                          placeholder="000.000.000-00"
-                          className="h-11"
-                          required
-                        />
-                      )}
-                    </InputMask>
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                        let formattedValue = '';
+                        if (value.length > 0) {
+                          formattedValue = value.substring(0, 3);
+                          if (value.length > 3) {
+                            formattedValue += '.' + value.substring(3, 6);
+                          }
+                          if (value.length > 6) {
+                            formattedValue += '.' + value.substring(6, 9);
+                          }
+                          if (value.length > 9) {
+                            formattedValue += '-' + value.substring(9, 11);
+                          }
+                        }
+                        setValue('cpf', formattedValue, { shouldValidate: true });
+                      }}
+                      placeholder="000.000.000-00"
+                      className="h-11"
+                      required
+                      maxLength={14} // Max length for CPF with mask
+                    />
                     {errors.cpf && <p className="text-destructive text-sm">{errors.cpf.message}</p>}
                   </div>
 
@@ -277,7 +309,13 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cnh_expiry">Validade CNH</Label>
-                      <Input id="cnh_expiry" type="date" {...register('cnh_expiry')} className="h-11" />
+                      <DateInput
+                        id="cnh_expiry"
+                        value={cnhExpiryDate || ''}
+                        onChange={(value) => setValue('cnh_expiry', value)}
+                        className="h-11"
+                      />
+                      {form.formState.errors.cnh_expiry && <p className="text-destructive text-sm">{form.formState.errors.cnh_expiry.message}</p>}
                     </div>
                   </div>
                 </AccordionContent>
@@ -290,12 +328,13 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
                 <AccordionContent className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="omnilink_score_registration_date">Data de Cadastro</Label>
-                    <Input
+                    <DateInput
                       id="omnilink_score_registration_date"
-                      type="date"
-                      {...register('omnilink_score_registration_date')}
+                      value={omnilinkRegDate || ''}
+                      onChange={(value) => setValue('omnilink_score_registration_date', value)}
                       className="h-11"
                     />
+                    {form.formState.errors.omnilink_score_registration_date && <p className="text-destructive text-sm">{form.formState.errors.omnilink_score_registration_date.message}</p>}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,7 +342,7 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
                       <Label htmlFor="omnilink_score_expiry_date">Vencimento</Label>
                       <Input
                         id="omnilink_score_expiry_date"
-                        type="date"
+                        type="text"
                         value={detailedOmnilinkStatus?.expiryDate ? formatDate(detailedOmnilinkStatus.expiryDate) : ''}
                         readOnly
                         className="bg-muted/50 h-11"

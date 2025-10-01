@@ -40,7 +40,7 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
   };
 
   return (
-    <div className="font-sans text-gray-900 p-8 bg-white h-fit print:p-0 print:bg-white"> {/* Alterado min-h-screen para h-fit */}
+    <div className="font-sans text-gray-900 p-10 bg-white h-fit print:p-0 print:bg-white"> {/* Alterado p-8 para p-10 */}
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none border border-gray-300">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-700 to-cyan-600 text-white p-6 flex items-center justify-between">
@@ -68,18 +68,22 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 border border-gray-200 table-fixed"> {/* Adicionado table-fixed */}
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/6"> {/* Ajustado largura */}
                     Nome Completo
-                  </th><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"> {/* Ajustado largura */}
                     CPF
-                  </th><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"> {/* Ajustado largura */}
                     Tipo
-                  </th><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Reg. Omnilink
-                  </th><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Status Indicação
                   </th>
                 </tr>
@@ -87,19 +91,19 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
               <tbody className="bg-white divide-y divide-gray-200">
                 {drivers.map((driver) => (
                   <tr key={driver.id}>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-2 text-sm font-medium text-gray-900">
                       {driver.full_name}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 py-2 text-sm text-gray-600">
                       {driver.cpf}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 py-2 text-sm text-gray-600">
                       {driver.type || 'N/A'}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 py-2 text-sm text-gray-600">
                       {driver.omnilink_score_registration_date ? format(parseISO(driver.omnilink_score_registration_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 py-2 text-sm text-gray-600">
                       {getIndicacaoStatusLabel(driver.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado' | null)}
                     </td>
                   </tr>

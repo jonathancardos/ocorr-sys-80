@@ -190,7 +190,7 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-full h-auto flex flex-col p-0 bg-card/20 backdrop-blur-md border border-border/50">
+      <DialogContent className="max-w-2xl w-full h-auto flex flex-col p-0 bg-card shadow-lg border">
         <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>Relatório de Motoristas</DialogTitle>
           <DialogDescription>
