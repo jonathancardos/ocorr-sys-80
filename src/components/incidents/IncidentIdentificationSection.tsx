@@ -1,321 +1,180 @@
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { incidentFormSchema } from '@/lib/validations/incident-form-schema';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { DateInput } from '@/components/ui/date-input';
 
 interface IncidentIdentificationSectionProps {
-  formData: any;
-  handleInputChange: (field: string, value: any) => void;
+  formData: z.infer<typeof IncidentFormSchema>;
+  onFormDataChange: (data: Partial<z.infer<typeof IncidentFormSchema>>) => void;
+  isEditing?: boolean;
 }
 
-export const IncidentIdentificationSection: React.FC<IncidentIdentificationSectionProps> = ({
+export function IncidentIdentificationSection({
   formData,
-  handleInputChange,
-}) => {
-  const [sequentialNumber, setSequentialNumber] = useState(1); // Initialize sequential number
+  onFormDataChange,
+  isEditing = false,
+}: IncidentIdentificationSectionProps) {
+  const now = new Date();
 
-  const handleGenerateIncidentNumber = () => {
-    const now = new Date();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
-    const year = now.getFullYear().toString().slice(-2); // Get last two digits of the year
+  useEffect(() => {
+    if (!isEditing && !formData.incidentDate) {
+      onFormDataChange({ incidentDate: format(now, 'yyyy-MM-dd') });
+    }
+    if (!isEditing && !formData.boDate) {
+      onFormDataChange({ boDate: '' }); // Initialize BO date as empty
+    }
+  }, [isEditing, formData.incidentDate, formData.boDate, onFormDataChange, now]);
 
-    // In a real application, the sequential number should be fetched from a backend
-    // to ensure uniqueness and persistence across sessions and users.
-    const currentSequential = sequentialNumber.toString().padStart(2, '0');
-    setSequentialNumber(prev => prev + 1); // Increment for next time
+  const handleDateChange = (field: 'incidentDate' | 'boDate') => (value: string) => {
+    onFormDataChange({ [field]: value });
+  };
 
-    const newIncidentNumber = `OC${currentSequential}-${month}${year}`;
-    handleInputChange("incidentNumber", newIncidentNumber);
+  const handleInputChange = (field: keyof z.infer<typeof IncidentFormSchema>, value: any) => {
+    onFormDataChange({ [field]: value });
   };
 
   return (
-    <div className="rounded-lg border bg-card p-8">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Calendar className="h-5 w-5" />
-        </div>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Identificação da Ocorrência</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h2 className="text-xl font-semibold">Identificação da Ocorrência</h2>
-          <p className="text-sm text-muted-foreground">Informações básicas sobre a ocorrência e registro policial</p>
+          <Label htmlFor="incidentNumber" className="text-sm font-medium">
+            Número da Ocorrência
+          </Label>
+          <Input
+            id="incidentNumber"
+            value={formData.incidentNumber}
+            onChange={(e) => handleInputChange('incidentNumber', e.target.value)}
+            disabled={isEditing}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="incidentDate" className="text-sm font-medium">
+            Data da Ocorrência
+          </Label>
+          <DateInput
+            id="incidentDate"
+            value={formData.incidentDate || ''}
+            onChange={handleDateChange('incidentDate')}
+            disabled={isEditing}
+          />
+          {/* No form.formState.errors here, as we are not using useFormContext directly */}
+        </div>
+
+        <div>
+          <Label htmlFor="incidentTime" className="text-sm font-medium">
+            Horário da Ocorrência
+          </Label>
+          <Input
+            id="incidentTime"
+            type="time"
+            value={formData.incidentTime}
+            onChange={(e) => handleInputChange('incidentTime', e.target.value)}
+            disabled={isEditing}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="locationType" className="text-sm font-medium">Tipo de Local</Label>
+          <Select onValueChange={(value) => handleInputChange('locationType', value)} value={formData.locationType} disabled={isEditing}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o tipo de local" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="urbana">Urbana</SelectItem>
+              <SelectItem value="rural">Rural</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-      
-      <div className="space-y-8">
-        {/* Sub-seção: Detalhes da Ocorrência */}
+
+      <div>
+        <Label htmlFor="location" className="text-sm font-medium">Local da Ocorrência</Label>
+        <Textarea
+          id="location"
+          value={formData.location}
+          onChange={(e) => handleInputChange('location', e.target.value)}
+          rows={3}
+          disabled={isEditing}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Detalhes da Ocorrência</h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-3">
-              <Label htmlFor="incidentNumber" className="text-sm font-medium">
-                Nº da Ocorrência: {formData.incidentNumber} <span className="text-destructive">*</span>
-              </Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  id="incidentNumber"
-                  value={formData.incidentNumber}
-                  readOnly
-                  className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Button type="button" onClick={handleGenerateIncidentNumber} className="h-11 px-4 py-2">
-                  Gerar Número
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="incidentDate" className="text-sm font-medium">
-                Data da Ocorrência <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="incidentDate"
-                type="date"
-                value={formData.incidentDate}
-                onChange={(e) => handleInputChange("incidentDate", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="incidentTime" className="text-sm font-medium">
-                Horário da Ocorrência <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="incidentTime"
-                type="time"
-                value={formData.incidentTime}
-                onChange={(e) => handleInputChange("incidentTime", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3 md:col-span-2">
-              <Label className="text-sm font-medium">Onde a ocorrência aconteceu? <span className="text-destructive">*</span></Label>
-              <RadioGroup
-                value={formData.locationType}
-                onValueChange={(value: "establishment" | "public_road") => handleInputChange("locationType", value)}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="establishment" id="locationType-establishment" />
-                  <Label htmlFor="locationType-establishment">Em estabelecimento (Doca/Pátio)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="public_road" id="locationType-public_road" />
-                  <Label htmlFor="locationType-public_road">Em rodovia/rua/via pública</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {formData.locationType === "establishment" && (
-              <>
-                <div className="space-y-3">
-                  <Label htmlFor="establishmentName" className="text-sm font-medium">
-                    Nome do Estabelecimento <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="establishmentName"
-                    placeholder="Ex: Centro de Distribuição X"
-                    value={formData.establishmentName}
-                    onChange={(e) => handleInputChange("establishmentName", e.target.value)}
-                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="establishmentAddress" className="text-sm font-medium">
-                    Endereço Completo do Estabelecimento <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="establishmentAddress"
-                    placeholder="Ex: Rua das Flores, 123, Bairro, Cidade/UF"
-                    value={formData.establishmentAddress}
-                    onChange={(e) => handleInputChange("establishmentAddress", e.target.value)}
-                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="establishmentCircumstances" className="text-sm font-medium">
-                    Circunstâncias do Ocorrido no Estabelecimento
-                  </Label>
-                  <Textarea
-                    id="establishmentCircumstances"
-                    placeholder="Descreva o que aconteceu nas dependências do estabelecimento..."
-                    value={formData.establishmentCircumstances}
-                    onChange={(e) => handleInputChange("establishmentCircumstances", e.target.value)}
-                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Existe doca no estabelecimento?</Label>
-                  <RadioGroup
-                    value={formData.hasDock}
-                    onValueChange={(value: "yes" | "no") => handleInputChange("hasDock", value)}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="hasDock-yes" />
-                      <Label htmlFor="hasDock-yes">Sim</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="hasDock-no" />
-                      <Label htmlFor="hasDock-no">Não</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Tem estacionamento disponível?</Label>
-                  <RadioGroup
-                    value={formData.hasParking}
-                    onValueChange={(value: "yes" | "no") => handleInputChange("hasParking", value)}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="hasParking-yes" />
-                      <Label htmlFor="hasParking-yes">Sim</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="hasParking-no" />
-                      <Label htmlFor="hasParking-no">Não</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </>
-            )}
-
-            {formData.locationType === "public_road" && (
-              <>
-                <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="roadDetailedLocation" className="text-sm font-medium">
-                    Descrição Detalhada do Local (Rodovia/Rua) <span className="text-destructive">*</span>
-                  </Label>
-                  <Textarea
-                    id="roadDetailedLocation"
-                    placeholder="Ex: BR-116, KM 250, próximo ao posto de gasolina 'X', sentido Sul."
-                    value={formData.roadDetailedLocation}
-                    onChange={(e) => handleInputChange("roadDetailedLocation", e.target.value)}
-                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="roadSuspicions" className="text-sm font-medium">
-                    Suspeitas sobre Veículos ou Indivíduos Próximos
-                  </Label>
-                  <Textarea
-                    id="roadSuspicions"
-                    placeholder="Descreva qualquer veículo ou pessoa suspeita observada..."
-                    value={formData.roadSuspicions}
-                    onChange={(e) => handleInputChange("roadSuspicions", e.target.value)}
-                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="roadTrafficConditions" className="text-sm font-medium">
-                    Condições do Trânsito no Momento
-                  </Label>
-                  <Input
-                    id="roadTrafficConditions"
-                    placeholder="Ex: Trânsito intenso, fluxo normal, parado, etc."
-                    value={formData.roadTrafficConditions}
-                    onChange={(e) => handleInputChange("roadTrafficConditions", e.target.value)}
-                    className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="roadWitnesses" className="text-sm font-medium">
-                    Existência de Testemunhas (Nome e Contato)
-                  </Label>
-                  <Textarea
-                    id="roadWitnesses"
-                    placeholder="Nomes e contatos de possíveis testemunhas..."
-                    value={formData.roadWitnesses}
-                    onChange={(e) => handleInputChange("roadWitnesses", e.target.value)}
-                    className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </>
-            )}
-          </div>
+          <Label htmlFor="boNumber" className="text-sm font-medium">Número do B.O.</Label>
+          <Input
+            id="boNumber"
+            value={formData.boNumber}
+            onChange={(e) => handleInputChange('boNumber', e.target.value)}
+            disabled={isEditing}
+          />
         </div>
 
-        {/* Sub-seção: Registro Policial (B.O.) */}
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Registro Policial (B.O.)</h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-3">
-              <Label htmlFor="boNumber" className="text-sm font-medium">
-                Nº do B.O. <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="boNumber"
-                placeholder="Ex: 123456789"
-                value={formData.boNumber}
-                onChange={(e) => handleInputChange("boNumber", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="boDate" className="text-sm font-medium">
-                Data do B.O. <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="boDate"
-                type="date"
-                value={formData.boDate}
-                onChange={(e) => handleInputChange("boDate", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Registrado no mesmo dia da ocorrência?</Label>
-              <RadioGroup
-                value={formData.sameDay}
-                onValueChange={(value: "yes" | "no") => handleInputChange("sameDay", value)}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="sameDay-yes" />
-                  <Label htmlFor="sameDay-yes">Sim</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="sameDay-no" />
-                  <Label htmlFor="sameDay-no">Não</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="responsible" className="text-sm font-medium">
-                Responsável pelo Registro <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="responsible"
-                placeholder="Nome completo"
-                value={formData.responsible}
-                onChange={(e) => handleInputChange("responsible", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3 md:col-span-2">
-              <Label htmlFor="policeReportObservations" className="text-sm font-medium">
-                Observações do Registro Policial
-              </Label>
-              <Textarea
-                id="policeReportObservations"
-                placeholder="Descreva quaisquer observações relevantes sobre o registro policial..."
-                value={formData.policeReportObservations}
-                onChange={(e) => handleInputChange("policeReportObservations", e.target.value)}
-                className="min-h-[80px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="boDate" className="text-sm font-medium">
+            Data do B.O.
+          </Label>
+          <DateInput
+            id="boDate"
+            value={formData.boDate || ''}
+            onChange={handleDateChange('boDate')}
+            disabled={isEditing}
+          />
+          {/* No form.formState.errors here, as we are not using useFormContext directly */}
         </div>
+      </div>
+
+      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+        <div className="space-y-0.5">
+          <Label className="text-base">Registrado no mesmo dia?</Label>
+        </div>
+        <Switch
+          checked={formData.sameDay}
+          onCheckedChange={(checked) => handleInputChange('sameDay', checked)}
+          disabled={isEditing}
+          aria-readonly
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="responsible" className="text-sm font-medium">Responsável pelo Registro</Label>
+        <Input
+          id="responsible"
+          value={formData.responsible}
+          onChange={(e) => handleInputChange('responsible', e.target.value)}
+          disabled={isEditing}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="roadWitnesses" className="text-sm font-medium">Testemunhas (se houver)</Label>
+        <Textarea
+          id="roadWitnesses"
+          value={formData.roadWitnesses}
+          onChange={(e) => handleInputChange('roadWitnesses', e.target.value)}
+          rows={2}
+          disabled={isEditing}
+        />
       </div>
     </div>
   );
-};
+}

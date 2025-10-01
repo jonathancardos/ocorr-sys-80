@@ -16,6 +16,8 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { z } from "zod";
+import { incidentFormSchema } from "@/lib/validations/incident-form-schema";
 
 interface PdfConfig {
   includeCoverPage: boolean;
@@ -318,18 +320,21 @@ const sectionFields = {
 
   const cnhStatus = getCnhStatus(formData.licenseExpiry);
 
+  const handleIdentificationSectionChange = (data: Partial<z.infer<typeof incidentFormSchema>>) => {
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        handleInputChange(key as string, data[key as keyof typeof data]);
+      }
+    }
+  };
+
   const renderSectionContent = (sectionId: string) => {
     switch (sectionId) {
       case "identification":
         return (
           <IncidentIdentificationSection
-            formData={{
-              boFiles: formData.boFiles,
-              sapScreenshots: formData.sapScreenshots,
-              riskReports: formData.riskReports,
-              omnilinkPhoto: formData.omnilinkPhoto,
-            }}
-            handleInputChange={handleInputChange}
+            formData={formData}
+            onFormDataChange={handleIdentificationSectionChange}
           />
         );
       case "vehicle":

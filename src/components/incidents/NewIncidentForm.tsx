@@ -725,7 +725,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         return (
           <IncidentIdentificationSection
             formData={formData}
-            handleInputChange={handleInputChange}
+            onFormDataChange={handleInputChange}
           />
         );
       case "vehicle":
