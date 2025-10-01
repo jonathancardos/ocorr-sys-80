@@ -124,6 +124,18 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
   });
 
   const onSubmit = async (data: DriverFormValues) => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      const missingFields = Object.keys(form.formState.errors)
+        .map(field => {
+          const fieldName = field.replace(/_/g, ' '); // Replace underscores with spaces for better readability
+          return `Falta preenchimento da coluna: ${fieldName}`;
+        })
+        .join('\n');
+      toast.error("Campos obrigatórios não preenchidos", {
+        description: missingFields,
+      });
+      return;
+    }
     await createDriverMutation.mutateAsync(data as TablesInsert<'drivers'>);
   };
 
@@ -202,6 +214,27 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
                     <Label htmlFor="full_name">Nome Completo *</Label>
                     <Input id="full_name" {...register('full_name')} required className="h-11" />
                     {errors.full_name && <p className="text-destructive text-sm">{errors.full_name.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF *</Label>
+                    <InputMask
+                      mask="999.999.999-99"
+                      value={watch('cpf')}
+                      onChange={(e) => setValue('cpf', e.target.value, { shouldValidate: true })}
+                    >
+                      {(inputProps: any) => (
+                        <Input
+                          id="cpf"
+                          {...inputProps}
+                          type="text"
+                          placeholder="000.000.000-00"
+                          className="h-11"
+                          required
+                        />
+                      )}
+                    </InputMask>
+                    {errors.cpf && <p className="text-destructive text-sm">{errors.cpf.message}</p>}
                   </div>
 
                   <div className="space-y-2">
