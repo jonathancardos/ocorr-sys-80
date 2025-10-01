@@ -209,34 +209,40 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="plate">Placa do Veículo *</Label>
-        <Input
-          id="plate"
-          value={formData.plate}
-          onChange={handleInputChange}
-          required
-          placeholder="Ex: ABC-1234"
-        />
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 p-1 sm:p-2 md:p-4">
+      {/* Placa e Modelo - 1 campo em mobile, 2 colunas em desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="plate" className="text-base md:text-sm">Placa do Veículo *</Label>
+          <Input
+            id="plate"
+            value={formData.plate}
+            onChange={handleInputChange}
+            required
+            placeholder="Ex: ABC-1234"
+            className="text-base md:text-sm h-11 md:h-10"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="model" className="text-base md:text-sm">Modelo do Veículo *</Label>
+          <Input
+            id="model"
+            value={formData.model}
+            onChange={handleInputChange}
+            required
+            placeholder="Ex: Mercedes Sprinter"
+            className="text-base md:text-sm h-11 md:h-10"
+          />
+        </div>
       </div>
       
+      {/* Tecnologias - Campo Único com Layout Responsivo */}
       <div className="space-y-2">
-        <Label htmlFor="model">Modelo do Veículo *</Label>
-        <Input
-          id="model"
-          value={formData.model}
-          onChange={handleInputChange}
-          required
-          placeholder="Ex: Mercedes Sprinter"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="technology">Tecnologias</Label>
+        <Label htmlFor="technology" className="text-base md:text-sm">Tecnologias</Label>
         <div className="flex flex-wrap gap-2 mb-2">
           {(formData.technology || []).map(tech => (
-            <Badge key={tech} variant="secondary" className="pr-1">
+            <Badge key={tech} variant="secondary" className="pr-1 text-sm md:text-xs">
               {tech}
               <Button
                 type="button"
@@ -252,10 +258,10 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
         </div>
         <Select
           onValueChange={handleTechnologyChange}
-          value="" // Reset the select value after selection
+          value=""
           disabled={isLoadingExistingTechnologies}
         >
-          <SelectTrigger className="h-11">
+          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
             <SelectValue placeholder="Adicionar tecnologia existente" />
           </SelectTrigger>
           <SelectContent>
@@ -270,29 +276,35 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
             )}
           </SelectContent>
         </Select>
-        <div className="flex items-center space-x-2 mt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2">
           <Input
             id="newTechnology"
             placeholder="Ou digite uma nova tecnologia"
             value={newTechnologyInput}
             onChange={(e) => setNewTechnologyInput(e.target.value)}
-            className="h-11 flex-1"
+            className="h-11 md:h-10 text-base md:text-sm flex-1"
           />
-          <Button type="button" onClick={handleAddNewTechnology} disabled={!newTechnologyInput.trim()}>
+          <Button 
+            type="button" 
+            onClick={handleAddNewTechnology} 
+            disabled={!newTechnologyInput.trim()}
+            className="h-11 md:h-10 text-base md:text-sm w-full sm:w-auto"
+          >
             <PlusCircle className="mr-2 h-4 w-4" /> Adicionar
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* NEW FIELD: Priority */}
+      {/* Prioridade e Bloqueador - 1 campo em mobile, 2 colunas em desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* Campo Prioridade */}
         <div className="space-y-2">
-          <Label htmlFor="priority" className="font-semibold">Prioridade</Label>
+          <Label htmlFor="priority" className="font-semibold text-base md:text-sm">Prioridade</Label>
           <Select
             value={formData.priority?.toString() || ''}
             onValueChange={(value) => handleSelectChange('priority', value)}
           >
-            <SelectTrigger className="h-11">
+            <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
               <SelectValue placeholder="Selecione a prioridade" />
             </SelectTrigger>
             <SelectContent>
@@ -301,19 +313,19 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
               <SelectItem value="3">3 (Baixa)</SelectItem>
             </SelectContent>
           </Select>
-          {/* NEW: Raw text input for priority */}
+          {/* Raw text input para prioridade */}
           <Input
             id="raw_priority_text"
             placeholder="Texto original da prioridade (opcional)"
             value={formData.raw_priority_text || ''}
             onChange={handleInputChange}
-            className="h-11"
+            className="h-11 md:h-10 text-base md:text-sm mt-2"
           />
         </div>
 
-        {/* UPDATED FIELD: Blocker Installed */}
+        {/* Campo Bloqueador */}
         <div className="space-y-2">
-          <Label htmlFor="blocker_installed_select" className="flex items-center gap-1 font-semibold">
+          <Label htmlFor="blocker_installed_select" className="flex items-center gap-1 font-semibold text-base md:text-sm">
             Bloqueador Instalado?
             <Tooltip>
               <TooltipTrigger asChild>
@@ -328,7 +340,7 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
             value={getBlockerSelectValue()}
             onValueChange={handleBlockerInstalledSelectChange}
           >
-            <SelectTrigger id="blocker_installed_select" className="h-11">
+            <SelectTrigger id="blocker_installed_select" className="h-11 md:h-10 text-base md:text-sm">
               <SelectValue placeholder="Selecione o status do bloqueador" />
             </SelectTrigger>
             <SelectContent>
@@ -339,26 +351,27 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
               <SelectItem value="other">Outra Informação</SelectItem>
             </SelectContent>
           </Select>
-          {/* Conditional raw text input for blocker_installed */}
+          {/* Input condicional para bloqueador */}
           {getBlockerSelectValue() === 'other' && (
             <Input
               id="raw_blocker_installed_text"
               placeholder="Descreva o status do bloqueador"
               value={formData.raw_blocker_installed_text || ''}
               onChange={handleInputChange}
-              className="h-11"
+              className="h-11 md:h-10 text-base md:text-sm mt-2"
             />
           )}
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 pt-4">
+      {/* Tem Oficina - Switch com Label Responsivo */}
+      <div className="flex items-center space-x-2 pt-2">
         <Switch
           id="has_workshop"
           checked={formData.has_workshop || false}
           onCheckedChange={(checked) => handleSwitchChange('has_workshop', checked)}
         />
-        <Label htmlFor="has_workshop" className="flex items-center gap-1 font-semibold">
+        <Label htmlFor="has_workshop" className="flex items-center gap-1 font-semibold text-base md:text-sm">
           Tem Oficina?
           <Tooltip>
             <TooltipTrigger asChild>
@@ -371,16 +384,18 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
         </Label>
       </div>
       
-      <DialogFooter className="pt-4">
+      {/* Botões de Ação - Stack em mobile, lado a lado em desktop */}
+      <DialogFooter className="pt-4 flex-col sm:flex-row gap-2 sm:gap-0">
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
           disabled={isSubmitting}
+          className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm"
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm">
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

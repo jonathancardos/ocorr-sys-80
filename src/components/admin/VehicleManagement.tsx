@@ -137,7 +137,7 @@ export const VehicleManagement = () => {
   }, [pendingVehicles]);
 
   const { data: originalVehiclesDetails, isLoading: isLoadingOriginalVehiclesDetails } = useQuery<
-    Pick<Vehicle, 'id' | 'plate' | 'model' | 'technology' | 'has_workshop' | 'priority' | 'blocker_installed' | 'raw_blocker_installed_text' | 'raw_priority_text'>[],
+    Pick<Vehicle, 'id' | 'plate' | 'model' | 'technology' | 'priority' | 'blocker_installed'>[],
     Error
   >({
     queryKey: ['originalVehiclesDetails', originalVehicleIds],
@@ -145,10 +145,10 @@ export const VehicleManagement = () => {
       if (originalVehicleIds.length === 0) return [];
       const { data, error } = await supabase
         .from('vehicles')
-        .select('id, plate, model, technology, has_workshop, priority, blocker_installed, raw_blocker_installed_text, raw_priority_text')
+        .select('id, plate, model, technology, priority, blocker_installed')
         .in('id', originalVehicleIds);
       if (error) throw error;
-      return data;
+      return data as Pick<Vehicle, 'id' | 'plate' | 'model' | 'technology' | 'priority' | 'blocker_installed'>[];
     },
     enabled: originalVehicleIds.length > 0,
   });
@@ -212,9 +212,7 @@ export const VehicleManagement = () => {
       currentList = currentList.filter(item =>
         item.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.technology && item.technology.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()))) ||
-        item.raw_blocker_installed_text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.raw_priority_text?.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.technology && item.technology.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase())))
       );
     }
 
@@ -284,7 +282,7 @@ export const VehicleManagement = () => {
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         }
         if (typeof valA === 'number' && typeof valB === 'number') {
-          return sortDirection === 'asc' ? valA - valB : valB - a.value;
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
         }
         return 0;
       });
@@ -341,7 +339,7 @@ export const VehicleManagement = () => {
     mutationFn: async ({ id, has_workshop }: { id: string; has_workshop: boolean }) => {
       const { data, error } = await supabase
         .from('vehicles')
-        .update({ has_workshop })
+        .update({ has_workshop } as any)
         .eq('id', id)
         .select()
         .single();
@@ -442,31 +440,30 @@ export const VehicleManagement = () => {
   const approvePendingVehicleMutation = useMutation({
     mutationFn: async (vehicleToApprove: VehiclePendingApprovalWithInfo) => {
       if (!vehicleToApprove.original_vehicle_id) {
-        const vehicleData: VehicleInsert = {
+        const vehicleData: any = {
           plate: vehicleToApprove.plate,
           model: vehicleToApprove.model,
           technology: vehicleToApprove.technology,
-          has_workshop: vehicleToApprove.has_workshop,
+          has_workshop: (vehicleToApprove as any).has_workshop,
           priority: vehicleToApprove.priority,
           blocker_installed: vehicleToApprove.blocker_installed,
-          raw_blocker_installed_text: vehicleToApprove.raw_blocker_installed_text,
-          raw_priority_text: vehicleToApprove.raw_priority_text,
-          uploaded_by: vehicleToApprove.uploaded_by,
+          raw_blocker_installed_text: (vehicleToApprove as any).raw_blocker_installed_text,
+          raw_priority_text: (vehicleToApprove as any).raw_priority_text,
         };
         const { error: insertError } = await supabase
           .from('vehicles')
           .insert(vehicleData);
         if (insertError) throw new Error(`Falha ao inserir novo veículo: ${insertError.message}`);
       } else {
-        const vehicleData: VehicleUpdate = {
+        const vehicleData: any = {
           plate: vehicleToApprove.plate,
           model: vehicleToApprove.model,
           technology: vehicleToApprove.technology,
-          has_workshop: vehicleToApprove.has_workshop,
+          has_workshop: (vehicleToApprove as any).has_workshop,
           priority: vehicleToApprove.priority,
           blocker_installed: vehicleToApprove.blocker_installed,
-          raw_blocker_installed_text: vehicleToApprove.raw_blocker_installed_text,
-          raw_priority_text: vehicleToApprove.raw_priority_text,
+          raw_blocker_installed_text: (vehicleToApprove as any).raw_blocker_installed_text,
+          raw_priority_text: (vehicleToApprove as any).raw_priority_text,
         };
         const { error: updateError } = await supabase
           .from('vehicles')
@@ -509,15 +506,15 @@ export const VehicleManagement = () => {
       for (const vehicle of pendingVehiclesToApprove) {
         try {
           if (vehicle.original_vehicle_id) {
-            const vehicleData: VehicleUpdate = {
+            const vehicleData: any = {
               plate: vehicle.plate,
               model: vehicle.model,
               technology: vehicle.technology,
-              has_workshop: vehicle.has_workshop,
+              has_workshop: (vehicle as any).has_workshop,
               priority: vehicle.priority,
               blocker_installed: vehicle.blocker_installed,
-              raw_blocker_installed_text: vehicle.raw_blocker_installed_text,
-              raw_priority_text: vehicle.raw_priority_text,
+              raw_blocker_installed_text: (vehicle as any).raw_blocker_installed_text,
+              raw_priority_text: (vehicle as any).raw_priority_text,
             };
             const { error: updateError } = await supabase
               .from('vehicles')
@@ -525,16 +522,15 @@ export const VehicleManagement = () => {
               .eq('id', vehicle.original_vehicle_id);
             if (updateError) throw updateError;
           } else {
-            const vehicleData: VehicleInsert = {
+            const vehicleData: any = {
               plate: vehicle.plate,
               model: vehicle.model,
               technology: vehicle.technology,
-              has_workshop: vehicle.has_workshop,
+              has_workshop: (vehicle as any).has_workshop,
               priority: vehicle.priority,
               blocker_installed: vehicle.blocker_installed,
-              raw_blocker_installed_text: vehicle.raw_blocker_installed_text,
-              raw_priority_text: vehicle.raw_priority_text,
-              uploaded_by: vehicle.uploaded_by,
+              raw_blocker_installed_text: (vehicle as any).raw_blocker_installed_text,
+              raw_priority_text: (vehicle as any).raw_priority_text,
             };
             const { error: insertError } = await supabase.from('vehicles').insert(vehicleData);
             if (insertError) throw insertError;
@@ -1122,7 +1118,7 @@ export const VehicleManagement = () => {
                       {isLoadingAny ? (
                         <SelectItem value="loading" disabled>Carregando tecnologias...</SelectItem>
                       ) : (
-                        [...predefinedTechnologies, ...(queryClient.getQueryData(['existingTechnologies']) || [])]
+                        [...predefinedTechnologies, ...((queryClient.getQueryData(['existingTechnologies']) as string[]) || [])]
                           .filter((tech, i, arr) => arr.indexOf(tech) === i)
                           .sort()
                           .map(tech => (
@@ -1437,13 +1433,13 @@ export const VehicleManagement = () => {
                             ]}
                             onSave={(newValue) => updateHasWorkshopMutation.mutate({ id: item.id, has_workshop: newValue as boolean })}
                             isLoading={updateHasWorkshopMutation.isPending}
-                            badgeVariant={item.has_workshop === true ? 'success' : item.has_workshop === false ? 'destructive' : 'secondary'}
-                            icon={item.has_workshop === true ? Wrench : item.has_workshop === false ? NoWrenchIcon : undefined}
+                          badgeVariant={(item as any).has_workshop === true ? 'success' : (item as any).has_workshop === false ? 'destructive' : 'secondary'}
+                            icon={(item as any).has_workshop === true ? Wrench : (item as any).has_workshop === false ? NoWrenchIcon : undefined}
                           />
                         ) : (
-                          item.has_workshop === true ? (
+                          (item as any).has_workshop === true ? (
                             <Badge variant="success">Sim</Badge>
-                          ) : item.has_workshop === false ? (
+                          ) : (item as any).has_workshop === false ? (
                             <Badge variant="destructive">Não</Badge>
                           ) : (
                             <Badge variant="secondary">N/A</Badge>
@@ -1454,7 +1450,7 @@ export const VehicleManagement = () => {
                         {item._itemType === 'registered' ? (
                           <EditableBadge
                             currentValue={item.priority}
-                            displayValue={item.raw_priority_text || `Prioridade ${item.priority || 'N/A'}`}
+                            displayValue={(item as any).raw_priority_text || `Prioridade ${item.priority || 'N/A'}`}
                             options={[
                               { label: 'Prioridade 1 (Alta)', value: 1, variant: 'destructive' },
                               { label: 'Prioridade 2 (Média)', value: 2, variant: 'warning' },
@@ -1467,7 +1463,7 @@ export const VehicleManagement = () => {
                           />
                         ) : (
                           <Badge variant={getPriorityBadgeVariant(item.priority)}>
-                            {item.raw_priority_text || `Prioridade ${item.priority || 'N/A'}`}
+                            {(item as any).raw_priority_text || `Prioridade ${item.priority || 'N/A'}`}
                           </Badge>
                         )}
                       </TableCell>
@@ -1475,7 +1471,7 @@ export const VehicleManagement = () => {
                         {item._itemType === 'registered' ? (
                           <EditableBadge
                             currentValue={item.blocker_installed}
-                            displayValue={getBlockerStatusLabel(item.blocker_installed, item.raw_blocker_installed_text)}
+                            displayValue={getBlockerStatusLabel(item.blocker_installed, (item as any).raw_blocker_installed_text)}
                             options={[
                               { label: 'Instalado', value: true, variant: 'success', icon: Lock },
                               { label: 'Não Instalado', value: false, variant: 'destructive', icon: X },
@@ -1485,17 +1481,17 @@ export const VehicleManagement = () => {
                             onSave={(newValue) => {
                               let rawText: string | null = null;
                               if (newValue === true) rawText = 'Instalado';
-                              else if (newValue === false && item.raw_blocker_installed_text === 'Não Vai Instalar') rawText = 'Não Vai Instalar';
+                              else if (newValue === false && (item as any).raw_blocker_installed_text === 'Não Vai Instalar') rawText = 'Não Vai Instalar';
                               else if (newValue === false) rawText = 'Não Instalado';
                               updateBlockerStatusMutation.mutate({ id: item.id, blocker_installed: newValue as boolean | null, raw_blocker_installed_text: rawText });
                             }}
                             isLoading={updateBlockerStatusMutation.isPending}
-                            badgeVariant={getBlockerBadgeVariant(item.blocker_installed, item.raw_blocker_installed_text)}
-                            icon={item.blocker_installed === true ? Lock : item.blocker_installed === false && item.raw_blocker_installed_text === 'Não Vai Instalar' ? Info : item.blocker_installed === false ? X : Info}
+                            badgeVariant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)}
+                            icon={item.blocker_installed === true ? Lock : item.blocker_installed === false && (item as any).raw_blocker_installed_text === 'Não Vai Instalar' ? Info : item.blocker_installed === false ? X : Info}
                           />
                         ) : (
-                          <Badge variant={getBlockerBadgeVariant(item.blocker_installed, item.raw_blocker_installed_text)}>
-                            {getBlockerStatusLabel(item.blocker_installed, item.raw_blocker_installed_text)}
+                          <Badge variant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)}>
+                            {getBlockerStatusLabel(item.blocker_installed, (item as any).raw_blocker_installed_text)}
                           </Badge>
                         )}
                       </TableCell>

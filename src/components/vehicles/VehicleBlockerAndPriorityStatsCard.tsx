@@ -125,7 +125,7 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
                     </div>
                     <span className="text-sm text-foreground">{vehiclesWithBlockerInstalled} ({blockerInstalledPercentage}%)</span>
                   </div>
-                  <Progress value={blockerInstalledPercentage} className="h-2" indicatorClassName="bg-success" />
+                  <Progress value={blockerInstalledPercentage} className="h-2 [&>div]:bg-success" />
 
                   {/* Não Instalado (Explicitamente) */}
                   <div 
@@ -149,7 +149,7 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
                     </div>
                     <span className="text-sm text-foreground">{vehiclesBlockerNotInstalledExplicitly} ({blockerNotInstalledPercentage}%)</span>
                   </div>
-                  <Progress value={blockerNotInstalledPercentage} className="h-2" indicatorClassName="bg-destructive" />
+                  <Progress value={blockerNotInstalledPercentage} className="h-2 [&>div]:bg-destructive" />
 
                   {/* Outros Status Não Classificados */}
                   <div 
@@ -170,7 +170,7 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
                     </div>
                     <span className="text-sm text-foreground">{vehiclesBlockerStatusUnknown} ({blockerUnknownPercentage}%)</span>
                   </div>
-                  <Progress value={blockerUnknownPercentage} className="h-2" indicatorClassName="bg-muted-foreground" />
+                  <Progress value={blockerUnknownPercentage} className="h-2 [&>div]:bg-muted-foreground" />
                 </div>
               </div>
 

@@ -124,43 +124,27 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-xl mx-auto p-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 p-1 sm:p-2 md:p-4">
+      {/* Nome Completo - Campo Único em Linha Completa */}
       <div className="space-y-2">
-        <Label htmlFor="full_name">Nome Completo *</Label>
+        <Label htmlFor="full_name" className="text-base md:text-sm">Nome Completo *</Label>
         <Input
           id="full_name"
           {...register('full_name')}
           required
+          className="text-base md:text-sm h-11 md:h-10"
         />
-        {errors.full_name && <p className="text-red-500 text-sm">{errors.full_name.message}</p>}
+        {errors.full_name && <p className="text-destructive text-sm mt-1">{errors.full_name.message}</p>}
       </div>
       
-      {/* <div className="space-y-2">
-        <Label htmlFor="cpf">CPF *</Label>
-        <InputMask
-          mask="999.999.999-99"
-          value={watch('cpf')}
-          onChange={(e) => setValue('cpf', e.target.value, { shouldValidate: true })}
-        >
-          {(inputProps: any) => (
-            <Input
-              id="cpf"
-              {...inputProps}
-              {...register('cpf')}
-              required
-            />
-          )}
-        </InputMask>
-        {errors.cpf && <p className="text-red-500 text-sm">{errors.cpf.message}</p>}
-      </div> */}
-
+      {/* Tipo de Motorista - Campo Único */}
       <div className="space-y-2">
-        <Label htmlFor="type">Tipo</Label>
+        <Label htmlFor="type" className="text-base md:text-sm">Tipo</Label>
         <Select
           onValueChange={(value) => setValue('type', value, { shouldValidate: true })}
           value={watch('type') || ''}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -168,78 +152,87 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
             <SelectItem value="agregado">Agregado</SelectItem>
           </SelectContent>
         </Select>
-        {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
+        {errors.type && <p className="text-destructive text-sm mt-1">{errors.type.message}</p>}
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* CNH e Validade - 1 campo em mobile, 2 colunas em desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div className="space-y-2">
-          <Label htmlFor="cnh">CNH</Label>
+          <Label htmlFor="cnh" className="text-base md:text-sm">CNH</Label>
           <Input
             id="cnh"
             {...register('cnh')}
+            className="text-base md:text-sm h-11 md:h-10"
           />
-          {errors.cnh && <p className="text-red-500 text-sm">{errors.cnh.message}</p>}
+          {errors.cnh && <p className="text-destructive text-sm mt-1">{errors.cnh.message}</p>}
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="cnh_expiry">Validade CNH</Label>
+          <Label htmlFor="cnh_expiry" className="text-base md:text-sm">Validade CNH</Label>
           <Input
             id="cnh_expiry"
             type="date"
             {...register('cnh_expiry')}
+            className="text-base md:text-sm h-11 md:h-10"
           />
-          {errors.cnh_expiry && <p className="text-red-500 text-sm">{errors.cnh_expiry.message}</p>}
+          {errors.cnh_expiry && <p className="text-destructive text-sm mt-1">{errors.cnh_expiry.message}</p>}
         </div>
       </div>
       
+      {/* Telefone - Campo Único */}
       <div className="space-y-2">
-        <Label htmlFor="phone">Telefone</Label>
+        <Label htmlFor="phone" className="text-base md:text-sm">Telefone</Label>
         <Input
           id="phone"
           {...register('phone')}
+          className="text-base md:text-sm h-11 md:h-10"
         />
-        {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
+        {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>}
       </div>
 
+      {/* Data de Cadastro Omnilink Score - Campo Único */}
       <div className="space-y-2">
-        <Label htmlFor="omnilink_score_registration_date">Data de Cadastro Omnilink Score</Label>
+        <Label htmlFor="omnilink_score_registration_date" className="text-base md:text-sm">Data de Cadastro Omnilink Score</Label>
         <Input
           id="omnilink_score_registration_date"
           type="date"
           {...register('omnilink_score_registration_date')}
+          className="text-base md:text-sm h-11 md:h-10"
         />
-        {errors.omnilink_score_registration_date && <p className="text-red-500 text-sm">{errors.omnilink_score_registration_date.message}</p>}
+        {errors.omnilink_score_registration_date && <p className="text-destructive text-sm mt-1">{errors.omnilink_score_registration_date.message}</p>}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Vencimento e Status Omnilink - 1 campo em mobile, 2 colunas em desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div className="space-y-2">
-          <Label htmlFor="omnilink_score_expiry_date">Vencimento Omnilink Score</Label>
+          <Label htmlFor="omnilink_score_expiry_date" className="text-base md:text-sm">Vencimento Omnilink Score</Label>
           <Input
             id="omnilink_score_expiry_date"
             type="date"
             value={detailedOmnilinkStatus?.expiryDate ? formatDate(detailedOmnilinkStatus.expiryDate) : ''}
             readOnly
-            className="bg-muted/50"
+            className="bg-muted/50 text-base md:text-sm h-11 md:h-10"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="omnilink_score_status_display">Status Omnilink Score</Label>
+          <Label htmlFor="omnilink_score_status_display" className="text-base md:text-sm">Status Omnilink Score</Label>
           <Input
             id="omnilink_score_status_display"
             value={detailedOmnilinkStatus?.message || ''}
             readOnly
-            className="bg-muted/50"
+            className="bg-muted/50 text-base md:text-sm h-11 md:h-10"
           />
         </div>
       </div>
 
+      {/* Status de Indicação - Campo Único */}
       <div className="space-y-2">
-        <Label htmlFor="status_indicacao">Status de Indicação</Label>
+        <Label htmlFor="status_indicacao" className="text-base md:text-sm">Status de Indicação</Label>
         <Select
           onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => setValue('status_indicacao', value, { shouldValidate: true })}
           value={statusIndicacao || ''}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
             <SelectValue placeholder="Selecione o status de indicação" />
           </SelectTrigger>
           <SelectContent>
@@ -248,32 +241,35 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
             <SelectItem value="nao_indicado">Não Indicado</SelectItem>
           </SelectContent>
         </Select>
-        {errors.status_indicacao && <p className="text-red-500 text-sm">{errors.status_indicacao.message}</p>}
+        {errors.status_indicacao && <p className="text-destructive text-sm mt-1">{errors.status_indicacao.message}</p>}
       </div>
 
+      {/* Motivo de Não Indicação - Aparece Condicionalmente */}
       {statusIndicacao === 'nao_indicado' && (
         <div className="space-y-2">
-          <Label htmlFor="reason_nao_indicacao">Motivo de Não Indicação (Opcional)</Label>
+          <Label htmlFor="reason_nao_indicacao" className="text-base md:text-sm">Motivo de Não Indicação (Opcional)</Label>
           <Textarea
             id="reason_nao_indicacao"
             {...register('reason_nao_indicacao')}
             placeholder="Descreva o motivo pelo qual o motorista não foi indicado..."
-            className="min-h-[80px]"
+            className="min-h-[100px] md:min-h-[80px] text-base md:text-sm"
           />
-          {errors.reason_nao_indicacao && <p className="text-red-500 text-sm">{errors.reason_nao_indicacao.message}</p>}
+          {errors.reason_nao_indicacao && <p className="text-destructive text-sm mt-1">{errors.reason_nao_indicacao.message}</p>}
         </div>
       )}
       
-      <DialogFooter className="pt-4">
+      {/* Botões de Ação - Stack em mobile, lado a lado em desktop */}
+      <DialogFooter className="pt-4 flex-col sm:flex-row gap-2 sm:gap-0">
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
           disabled={isSubmitting}
+          className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm"
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm">
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

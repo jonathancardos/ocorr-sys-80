@@ -152,7 +152,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{cnhValid} ({totalDrivers > 0 ? (cnhValid / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (cnhValid / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-success" />
+                  <Progress value={totalDrivers > 0 ? (cnhValid / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-success" />
 
                   {/* CNH Prestes a Vencer */}
                   <div
@@ -173,7 +173,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{cnhExpiringSoon} ({totalDrivers > 0 ? (cnhExpiringSoon / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (cnhExpiringSoon / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-warning" />
+                  <Progress value={totalDrivers > 0 ? (cnhExpiringSoon / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-warning" />
 
                   {/* CNH Vencida */}
                   <div
@@ -194,7 +194,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{cnhExpired} ({totalDrivers > 0 ? (cnhExpired / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (cnhExpired / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-destructive" />
+                  <Progress value={totalDrivers > 0 ? (cnhExpired / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-destructive" />
 
                   {/* CNH Não Informada */}
                   <div
@@ -215,7 +215,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{cnhUnknown} ({totalDrivers > 0 ? (cnhUnknown / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (cnhUnknown / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-muted-foreground" />
+                  <Progress value={totalDrivers > 0 ? (cnhUnknown / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-muted-foreground" />
                 </div>
               </div>
 
@@ -242,7 +242,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{omnilinkEmDia} ({totalDrivers > 0 ? (omnilinkEmDia / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (omnilinkEmDia / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-success" />
+                  <Progress value={totalDrivers > 0 ? (omnilinkEmDia / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-success" />
 
                   {/* Omnilink Prestes a Vencer */}
                   <div
@@ -263,7 +263,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{omnilinkPrestVencer} ({totalDrivers > 0 ? (omnilinkPrestVencer / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (omnilinkPrestVencer / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-warning" />
+                  <Progress value={totalDrivers > 0 ? (omnilinkPrestVencer / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-warning" />
 
                   {/* Omnilink Vencido */}
                   <div
@@ -284,7 +284,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{omnilinkVencido} ({totalDrivers > 0 ? (omnilinkVencido / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (omnilinkVencido / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-destructive" />
+                  <Progress value={totalDrivers > 0 ? (omnilinkVencido / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-destructive" />
 
                   {/* Omnilink Não Informado */}
                   <div
@@ -305,7 +305,7 @@ export const DriverCnhOmnilinkStatsCard: React.FC<DriverCnhOmnilinkStatsCardProp
                     </div>
                     <span className="text-sm text-foreground">{omnilinkUnknown} ({totalDrivers > 0 ? (omnilinkUnknown / totalDrivers * 100).toFixed(0) : 0}%)</span>
                   </div>
-                  <Progress value={totalDrivers > 0 ? (omnilinkUnknown / totalDrivers * 100) : 0} className="h-2" indicatorClassName="bg-muted-foreground" />
+                  <Progress value={totalDrivers > 0 ? (omnilinkUnknown / totalDrivers * 100) : 0} className="h-2 [&>div]:bg-muted-foreground" />
                 </div>
               </div>
             </CardContent>
