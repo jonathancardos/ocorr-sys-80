@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -6,12 +6,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Eye, Save, FileText } from 'lucide-react';
+import { Loader2, Eye, Save, FileText, ZoomIn, ZoomOut } from 'lucide-react'; // Adicionado ZoomIn, ZoomOut
 import { IncidentReportPDFLayout } from './IncidentReportPDFLayout';
 import { toast } from 'sonner'; // Importar toast do sonner
-import { getCnhStatus as getCnhStatusUtil, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import getCnhStatus from new utility
+import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import getCnhStatus from new utility
 import { Input } from '@/components/ui/input'; // Adicionado: Importação do componente Input
 import { createRoot } from 'react-dom/client'; // Correct import for createRoot
+import html2canvas from 'html2canvas'; // Importar html2canvas
+import jsPDF from 'jspdf'; // Importar jsPDF
+import { Slider } from '@/components/ui/slider'; // Importar Slider
 
 interface ReportCustomizationTabProps {
   formData: any;
@@ -205,9 +208,11 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
   const [selectedTemplate, setSelectedTemplate] = useState<string>("Padrão Detalhado");
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewRef = React.useRef<HTMLDivElement>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null); // Estado para a URL do blob do PDF
+  const [zoomLevel, setZoomLevel] = useState<number>(100); // Estado para o nível de zoom (em porcentagem)
 
-  const cnhStatus = getCnhStatusUtil(formData.licenseExpiry); // Use the imported utility function
-  const omnilinkDetailedStatus = getDetailedOmnilinkStatus(formData.omnilinkScoreRegistrationDate); // NEW
+  const cnhStatus = getCnhStatus(formData.licenseExpiry);
+  const omnilinkDetailedStatus = getDetailedOmnilinkStatus(formData.omnilinkScoreRegistrationDate);
 
   const handleTemplateChange = (templateName: string) => {
     setSelectedTemplate(templateName);
@@ -218,30 +223,32 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
   };
 
   const handleSectionVisibilityChange = (sectionId: string, isChecked: boolean) => {
-    setPdfConfig(prev => ({
-      ...prev,
-      sections: {
-        ...prev.sections,
-        [sectionId]: {
-          ...prev.sections[sectionId],
-          isVisible: isChecked,
+    setPdfConfig(prev => {
+      const currentSection = prev.sections[sectionId] || { isVisible: false, fields: {} }; // Provide a default
+      return {
+        ...prev,
+        sections: {
+          ...prev.sections,
+          [sectionId]: {
+            ...currentSection,
+            isVisible: isChecked,
+          },
         },
-      },
-    }));
+      };
+    });
   };
 
   const handleFieldVisibilityChange = (sectionId: string, fieldId: string, isChecked: boolean) => {
     setPdfConfig(prev => {
-      const currentSection = prev.sections[sectionId];
-      // Ensure currentSection and its fields property exist and are objects
-      const updatedFields = { ...(currentSection?.fields || {}), [fieldId]: isChecked };
+      const currentSection = prev.sections[sectionId] || { isVisible: false, fields: {} }; // Provide a default
+      const updatedFields = { ...(currentSection.fields || {}), [fieldId]: isChecked };
       return {
         ...prev,
         sections: {
-          ...currentSection, // Copy existing properties of the section
+          ...prev.sections,
           [sectionId]: {
             ...currentSection,
-            fields: updatedFields, // Assign the safely updated fields object
+            fields: updatedFields,
           },
         },
       };
@@ -338,55 +345,118 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
     );
   };
 
-  const renderPdfPreview = useCallback(() => {
-    if (!previewRef.current) return;
-
+  const renderPdfPreview = useCallback(async () => {
+    console.log("renderPdfPreview: Iniciando a geração do PDF."); // Novo log
     setPreviewLoading(true);
-    // Clear previous content
-    previewRef.current.innerHTML = '';
-
-    // Render the PDF layout component into a temporary div
-    const tempDiv = document.createElement('div');
+    setPdfBlobUrl(null);
+  
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
     tempDiv.style.width = '210mm'; // A4 width
     tempDiv.style.minHeight = '297mm'; // A4 height
-    tempDiv.style.boxShadow = '0 0 8px rgba(0,0,0,0.1)';
-    tempDiv.style.backgroundColor = 'white';
-    tempDiv.style.margin = 'auto';
-    tempDiv.style.overflow = 'hidden'; // Ensure content doesn't overflow
-    previewRef.current.appendChild(tempDiv);
-
-    const root = createRoot(tempDiv);
-    root.render(
-      <IncidentReportPDFLayout
-        formData={formData}
-        boAttachments={formData.boFiles}
-        sapScreenshotAttachments={formData.sapScreenshots}
-        riskReportAttachments={formData.riskReports}
-        omnilinkPhotoAttachment={formData.omnilinkPhoto ? [formData.omnilinkPhoto] : []}
-        pdfConfig={pdfConfig}
-        cnhStatus={cnhStatus}
-        omnilinkDetailedStatus={omnilinkDetailedStatus} // NEW
-      />
-    );
-
-    // A small delay to allow rendering before setting loading to false
-    setTimeout(() => {
+    // tempDiv.style.height = 'auto'; // Allow div to expand
+    document.body.appendChild(tempDiv);
+  
+    let root: ReturnType<typeof createRoot> | undefined;
+  
+    try {
+      console.log("renderPdfPreview: formData antes da renderização:", formData); // Novo log
+      console.log("renderPdfPreview: pdfConfig antes da renderização:", pdfConfig); // Novo log
+      const element = (
+        <IncidentReportPDFLayout
+          formData={formData}
+          boAttachments={formData.boFiles}
+          sapScreenshotAttachments={formData.sapScreenshots}
+          riskReportAttachments={formData.riskReports}
+          omnilinkPhotoAttachment={formData.omnilinkPhoto ? [formData.omnilinkPhoto] : []}
+          pdfConfig={pdfConfig}
+          cnhStatus={getCnhStatus(formData.licenseExpiry)}
+          omnilinkDetailedStatus={getDetailedOmnilinkStatus(formData.omnilinkScoreRegistrationDate)}
+          onRenderComplete={() => {
+            console.log("renderPdfPreview: onRenderComplete chamado."); // Novo log
+          }}
+        />
+      );
+      root = createRoot(tempDiv);
+      root.render(element);
+  
+      // Aguardar um pequeno período para garantir que o React renderize o componente
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Aumentado para 2 segundos
+  
+      console.log("renderPdfPreview: Renderização do componente React concluída, iniciando html2canvas."); // Novo log
+      const canvas = await html2canvas(tempDiv, {
+        useCORS: true,
+        scale: 2, // Aumentar a escala para melhor qualidade
+      });
+      console.log("renderPdfPreview: html2canvas concluído, canvas gerado:", canvas); // Novo log
+      console.log("renderPdfPreview: Canvas dimensions - width:", canvas.width, "height:", canvas.height); // Novo log para dimensões do canvas
+  
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      console.log("renderPdfPreview: jsPDF inicializado."); // Novo log
+  
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+  
+      let position = 0;
+  
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+  
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      console.log("renderPdfPreview: PDF gerado."); // Novo log
+  
+      const pdfBlob = pdf.output("blob");
+      console.log("renderPdfPreview: Blob do PDF criado:", pdfBlob); // Novo log
+      const url = URL.createObjectURL(pdfBlob);
+      setPdfBlobUrl(url);
+      console.log("renderPdfPreview: URL do Blob do PDF criada e definida:", url); // Novo log
+    } catch (error) {
+      console.error("renderPdfPreview: Erro durante a geração do PDF:", error);
+      setPdfBlobUrl(null);
+    } finally {
+      if (root) {
+        root.unmount();
+      }
+      document.body.removeChild(tempDiv);
       setPreviewLoading(false);
-    }, 300);
-
-    return () => {
-      root.unmount();
-    };
-  }, [formData, pdfConfig, cnhStatus, omnilinkDetailedStatus]);
+      console.log("renderPdfPreview: Limpeza concluída.");
+    }
+  }, [formData, pdfConfig]);
 
   useEffect(() => {
     renderPdfPreview();
-  }, [renderPdfPreview]);
+    // Temporarily remove URL.revokeObjectURL to debug ERR_ABORTED
+    // return () => {
+    //   if (pdfBlobUrl) {
+    //     URL.revokeObjectURL(pdfBlobUrl);
+    //   }
+    // };
+  }, [renderPdfPreview]); // Removed pdfBlobUrl from dependencies
 
+  const handleZoomChange = (value: number[]) => {
+    setZoomLevel(value[0]);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 10, 200)); // Limite máximo de 200%
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 10, 50)); // Limite mínimo de 50%
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Coluna de Configuração */}
+      {/* Coluna de Configuração */ }
       <div className="space-y-6">
         <Card className="modern-card">
           <CardHeader>
@@ -436,14 +506,14 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
           </CardContent>
         </Card>
 
-        <ScrollArea className="h-[calc(100vh-250px)] pr-4"> {/* Adjust height as needed */}
+        <ScrollArea className="h-[calc(100vh-250px)] pr-4">
           {Object.keys(pdfConfig.sections).map(sectionId => renderSectionConfig(sectionId))}
         </ScrollArea>
       </div>
 
-      {/* Coluna de Pré-visualização */}
+      {/* Coluna de Pré-visualização */ }
       <div className="space-y-6">
-        <Card className="modern-card sticky top-20"> {/* Sticky for better UX */}
+        <Card className="modern-card sticky top-20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5 text-primary" />
@@ -453,14 +523,47 @@ const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formDat
               Veja como o relatório será gerado com as configurações atuais.
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative min-h-[400px] flex items-center justify-center">
+          <CardContent className="relative min-h-[400px] flex flex-col items-center justify-center">
             {previewLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             )}
-            <div ref={previewRef} className="w-full h-full overflow-hidden">
-              {/* PDF content will be rendered here */}
+
+            {pdfBlobUrl && (
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 50}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <Slider
+                  value={[zoomLevel]}
+                  onValueChange={handleZoomChange}
+                  min={50}
+                  max={200}
+                  step={10}
+                  className="w-[200px]"
+                />
+                <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 200}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium">{zoomLevel}%</span>
+              </div>
+            )}
+
+            <div className="w-full h-full overflow-auto border rounded-md bg-gray-100 flex items-center justify-center">
+              {pdfBlobUrl ? (
+                <iframe
+                  id="pdf-preview-iframe"
+                  src={pdfBlobUrl}
+                  width={`${zoomLevel}%`}
+                  height={`${zoomLevel}%`}
+                  className="min-w-[210mm] min-h-[297mm]" // Tamanho mínimo para A4
+                  style={{ border: 'none' }}
+                  title="Pré-visualização do PDF"
+                />
+              ) : (
+                !previewLoading && <p className="text-muted-foreground">Nenhuma pré-visualização disponível.</p>
+              )}
             </div>
           </CardContent>
         </Card>

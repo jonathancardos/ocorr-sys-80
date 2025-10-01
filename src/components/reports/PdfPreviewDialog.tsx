@@ -12,6 +12,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/integrations/supabase/storage';
+import { Slider } from '@/components/ui/slider'; // Importar Slider
 
 type Driver = Tables<'drivers'>;
 
@@ -35,22 +36,34 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [generatedPdfBlob, setGeneratedPdfBlob] = useState<Blob | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(1.0); // Estado para o nível de zoom
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setIsGeneratingPdf(true);
       setGeneratedPdfBlob(null);
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
       return;
     }
 
     const generatePdfBlob = async () => {
       setIsGeneratingPdf(true);
       setGeneratedPdfBlob(null);
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
 
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
-      tempDiv.style.width = '210mm';
+      tempDiv.style.width = '210mm'; // A4 width
+      tempDiv.style.padding = '10mm'; // Add some padding to avoid cutting content
       document.body.appendChild(tempDiv);
 
       const root = createRoot(tempDiv);
@@ -69,11 +82,11 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
       );
 
       await renderPromise;
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200)); // Give some time for layout to settle
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 2,
+          scale: 2, // Increased scale for better resolution
           useCORS: true,
           windowWidth: tempDiv.scrollWidth,
           windowHeight: tempDiv.scrollHeight,
@@ -81,25 +94,29 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
           y: 0,
           width: tempDiv.offsetWidth,
           height: tempDiv.offsetHeight,
+          scrollX: -window.scrollX,
+          scrollY: -window.scrollY,
         });
 
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 210;
-        const pageHeight = 295;
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
-        let position = 0;
+        let yOffset = 0;
 
-        pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
+        while (heightLeft > 0) {
+            pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            yOffset -= pageHeight; // Move up for the next page
+            if (heightLeft > 0) {
+                pdf.addPage();
+            }
         }
-        setGeneratedPdfBlob(pdf.output('blob'));
+        const blob = pdf.output('blob');
+        setGeneratedPdfBlob(blob);
+        setPdfUrl(URL.createObjectURL(blob));
 
       } catch (error) {
         console.error("Error generating PDF blob:", error);
@@ -187,10 +204,44 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
               <span>Gerando PDF...</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-foreground">
-              <CheckCircle className="h-12 w-12 text-success mb-4" />
-              <p className="text-lg font-semibold mb-2">PDF pronto!</p>
-              <p className="text-sm text-muted-foreground">Você pode abri-lo em uma nova aba ou baixá-lo.</p>
+            <div className="flex flex-col w-full h-full">
+              <div className="flex items-center justify-center mb-4 space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.1))}
+                >
+                  Zoom Out
+                </Button>
+                <Slider
+                  value={[zoomLevel]}
+                  min={0.5}
+                  max={2.0}
+                  step={0.1}
+                  onValueChange={(value) => setZoomLevel(value[0])}
+                  className="w-[150px]"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoomLevel(prev => Math.min(2.0, prev + 0.1))}
+                >
+                  Zoom In
+                </Button>
+                <span className="text-sm text-muted-foreground">{(zoomLevel * 100).toFixed(0)}%</span>
+              </div>
+              {pdfUrl && (
+                <div className="overflow-auto w-full h-[500px] border rounded-md">
+                  <iframe
+                    ref={iframeRef}
+                    src={pdfUrl}
+                    width={`${100 * zoomLevel}%`}
+                    height={`${500 * zoomLevel}px`}
+                    style={{ border: 'none' }}
+                    title="Pré-visualização do PDF"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
