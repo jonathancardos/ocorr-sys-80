@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Download, X, ExternalLink } from 'lucide-react'; // Adicionado ExternalLink
+import { Loader2, Download, X, ExternalLink, CheckCircle } from 'lucide-react'; // Adicionado ExternalLink e CheckCircle
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';

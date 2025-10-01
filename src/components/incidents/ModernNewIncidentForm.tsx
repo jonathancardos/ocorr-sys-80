@@ -40,7 +40,7 @@ import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpi
 
 interface NewIncidentFormProps {
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any, isDraft?: boolean) => void;
 }
 
 const sections = [
@@ -272,6 +272,13 @@ const sectionFields = {
     }
   }, [setFormData, setUploadingFiles, formData.incidentNumber, uploadFile, uploadFiles]);
 
+  const handleSaveAsDraft = () => {
+    onSave(formData, true);
+    toast.success("Rascunho salvo!", {
+      description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
+    });
+  };
+
   const handleSave = () => {
     if (!formData.incidentNumber || !formData.incidentDate || !formData.locationType) {
       toast.error("Campos obrigatórios", {
@@ -279,8 +286,7 @@ const sectionFields = {
       });
       return;
     }
-
-    onSave(formData);
+    onSave(formData, false);
     toast.success("Ocorrência salva!", {
       description: "A ocorrência foi registrada com sucesso.",
     });
@@ -421,16 +427,13 @@ const sectionFields = {
           </div>
           <div className="flex items-center gap-3">
             {/* Desktop Buttons */}
-            <Button 
-              onClick={generatePDF} 
-              variant="outline" 
-              className="hidden sm:flex bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Gerar PDF
+
+            <Button onClick={handleSaveAsDraft} size="sm" variant="outline" className="hidden sm:flex">
+              <Save className="mr-2 h-4 w-4" />
+              Salvar como Rascunho
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               className="hidden sm:flex bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-lg"
             >
               <Save className="mr-2 h-4 w-4" />

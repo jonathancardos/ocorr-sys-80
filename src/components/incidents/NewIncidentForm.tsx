@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+
 // Import modular sections
 import { IncidentIdentificationSection } from './IncidentIdentificationSection';
 import { VehicleDriverSection } from './VehicleDriverSection';
@@ -48,7 +49,7 @@ import NewDriverForm from '@/components/drivers/NewDriverForm';
 // Import the new vehicle form component
 import NewVehicleForm from '@/components/vehicles/NewVehicleForm';
 // Import the new ReportCustomizationTab component
-import ReportCustomizationTab, { PdfConfig } from './ReportCustomizationTab';
+import ReportCustomizationTab from './ReportCustomizationTab';
 
 // Import Supabase Storage utilities
 import { uploadFile, uploadFiles, deleteFile } from '@/integrations/supabase/storage';
@@ -59,7 +60,7 @@ import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpi
 
 interface NewIncidentFormProps {
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any, isDraft?: boolean) => void;
 }
 
 const sections = [
@@ -90,12 +91,16 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false); // State for new vehicle dialog
   const [pdfConfig, setPdfConfig] = useState<PdfConfig | null>(null); // State to hold PDF configuration
 
-  const [formData, setFormData] = useState({
-    // Identificação da Ocorrência
-    incidentNumber: "",
-    incidentDate: "",
-    incidentTime: "",
-    location: "", // General location field, might be used for both types
+  const [formData, setFormData] = useState(() => {
+    const now = new Date();
+    const currentDate = format(now, 'yyyy-MM-dd', { locale: ptBR });
+    const currentTime = format(now, 'HH:mm', { locale: ptBR });
+    return {
+      // Identificação da Ocorrência
+      incidentNumber: "",
+      incidentDate: currentDate,
+      incidentTime: currentTime,
+      location: "", // General location field, might be used for both types
     locationType: "" as "establishment" | "public_road" | "", // New field for location type
     establishmentName: "", // New field for establishment
     establishmentAddress: "", // New field for establishment
@@ -305,27 +310,53 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('incidents')
-        .select('incident_number')
+        .select('incident_number, created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
+      const currentDate = new Date();
+      const currentMonth = format(currentDate, 'MM');
+      const currentYear = format(currentDate, 'yyyy');
+
       if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-        console.error('Error fetching last incident number:', error);
-        return 'OC0001'; // Fallback
+        console.error("Error fetching last incident number:", error);
+        throw error;
       }
 
-      if (data && (data as Incident).incident_number) { // Explicitly cast data to Incident
-        const lastNumberMatch = (data as Incident).incident_number!.match(/OC(\d+)/);
-        if (lastNumberMatch) {
-          const lastNum = parseInt(lastNumberMatch[1], 10);
-          const nextNum = lastNum + 1;
-          return `OC${String(nextNum).padStart(4, '0')}`;
+      let sequentialNumber = 1;
+      let lastIncidentMonth = currentMonth;
+      let lastIncidentYear = currentYear;
+
+      if (data) {
+        const lastIncidentNumber = data.incident_number;
+        const lastIncidentCreatedAt = new Date(data.created_at);
+        lastIncidentMonth = format(lastIncidentCreatedAt, 'MM');
+        lastIncidentYear = format(lastIncidentCreatedAt, 'yyyy');
+
+        if (lastIncidentNumber && lastIncidentNumber.startsWith('OC')) {
+          const parts = lastIncidentNumber.split('OC')[1].split('-');
+          const seqNum = parseInt(parts[0], 10);
+          const monthYear = parts[1];
+
+          if (monthYear) {
+            const lastMonth = monthYear.substring(0, 2);
+            const lastYear = monthYear.substring(2, 6);
+
+            if (lastMonth === currentMonth && lastYear === currentYear) {
+              sequentialNumber = seqNum + 1;
+            } else {
+              sequentialNumber = 1; // Reset if month or year changed
+            }
+          }
         }
       }
-      return 'OC0001';
+
+      const formattedSequentialNumber = String(sequentialNumber).padStart(3, '0');
+      return `OC${formattedSequentialNumber}${currentMonth}${currentYear}`;
     },
-    staleTime: Infinity, // Incident numbers don't change frequently
+    staleTime: Infinity, // The incident number should not change during the session
+    refetchOnWindowFocus: false,
   });
 
   // Fetch drivers for the select input
@@ -349,17 +380,10 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   });
 
   useEffect(() => {
-    const now = new Date();
-    const currentDate = format(now, 'yyyy-MM-dd', { locale: ptBR });
-    const currentTime = format(now, 'HH:mm', { locale: ptBR });
-
-    setFormData(prev => ({
-      ...prev,
-      incidentDate: currentDate,
-      incidentTime: currentTime,
-      incidentNumber: nextIncidentNumber || 'OC0001', // Use fetched number or default
-    }));
-  }, [nextIncidentNumber]); // Re-run when nextIncidentNumber is fetched
+    if (nextIncidentNumber && formData.incidentNumber === "") {
+      setFormData(prev => ({ ...prev, incidentNumber: nextIncidentNumber }));
+    }
+  }, [nextIncidentNumber, setFormData, formData.incidentNumber]);
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => {
@@ -665,6 +689,13 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     }
   };
 
+  const handleSaveAsDraft = () => {
+    onSave(formData, true);
+    toast.success("Rascunho salvo!", {
+      description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
+    });
+  };
+
   const handleSave = () => {
     if (!formData.incidentNumber || !formData.incidentDate || !formData.locationType) {
       toast.error("Campos obrigatórios", {
@@ -672,8 +703,8 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       });
       return;
     }
-
-    onSave(formData);
+    onSave(formData, false);
+  };
     toast.success("Ocorrência salva!", {
       description: "A ocorrência foi registrada com sucesso.",
     });
@@ -682,14 +713,13 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const cnhStatus = getCnhStatus(formData.licenseExpiry);
 
   // Helper to render each section's content
-  const renderSectionContent = (sectionId: string) => {
+  const renderSectionContent = useCallback((sectionId: string) => {
     switch (sectionId) {
       case "identification":
         return (
           <IncidentIdentificationSection
             formData={formData}
             handleInputChange={handleInputChange}
-            isIncidentNumberLoading={isIncidentNumberLoading}
           />
         );
       case "vehicle":
@@ -751,7 +781,6 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           />
         );
       case "attachments":
-        console.log('NewIncidentForm: Type of handleFileUpload before passing:', typeof handleFileUpload, handleFileUpload);
         return (
           <IncidentAttachmentsSection
             formData={formData}
@@ -770,7 +799,23 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       default:
         return null;
     }
-  };
+  }, [
+    formData,
+    handleInputChange,
+    isLoadingDrivers,
+    drivers,
+    handleDriverSelect,
+    setIsNewDriverDialogOpen,
+    isLoadingVehicles,
+    vehicles,
+    handleVehicleSelect,
+    setIsNewVehicleDialogOpen,
+    cnhStatus,
+    handleFileUpload,
+    uploadingFiles,
+    handleRemoveAttachment,
+    generatePDF,
+  ]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -795,6 +840,10 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
             <Button onClick={() => generatePDF()} variant="outline" size="sm" className="hidden sm:flex">
               <Download className="mr-2 h-4 w-4" />
               Gerar PDF
+            </Button>
+            <Button onClick={handleSaveAsDraft} size="sm" variant="outline" className="hidden sm:flex">
+              <Save className="mr-2 h-4 w-4" />
+              Salvar como Rascunho
             </Button>
             <Button onClick={handleSave} size="sm" className="hidden sm:flex">
               <Save className="mr-2 h-4 w-4" />

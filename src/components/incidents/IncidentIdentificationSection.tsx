@@ -1,21 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface IncidentIdentificationSectionProps {
   formData: any;
   handleInputChange: (field: string, value: any) => void;
-  isIncidentNumberLoading: boolean;
 }
 
 export const IncidentIdentificationSection: React.FC<IncidentIdentificationSectionProps> = ({
   formData,
   handleInputChange,
-  isIncidentNumberLoading,
 }) => {
+  const [sequentialNumber, setSequentialNumber] = useState(1); // Initialize sequential number
+
+  const handleGenerateIncidentNumber = () => {
+    const now = new Date();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
+    const year = now.getFullYear().toString().slice(-2); // Get last two digits of the year
+
+    // In a real application, the sequential number should be fetched from a backend
+    // to ensure uniqueness and persistence across sessions and users.
+    const currentSequential = sequentialNumber.toString().padStart(2, '0');
+    setSequentialNumber(prev => prev + 1); // Increment for next time
+
+    const newIncidentNumber = `OC${currentSequential}-${month}${year}`;
+    handleInputChange("incidentNumber", newIncidentNumber);
+  };
+
   return (
     <div className="rounded-lg border bg-card p-8">
       <div className="mb-8 flex items-center gap-3">
@@ -35,16 +50,19 @@ export const IncidentIdentificationSection: React.FC<IncidentIdentificationSecti
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-3">
               <Label htmlFor="incidentNumber" className="text-sm font-medium">
-                Nº da Ocorrência <span className="text-destructive">*</span>
+                Nº da Ocorrência: {formData.incidentNumber} <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="incidentNumber"
-                placeholder="Ex: OC001"
-                value={isIncidentNumberLoading ? "Carregando..." : formData.incidentNumber}
-                onChange={(e) => handleInputChange("incidentNumber", e.target.value)}
-                className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={isIncidentNumberLoading}
-              />
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="incidentNumber"
+                  value={formData.incidentNumber}
+                  readOnly
+                  className="h-11 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Button type="button" onClick={handleGenerateIncidentNumber} className="h-11 px-4 py-2">
+                  Gerar Número
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-3">

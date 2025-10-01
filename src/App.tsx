@@ -59,7 +59,7 @@ const App = () => (
             >
               {/* Nested routes */}
               <Route index element={<Dashboard />} /> {/* Default route for / */}
-              <Route path="new-incident" element={<ModernNewIncidentForm onClose={() => {}} onSave={() => {}} />} />
+              <Route path="new-incident" element={<ModernNewIncidentForm onClose={() => {}} onSave={(formData, isDraft) => { console.log("Form Data:", formData, "Is Draft:", isDraft); }} />} />
               <Route path="history" element={<IncidentHistory />} />
               <Route path="reports" element={<ReportsPage />} /> {/* UPDATED: Use ReportsPage */}
               <Route path="users" element={<UserManagement />} />
