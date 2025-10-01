@@ -53,8 +53,8 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
   duplicateDriverInfo,
   onResolve,
 }) => {
-  console.log('DuplicateDriverDialog: duplicateDriverInfo prop received:', duplicateDriverInfo); // Log para depuração
-  console.log('DuplicateDriverDialog: duplicateDriverInfo.id:', duplicateDriverInfo?.id); // Log para depuração
+  console.log('[DuplicateDriverDialog] Prop duplicateDriverInfo recebida:', duplicateDriverInfo);
+  console.log('[DuplicateDriverDialog] ID de duplicateDriverInfo:', duplicateDriverInfo?.id);
 
   // Adicionar uma verificação defensiva aqui
   if (!duplicateDriverInfo || !duplicateDriverInfo.id) {
@@ -69,8 +69,8 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
   const handleChoice = (choice: 'keepExisting' | 'keepNew') => {
     const existingDriverId = duplicateDriverInfo.id;
 
-    console.log('DuplicateDriverDialog: handleChoice called. choice:', choice);
-    console.log('DuplicateDriverDialog: existingDriverId from duplicateDriverInfo.id (before validation):', existingDriverId); // --- NEW LOG ---
+    console.log('[DuplicateDriverDialog] handleChoice chamado. Escolha:', choice);
+    console.log('[DuplicateDriverDialog] existingDriverId de duplicateDriverInfo.id (antes da validação):', existingDriverId);
 
     // Verificação robusta para o ID do motorista existente
     if (!existingDriverId || typeof existingDriverId !== 'string' || existingDriverId.length !== 36) { // UUIDs são 36 caracteres
@@ -81,7 +81,7 @@ export const DuplicateDriverDialog: React.FC<DuplicateDriverDialogProps> = ({
       onClose();
       return;
     }
-    console.log('DuplicateDriverDialog: existingDriverId after validation, before onResolve:', existingDriverId);
+    console.log('[DuplicateDriverDialog] existingDriverId após validação, antes de onResolve:', existingDriverId);
 
     onResolve(choice, pendingDriver.id, existingDriverId);
     onClose();

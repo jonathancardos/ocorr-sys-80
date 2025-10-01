@@ -69,7 +69,9 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
 
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
-              <thead className="bg-gray-50"><tr><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nome Completo
                   </th><th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CPF
