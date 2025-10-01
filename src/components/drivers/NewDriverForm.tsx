@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, FileText, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import { TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import InputMask from 'react-input-mask';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 interface NewDriverFormProps {
   onDriverCreated: (driverId: string) => void;
@@ -54,6 +56,8 @@ type DriverFormValues = z.infer<typeof formSchema>;
 
 const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose, initialFormData }) => {
   const queryClient = useQueryClient();
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
 
   const form = useForm<DriverFormValues>({
     resolver: zodResolver(formSchema),
@@ -123,164 +127,253 @@ const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose,
     await createDriverMutation.mutateAsync(data as TablesInsert<'drivers'>);
   };
 
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const steps = [
+    { number: 1, title: 'Dados Pessoais', icon: User },
+    { number: 2, title: 'Documentação', icon: FileText },
+    { number: 3, title: 'Indicação', icon: CheckCircle },
+  ];
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6 p-1 sm:p-2 md:p-4">
-      {/* Nome Completo - Campo Único em Linha Completa */}
-      <div className="space-y-2">
-        <Label htmlFor="full_name" className="text-base md:text-sm">Nome Completo *</Label>
-        <Input
-          id="full_name"
-          {...register('full_name')}
-          required
-          className="text-base md:text-sm h-11 md:h-10"
-        />
-        {errors.full_name && <p className="text-destructive text-sm mt-1">{errors.full_name.message}</p>}
-      </div>
-      
-      {/* Tipo de Motorista - Campo Único */}
-      <div className="space-y-2">
-        <Label htmlFor="type" className="text-base md:text-sm">Tipo</Label>
-        <Select
-          onValueChange={(value) => setValue('type', value, { shouldValidate: true })}
-          value={watch('type') || ''}
-        >
-          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="motorista">Motorista</SelectItem>
-            <SelectItem value="agregado">Agregado</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.type && <p className="text-destructive text-sm mt-1">{errors.type.message}</p>}
-      </div>
-      
-      {/* CNH e Validade - 1 campo em mobile, 2 colunas em desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="cnh" className="text-base md:text-sm">CNH</Label>
-          <Input
-            id="cnh"
-            {...register('cnh')}
-            className="text-base md:text-sm h-11 md:h-10"
-          />
-          {errors.cnh && <p className="text-destructive text-sm mt-1">{errors.cnh.message}</p>}
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="cnh_expiry" className="text-base md:text-sm">Validade CNH</Label>
-          <Input
-            id="cnh_expiry"
-            type="date"
-            {...register('cnh_expiry')}
-            className="text-base md:text-sm h-11 md:h-10"
-          />
-          {errors.cnh_expiry && <p className="text-destructive text-sm mt-1">{errors.cnh_expiry.message}</p>}
-        </div>
-      </div>
-      
-      {/* Telefone - Campo Único */}
-      <div className="space-y-2">
-        <Label htmlFor="phone" className="text-base md:text-sm">Telefone</Label>
-        <Input
-          id="phone"
-          {...register('phone')}
-          className="text-base md:text-sm h-11 md:h-10"
-        />
-        {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>}
+    <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[600px]">
+      {/* Stepper Horizontal */}
+      <div className="flex items-center justify-between mb-6 px-4 py-3 bg-muted/30 rounded-lg">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.number}>
+            <div className="flex items-center">
+              <div
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all",
+                  currentStep >= step.number
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-background border-muted-foreground/30 text-muted-foreground"
+                )}
+              >
+                {currentStep > step.number ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  <step.icon className="h-5 w-5" />
+                )}
+              </div>
+              <div className="ml-3 hidden sm:block">
+                <p className={cn(
+                  "text-sm font-medium",
+                  currentStep >= step.number ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {step.title}
+                </p>
+              </div>
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  "flex-1 h-0.5 mx-2 sm:mx-4 transition-all",
+                  currentStep > step.number ? "bg-primary" : "bg-muted-foreground/30"
+                )}
+              />
+            )}
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* Data de Cadastro Omnilink Score - Campo Único */}
-      <div className="space-y-2">
-        <Label htmlFor="omnilink_score_registration_date" className="text-base md:text-sm">Data de Cadastro Omnilink Score</Label>
-        <Input
-          id="omnilink_score_registration_date"
-          type="date"
-          {...register('omnilink_score_registration_date')}
-          className="text-base md:text-sm h-11 md:h-10"
-        />
-        {errors.omnilink_score_registration_date && <p className="text-destructive text-sm mt-1">{errors.omnilink_score_registration_date.message}</p>}
-      </div>
+      {/* Form Content com Scroll */}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-1">
+        <div className="space-y-4 pb-4">
+          {/* Etapa 1: Dados Pessoais */}
+          {currentStep === 1 && (
+            <Accordion type="single" collapsible defaultValue="info-basica" className="space-y-2">
+              <AccordionItem value="info-basica" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Informações Básicas
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Nome Completo *</Label>
+                    <Input id="full_name" {...register('full_name')} required className="h-11" />
+                    {errors.full_name && <p className="text-destructive text-sm">{errors.full_name.message}</p>}
+                  </div>
 
-      {/* Vencimento e Status Omnilink - 1 campo em mobile, 2 colunas em desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="omnilink_score_expiry_date" className="text-base md:text-sm">Vencimento Omnilink Score</Label>
-          <Input
-            id="omnilink_score_expiry_date"
-            type="date"
-            value={detailedOmnilinkStatus?.expiryDate ? formatDate(detailedOmnilinkStatus.expiryDate) : ''}
-            readOnly
-            className="bg-muted/50 text-base md:text-sm h-11 md:h-10"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="omnilink_score_status_display" className="text-base md:text-sm">Status Omnilink Score</Label>
-          <Input
-            id="omnilink_score_status_display"
-            value={detailedOmnilinkStatus?.message || ''}
-            readOnly
-            className="bg-muted/50 text-base md:text-sm h-11 md:h-10"
-          />
-        </div>
-      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Tipo</Label>
+                    <Select
+                      onValueChange={(value) => setValue('type', value, { shouldValidate: true })}
+                      value={watch('type') || ''}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="motorista">Motorista</SelectItem>
+                        <SelectItem value="agregado">Agregado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-      {/* Status de Indicação - Campo Único */}
-      <div className="space-y-2">
-        <Label htmlFor="status_indicacao" className="text-base md:text-sm">Status de Indicação</Label>
-        <Select
-          onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => setValue('status_indicacao', value, { shouldValidate: true })}
-          value={statusIndicacao || ''}
-        >
-          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
-            <SelectValue placeholder="Selecione o status de indicação" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="indicado">Indicado</SelectItem>
-            <SelectItem value="retificado">Retificado</SelectItem>
-            <SelectItem value="nao_indicado">Não Indicado</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.status_indicacao && <p className="text-destructive text-sm mt-1">{errors.status_indicacao.message}</p>}
-      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input id="phone" {...register('phone')} className="h-11" />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
-      {/* Motivo de Não Indicação - Aparece Condicionalmente */}
-      {statusIndicacao === 'nao_indicado' && (
-        <div className="space-y-2">
-          <Label htmlFor="reason_nao_indicacao" className="text-base md:text-sm">Motivo de Não Indicação (Opcional)</Label>
-          <Textarea
-            id="reason_nao_indicacao"
-            {...register('reason_nao_indicacao')}
-            placeholder="Descreva o motivo pelo qual o motorista não foi indicado..."
-            className="min-h-[100px] md:min-h-[80px] text-base md:text-sm"
-          />
-          {errors.reason_nao_indicacao && <p className="text-destructive text-sm mt-1">{errors.reason_nao_indicacao.message}</p>}
+          {/* Etapa 2: Documentação */}
+          {currentStep === 2 && (
+            <Accordion type="single" collapsible defaultValue="cnh-info" className="space-y-2">
+              <AccordionItem value="cnh-info" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Informações da CNH
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cnh">CNH</Label>
+                      <Input id="cnh" {...register('cnh')} className="h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cnh_expiry">Validade CNH</Label>
+                      <Input id="cnh_expiry" type="date" {...register('cnh_expiry')} className="h-11" />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="omnilink-info" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Omnilink Score
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="omnilink_score_registration_date">Data de Cadastro</Label>
+                    <Input
+                      id="omnilink_score_registration_date"
+                      type="date"
+                      {...register('omnilink_score_registration_date')}
+                      className="h-11"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="omnilink_score_expiry_date">Vencimento</Label>
+                      <Input
+                        id="omnilink_score_expiry_date"
+                        type="date"
+                        value={detailedOmnilinkStatus?.expiryDate ? formatDate(detailedOmnilinkStatus.expiryDate) : ''}
+                        readOnly
+                        className="bg-muted/50 h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="omnilink_score_status_display">Status</Label>
+                      <Input
+                        id="omnilink_score_status_display"
+                        value={detailedOmnilinkStatus?.message || ''}
+                        readOnly
+                        className="bg-muted/50 h-11"
+                      />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
+          {/* Etapa 3: Indicação */}
+          {currentStep === 3 && (
+            <Accordion type="single" collapsible defaultValue="indicacao-info" className="space-y-2">
+              <AccordionItem value="indicacao-info" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Status de Indicação
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status_indicacao">Status *</Label>
+                    <Select
+                      onValueChange={(value: 'indicado' | 'retificado' | 'nao_indicado') => setValue('status_indicacao', value, { shouldValidate: true })}
+                      value={statusIndicacao || ''}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="indicado">Indicado</SelectItem>
+                        <SelectItem value="retificado">Retificado</SelectItem>
+                        <SelectItem value="nao_indicado">Não Indicado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.status_indicacao && <p className="text-destructive text-sm">{errors.status_indicacao.message}</p>}
+                  </div>
+
+                  {statusIndicacao === 'nao_indicado' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="reason_nao_indicacao">Motivo (Opcional)</Label>
+                      <Textarea
+                        id="reason_nao_indicacao"
+                        {...register('reason_nao_indicacao')}
+                        placeholder="Descreva o motivo..."
+                        className="min-h-[100px]"
+                      />
+                      {errors.reason_nao_indicacao && <p className="text-destructive text-sm">{errors.reason_nao_indicacao.message}</p>}
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </div>
-      )}
-      
-      {/* Botões de Ação - Stack em mobile, lado a lado em desktop */}
-      <DialogFooter className="pt-4 flex-col sm:flex-row gap-2 sm:gap-0">
+      </form>
+
+      {/* Navigation Footer Fixo */}
+      <DialogFooter className="flex-row justify-between items-center pt-4 border-t mt-4 px-1">
         <Button
           type="button"
           variant="outline"
-          onClick={onClose}
-          disabled={isSubmitting}
-          className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm"
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className="gap-2"
         >
-          Cancelar
+          <ChevronLeft className="h-4 w-4" />
+          Anterior
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Cadastrando...
-            </>
+
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          
+          {currentStep < totalSteps ? (
+            <Button type="button" onClick={nextStep} className="gap-2">
+              Próximo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           ) : (
-            'Cadastrar'
+            <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cadastrando...
+                </>
+              ) : (
+                'Cadastrar'
+              )}
+            </Button>
           )}
-        </Button>
+        </div>
       </DialogFooter>
-    </form>
+    </div>
   );
 };
 

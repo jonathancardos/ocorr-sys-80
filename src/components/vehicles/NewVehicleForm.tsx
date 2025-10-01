@@ -3,18 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
-import { toast } from 'sonner'; // Importar toast do sonner
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { Loader2, PlusCircle, X, Info } from 'lucide-react'; // Adicionado Info icon
+import { Loader2, PlusCircle, X, Info, Truck, Settings, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Vehicle, VehicleInsert } from '@/types/vehicles';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { Switch } from '@/components/ui/switch'; // Import Switch
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'; // Import Tooltip
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface NewVehicleFormProps {
   onVehicleCreated: (vehicleId: string) => void;
@@ -34,6 +35,8 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTechnologyInput, setNewTechnologyInput] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
 
   const [formData, setFormData] = useState<VehicleInsert>({
     plate: '',
@@ -184,14 +187,13 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
       has_workshop: formData.has_workshop,
       priority: formData.priority,
       blocker_installed: formData.blocker_installed,
-      raw_blocker_installed_text: formData.raw_blocker_installed_text, // NEW
-      raw_priority_text: formData.raw_priority_text, // NEW
+      raw_blocker_installed_text: formData.raw_blocker_installed_text,
+      raw_priority_text: formData.raw_priority_text,
     });
   };
 
   const allAvailableTechnologies = Array.from(new Set([...predefinedTechnologies, ...(existingTechnologies || [])])).sort();
 
-  // Determine the selected value for the blocker_installed select
   const getBlockerSelectValue = () => {
     if (formData.blocker_installed === true && formData.raw_blocker_installed_text === 'Instalado') {
       return 'installed';
@@ -203,210 +205,317 @@ const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClo
       return 'will_not_install';
     }
     if (formData.blocker_installed === null && formData.raw_blocker_installed_text !== null) {
-      return 'other'; // Custom text entered
+      return 'other';
     }
-    return 'unmapped'; // Default or not set
+    return 'unmapped';
   };
 
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const steps = [
+    { number: 1, title: 'Dados Básicos', icon: Truck },
+    { number: 2, title: 'Tecnologias', icon: Settings },
+    { number: 3, title: 'Configurações', icon: CheckCircle },
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 p-1 sm:p-2 md:p-4">
-      {/* Placa e Modelo - 1 campo em mobile, 2 colunas em desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="plate" className="text-base md:text-sm">Placa do Veículo *</Label>
-          <Input
-            id="plate"
-            value={formData.plate}
-            onChange={handleInputChange}
-            required
-            placeholder="Ex: ABC-1234"
-            className="text-base md:text-sm h-11 md:h-10"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="model" className="text-base md:text-sm">Modelo do Veículo *</Label>
-          <Input
-            id="model"
-            value={formData.model}
-            onChange={handleInputChange}
-            required
-            placeholder="Ex: Mercedes Sprinter"
-            className="text-base md:text-sm h-11 md:h-10"
-          />
-        </div>
-      </div>
-      
-      {/* Tecnologias - Campo Único com Layout Responsivo */}
-      <div className="space-y-2">
-        <Label htmlFor="technology" className="text-base md:text-sm">Tecnologias</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {(formData.technology || []).map(tech => (
-            <Badge key={tech} variant="secondary" className="pr-1 text-sm md:text-xs">
-              {tech}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0.5 ml-1"
-                onClick={() => removeTechnology(tech)}
+    <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[600px]">
+      {/* Stepper Horizontal */}
+      <div className="flex items-center justify-between mb-6 px-4 py-3 bg-muted/30 rounded-lg">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.number}>
+            <div className="flex items-center">
+              <div
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all",
+                  currentStep >= step.number
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-background border-muted-foreground/30 text-muted-foreground"
+                )}
               >
-                <X className="h-3 w-3" />
-              </Button>
-            </Badge>
-          ))}
-        </div>
-        <Select
-          onValueChange={handleTechnologyChange}
-          value=""
-          disabled={isLoadingExistingTechnologies}
-        >
-          <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
-            <SelectValue placeholder="Adicionar tecnologia existente" />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoadingExistingTechnologies ? (
-              <SelectItem value="loading" disabled>Carregando tecnologias...</SelectItem>
-            ) : (
-              allAvailableTechnologies.map(tech => (
-                <SelectItem key={tech} value={tech} disabled={(formData.technology || []).includes(tech)}>
-                  {tech}
-                </SelectItem>
-              ))
+                {currentStep > step.number ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  <step.icon className="h-5 w-5" />
+                )}
+              </div>
+              <div className="ml-3 hidden sm:block">
+                <p className={cn(
+                  "text-sm font-medium",
+                  currentStep >= step.number ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {step.title}
+                </p>
+              </div>
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  "flex-1 h-0.5 mx-2 sm:mx-4 transition-all",
+                  currentStep > step.number ? "bg-primary" : "bg-muted-foreground/30"
+                )}
+              />
             )}
-          </SelectContent>
-        </Select>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2">
-          <Input
-            id="newTechnology"
-            placeholder="Ou digite uma nova tecnologia"
-            value={newTechnologyInput}
-            onChange={(e) => setNewTechnologyInput(e.target.value)}
-            className="h-11 md:h-10 text-base md:text-sm flex-1"
-          />
-          <Button 
-            type="button" 
-            onClick={handleAddNewTechnology} 
-            disabled={!newTechnologyInput.trim()}
-            className="h-11 md:h-10 text-base md:text-sm w-full sm:w-auto"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar
-          </Button>
-        </div>
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* Prioridade e Bloqueador - 1 campo em mobile, 2 colunas em desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* Campo Prioridade */}
-        <div className="space-y-2">
-          <Label htmlFor="priority" className="font-semibold text-base md:text-sm">Prioridade</Label>
-          <Select
-            value={formData.priority?.toString() || ''}
-            onValueChange={(value) => handleSelectChange('priority', value)}
-          >
-            <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
-              <SelectValue placeholder="Selecione a prioridade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 (Alta)</SelectItem>
-              <SelectItem value="2">2 (Média)</SelectItem>
-              <SelectItem value="3">3 (Baixa)</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* Raw text input para prioridade */}
-          <Input
-            id="raw_priority_text"
-            placeholder="Texto original da prioridade (opcional)"
-            value={formData.raw_priority_text || ''}
-            onChange={handleInputChange}
-            className="h-11 md:h-10 text-base md:text-sm mt-2"
-          />
-        </div>
+      {/* Form Content com Scroll */}
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-1">
+        <div className="space-y-4 pb-4">
+          {/* Etapa 1: Dados Básicos */}
+          {currentStep === 1 && (
+            <Accordion type="single" collapsible defaultValue="dados-basicos" className="space-y-2">
+              <AccordionItem value="dados-basicos" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Informações do Veículo
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="plate">Placa *</Label>
+                      <Input
+                        id="plate"
+                        value={formData.plate}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Ex: ABC-1234"
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="model">Modelo *</Label>
+                      <Input
+                        id="model"
+                        value={formData.model}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Ex: Mercedes Sprinter"
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
-        {/* Campo Bloqueador */}
-        <div className="space-y-2">
-          <Label htmlFor="blocker_installed_select" className="flex items-center gap-1 font-semibold text-base md:text-sm">
-            Bloqueador Instalado?
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p className="text-sm">Indica se o veículo possui um bloqueador instalado.</p>
-              </TooltipContent>
-            </Tooltip>
-          </Label>
-          <Select
-            value={getBlockerSelectValue()}
-            onValueChange={handleBlockerInstalledSelectChange}
-          >
-            <SelectTrigger id="blocker_installed_select" className="h-11 md:h-10 text-base md:text-sm">
-              <SelectValue placeholder="Selecione o status do bloqueador" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="unmapped">Não Classificado</SelectItem>
-              <SelectItem value="installed">Instalado</SelectItem>
-              <SelectItem value="not_installed">Não Instalado</SelectItem>
-              <SelectItem value="will_not_install">Não Vai Instalar</SelectItem>
-              <SelectItem value="other">Outra Informação</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* Input condicional para bloqueador */}
-          {getBlockerSelectValue() === 'other' && (
-            <Input
-              id="raw_blocker_installed_text"
-              placeholder="Descreva o status do bloqueador"
-              value={formData.raw_blocker_installed_text || ''}
-              onChange={handleInputChange}
-              className="h-11 md:h-10 text-base md:text-sm mt-2"
-            />
+          {/* Etapa 2: Tecnologias */}
+          {currentStep === 2 && (
+            <Accordion type="single" collapsible defaultValue="tecnologias" className="space-y-2">
+              <AccordionItem value="tecnologias" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Tecnologias Instaladas
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {(formData.technology || []).map(tech => (
+                      <Badge key={tech} variant="secondary" className="pr-1">
+                        {tech}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0.5 ml-1"
+                          onClick={() => removeTechnology(tech)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <Select
+                    onValueChange={handleTechnologyChange}
+                    value=""
+                    disabled={isLoadingExistingTechnologies}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Adicionar tecnologia existente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isLoadingExistingTechnologies ? (
+                        <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                      ) : (
+                        allAvailableTechnologies.map(tech => (
+                          <SelectItem key={tech} value={tech} disabled={(formData.technology || []).includes(tech)}>
+                            {tech}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      id="newTechnology"
+                      placeholder="Ou digite uma nova tecnologia"
+                      value={newTechnologyInput}
+                      onChange={(e) => setNewTechnologyInput(e.target.value)}
+                      className="h-11 flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleAddNewTechnology} 
+                      disabled={!newTechnologyInput.trim()}
+                      className="h-11 w-full sm:w-auto"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" /> Adicionar
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
+          {/* Etapa 3: Configurações */}
+          {currentStep === 3 && (
+            <Accordion type="multiple" defaultValue={["config-gerais", "config-bloqueador"]} className="space-y-2">
+              <AccordionItem value="config-gerais" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Configurações Gerais
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="priority" className="font-semibold">Prioridade</Label>
+                    <Select
+                      value={formData.priority?.toString() || ''}
+                      onValueChange={(value) => handleSelectChange('priority', value)}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione a prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 (Alta)</SelectItem>
+                        <SelectItem value="2">2 (Média)</SelectItem>
+                        <SelectItem value="3">3 (Baixa)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="raw_priority_text"
+                      placeholder="Texto original (opcional)"
+                      value={formData.raw_priority_text || ''}
+                      onChange={handleInputChange}
+                      className="h-11 mt-2"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch
+                      id="has_workshop"
+                      checked={formData.has_workshop || false}
+                      onCheckedChange={(checked) => handleSwitchChange('has_workshop', checked)}
+                    />
+                    <Label htmlFor="has_workshop" className="flex items-center gap-1">
+                      Tem Oficina?
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm">Controle interno da Siga+</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </Label>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="config-bloqueador" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                  Status do Bloqueador
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="blocker_installed_select" className="flex items-center gap-1">
+                      Bloqueador Instalado?
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm">Indica se o veículo possui bloqueador</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </Label>
+                    <Select
+                      value={getBlockerSelectValue()}
+                      onValueChange={handleBlockerInstalledSelectChange}
+                    >
+                      <SelectTrigger id="blocker_installed_select" className="h-11">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unmapped">Não Classificado</SelectItem>
+                        <SelectItem value="installed">Instalado</SelectItem>
+                        <SelectItem value="not_installed">Não Instalado</SelectItem>
+                        <SelectItem value="will_not_install">Não Vai Instalar</SelectItem>
+                        <SelectItem value="other">Outra Informação</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {getBlockerSelectValue() === 'other' && (
+                      <Input
+                        id="raw_blocker_installed_text"
+                        placeholder="Descreva o status"
+                        value={formData.raw_blocker_installed_text || ''}
+                        onChange={handleInputChange}
+                        className="h-11 mt-2"
+                      />
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </div>
-      </div>
+      </form>
 
-      {/* Tem Oficina - Switch com Label Responsivo */}
-      <div className="flex items-center space-x-2 pt-2">
-        <Switch
-          id="has_workshop"
-          checked={formData.has_workshop || false}
-          onCheckedChange={(checked) => handleSwitchChange('has_workshop', checked)}
-        />
-        <Label htmlFor="has_workshop" className="flex items-center gap-1 font-semibold text-base md:text-sm">
-          Tem Oficina?
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p className="text-sm">Esta informação é um controle interno da Siga+.</p>
-            </TooltipContent>
-          </Tooltip>
-        </Label>
-      </div>
-      
-      {/* Botões de Ação - Stack em mobile, lado a lado em desktop */}
-      <DialogFooter className="pt-4 flex-col sm:flex-row gap-2 sm:gap-0">
+      {/* Navigation Footer Fixo */}
+      <DialogFooter className="flex-row justify-between items-center pt-4 border-t mt-4 px-1">
         <Button
           type="button"
           variant="outline"
-          onClick={onClose}
-          disabled={isSubmitting}
-          className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm"
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className="gap-2"
         >
-          Cancelar
+          <ChevronLeft className="h-4 w-4" />
+          Anterior
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto h-11 md:h-10 text-base md:text-sm">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Cadastrando...
-            </>
+
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          
+          {currentStep < totalSteps ? (
+            <Button type="button" onClick={nextStep} className="gap-2">
+              Próximo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           ) : (
-            'Cadastrar'
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cadastrando...
+                </>
+              ) : (
+                'Cadastrar'
+              )}
+            </Button>
           )}
-        </Button>
+        </div>
       </DialogFooter>
-    </form>
+    </div>
   );
 };
 
