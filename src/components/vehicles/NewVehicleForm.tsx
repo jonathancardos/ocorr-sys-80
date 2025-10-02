@@ -30,7 +30,7 @@ const predefinedTechnologies = [
   "4G",
 ];
 
-const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClose }) => {
+export const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated, onClose }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);

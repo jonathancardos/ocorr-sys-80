@@ -1,73 +1,65 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams, useOutletContext } from "react-router-dom";
+import {
+  ArrowLeft,
+  FileText,
+  Save,
+  X,
+  MoreVertical,
+  AlertTriangle,
+  Truck,
+  Shield,
+  MapPin,
+  CheckCircle,
+  Package,
+  AlertCircleIcon,
+  Paperclip,
+  Download,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from 'sonner';
-import { IncidentAttachmentsFormData, AttachmentItem } from './IncidentAttachmentsSection';
-import { ArrowLeft, FileText, Save, Download, AlertTriangle, Truck, Shield, MapPin, CheckCircle, Package, AlertCircleIcon, Paperclip, MoreVertical, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { NewDriverForm } from "@/components/drivers/NewDriverForm";
+import { NewVehicleForm } from "@/components/vehicles/NewVehicleForm";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { z } from "zod";
-import { incidentFormSchema } from "@/lib/validations/incident-form-schema";
-import { supabase } from "@/integrations/supabase/client"; // Corrected import path
+import { incidentFormSchema } from "@/lib/validations/incidentFormSchema";
+import { getCnhStatus as getCnhStatusUtil } from "@/lib/driver-utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { SectionHeader } from "./SectionHeader";
+import { IncidentIdentificationSection } from "./IncidentIdentificationSection";
+import { VehicleDriverSection } from "./VehicleDriverSection";
+import { OmnilinkReportSection } from "./OmnilinkReportSection";
+import { TrackingReportSection } from "./TrackingReportSection";
+import { DriverEvaluationSection } from "./DriverEvaluationSection";
+import { CargoEvaluationSection } from "./CargoEvaluationSection";
+import { RiskMonitoringSection } from "./RiskMonitoringSection";
+import { FinalReportSection } from "./FinalReportSection";
+import { IncidentAttachmentsSection } from "./IncidentAttachmentsSection";
+import { ReportCustomizationTab } from "./ReportCustomizationTab";
+import { cn } from "@/lib/utils";
 
-interface PdfConfig {
-  includeCoverPage: boolean;
-  includeTableOfContents: boolean;
-  includeAttachments: boolean;
-  includeDriverInfo: boolean;
-  includeVehicleInfo: boolean;
-  includeOmnilinkReport: boolean;
-  includeTrackingReport: boolean;
-  includeDriverEvaluation: boolean;
-  includeCargoEvaluation: boolean;
-  includeRiskMonitoring: boolean;
-  includeFinalReport: boolean;
-}
-
-
-// Import modular sections
-import { IncidentIdentificationSection } from './IncidentIdentificationSection';
-import { VehicleDriverSection } from './VehicleDriverSection';
-import { OmnilinkReportSection } from './OmnilinkReportSection';
-import { TrackingReportSection } from './TrackingReportSection';
-import { DriverEvaluationSection } from './DriverEvaluationSection';
-import { CargoEvaluationSection } from './CargoEvaluationSection';
-import { RiskMonitoringSection } from './RiskMonitoringSection';
-import { FinalReportSection } from './FinalReportSection';
-import { IncidentAttachmentsSection } from './IncidentAttachmentsSection';
-import ReportCustomizationTab from './ReportCustomizationTab';
-
-// Import forms
-import NewDriverForm from '@/components/drivers/NewDriverForm';
-import NewVehicleForm from '@/components/vehicles/NewVehicleForm';
-
-// Import from new driver-utils
-import { getCnhStatus as getCnhStatusUtil, CnhStatus, calculateOmnilinkScoreExpiry, calculateOmnilinkScoreStatus } from '@/lib/driver-utils';
-
-interface IncidentFormData {
-  id?: string;
-  incidentNumber: string;
-  incidentDate: string;
-  incidentTime: string;
-  locationType: string;
-  locationDetails: string;
-  incidentType: string;
-  incidentDescription: string;
-  vehicleId: string;
+type IncidentFormData = z.infer<typeof incidentFormSchema> & {
   vehiclePlate: string;
   vehicleModel: string;
   vehicleYear: string;
-  driverId: string;
   driverName: string;
   driverDocument: string;
   licenseNumber: string;
@@ -84,7 +76,7 @@ interface IncidentFormData {
   driverScore: number;
   riskLevel: string;
   isDraft: boolean;
-}
+};
 
 
 interface NewIncidentFormProps {
@@ -92,6 +84,7 @@ interface NewIncidentFormProps {
   onSave: (data: IncidentFormData, isDraft?: boolean) => void;
   initialData?: any; // Add this line
   setHasUnsavedChanges: (hasChanges: boolean) => void;
+  onCancelConfirm: () => void; // Add this line
 }
 
 const sections = [
@@ -110,12 +103,13 @@ const sections = [
 // Helper function to get CNH status
 export const getCnhStatus = getCnhStatusUtil;
 
-export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedChanges }: NewIncidentFormProps) => {
+export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedChanges, onCancelConfirm }: NewIncidentFormProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("identification");
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false);
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
   const [isLoadingIncidentNumber, setIsLoadingIncidentNumber] = useState(true); // New state for loading
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false); // State for cancel confirmation modal
 
   // Usando a interface IncidentFormData já definida
   const [formData, setFormData] = useState<IncidentFormData>(initialData || {
@@ -152,72 +146,26 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
       includeOmnilinkReport: true,
       includeTrackingReport: true,
       includeDriverEvaluation: true,
-      includeCargoEvaluation: true,
-      includeRiskMonitoring: true,
-      includeFinalReport: true
+      includeRiskAnalysis: true,
+      includeCargoInfo: true,
+      includeFinalReport: true,
     },
     driverScore: 0,
-    riskLevel: "Baixo",
-    isDraft: false
+    riskLevel: "",
+    isDraft: false,
   });
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => {
-      const newData = { ...prev, [field]: value };
-      
-      // Recalcular pontuação do motorista e nível de risco quando certos campos mudam
-      if (field === 'driverScore') {
-        const score = value;
-        let riskLevel = 'Baixo';
-        
-        if (score < 60) {
-          riskLevel = 'Alto';
-        } else if (score < 80) {
-          riskLevel = 'Médio';
-        }
-        
-        return { ...newData, riskLevel };
-      }
-      
-      return newData;
-    });
-  };
-  
-
-  // Load form data from localStorage on initial render
+  // Load draft from localStorage if available and no initialData
   useEffect(() => {
-    const savedFormData = localStorage.getItem('incidentFormData');
-    if (savedFormData) {
-      setFormData(JSON.parse(savedFormData));
+    if (!initialData) {
+      const storedDraft = localStorage.getItem('incidentFormData');
+      if (storedDraft) {
+        setFormData(JSON.parse(storedDraft));
+      }
     }
+  }, [initialData]);
 
-    // Fetch incident number only if it's a new incident and not already set
-    if (!initialData?.incidentNumber) {
-      const fetchIncidentNumber = async () => {
-        setIsLoadingIncidentNumber(true);
-        try {
-          const { data, error } = await supabase.functions.invoke('get-next-incident-number');
-          console.log("Supabase function invoke result:", { data, error }); // Added console.log
-          if (error) {
-            console.error("Error fetching incident number:", error);
-            toast.error("Erro ao gerar número da ocorrência", { description: error.message });
-          } else {
-            setFormData(prev => ({ ...prev, incidentNumber: data.nextIncidentNumber }));
-          }
-        } catch (error) {
-          console.error("Unhandled error fetching incident number:", error);
-          toast.error("Erro inesperado ao gerar número da ocorrência");
-        } finally {
-          setIsLoadingIncidentNumber(false);
-        }
-      };
-      fetchIncidentNumber();
-    } else {
-      setIsLoadingIncidentNumber(false);
-    }
-  }, [initialData?.incidentNumber]);
-
-  // Save form data to localStorage whenever it changes
+  // Save draft to localStorage on formData change
   useEffect(() => {
     localStorage.setItem('incidentFormData', JSON.stringify(formData));
   }, [formData]);
@@ -241,45 +189,26 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
 const sectionFields = {
     identification: [
       'incidentNumber', 'incidentDate', 'incidentTime', 'location', 'boNumber', 'boDate', 'sameDay', 'responsible',
-      'locationType',
+      'locationType', 'establishmentName', 'establishmentAddress', 'establishmentCircumstances', 'hasDock', 'hasParking',
+      'roadDetailedLocation', 'roadSuspicions', 'roadTrafficConditions', 'roadWitnesses',
     ],
-    omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict'],
-    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
-    tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop'],
+    omnilink: ['omnilinkStatus', 'omnilinkObservations', 'omnilinkAnalystVerdict', 'omnilinkPhoto'],
+    vehicle: ['vehicleId', 'vehiclePlate', 'vehicleModel', 'vehicleTechnology', 'vehiclePriority', 'vehicleBlockerInstalled', 'driverId', 'driverName', 'driverCpf', 'driverPhone', 'driverLicense', 'licenseExpiry', 'omnilinkScoreRegistrationDate', 'omnilinkScoreExpiryDate', 'omnilinkScoreStatus'], // UPDATED
+    tracking: ['signalLoss', 'unauthorizedStop', 'prolongedStop', 'trackingAnalysis'],
     cargo: ['totalCargoValue', 'stolenCargoValue', 'cargoObservations'],
-    risk: ['riskObservations'],
+    risk: ['riskObservations', 'riskAnalysis'],
+    evaluation: ['evaluationConclusion', 'evaluationRecommendations'],
     final: ['omnilinkSummary', 'driverSummary', 'trackingSummary', 'cargoSummary', 'riskSummary', 'finalConclusion', 'recommendations', 'analystName'],
-    attachments: ['boFiles', 'sapScreenshots', 'riskReports', 'omnilinkPhoto'],
-    "pdf-customization": [],
+    attachments: ['boFiles', 'sapScreenshots', 'riskReports'],
+    pdf: [], // No direct fields, handled by pdfConfig
   };
 
-  const calculateSectionCompletion = (currentFormData: typeof formData, sectionId: keyof typeof sectionFields | 'evaluation'): number => {
-    if (sectionId === 'evaluation') {
-      // Simplified calculation for evaluation
-      return 50; // Return a default percentage
-    }
-
-    const fields = sectionFields[sectionId as keyof typeof sectionFields];
-    if (!fields) return 0;
-
-    let filledCount = 0;
-    let totalCount = fields.length;
-
-    fields.forEach(field => {
-      const value = currentFormData[field as keyof typeof currentFormData];
-      if (typeof value === 'string' && value.trim() !== '') {
-        filledCount++;
-      } else if (Array.isArray(value) && value.length > 0) {
-        filledCount++;
-      } else if (value !== null && value !== undefined && value !== '') {
-        filledCount++;
-      }
-    });
-
-    return totalCount === 0 ? 100 : Math.round((filledCount / totalCount) * 100);
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (setHasUnsavedChanges) setHasUnsavedChanges(true);
   };
 
-    // Função de upload de arquivos
+  // Função de upload de arquivos
   const handleFileUpload = useCallback(async (field: keyof IncidentAttachmentsFormData, files: FileList | File | null) => {
     if (!files) return;
 
@@ -322,24 +251,34 @@ const sectionFields = {
             uploaded.push({ name: file.name, url: `/uploads/${path}/${file.name}` });
           }
         }
-        
         setFormData(prev => ({ ...prev, [field]: [...(prev[field] as AttachmentItem[]), ...uploaded] }));
       }
-      toast.success("Arquivo(s) enviado(s) com sucesso!");
+      toast.success("Upload concluído", {
+        description: `Arquivo(s) para ${field} enviado(s) com sucesso.`,
+      });
     } catch (error) {
-      console.error("Erro ao enviar arquivo(s):", error);
-      toast.error("Erro ao enviar arquivo(s)", { description: "Por favor, tente novamente." });
+      console.error("Erro ao fazer upload:", error);
+      toast.error("Erro no upload", {
+        description: "Não foi possível enviar o(s) arquivo(s).",
+      });
     } finally {
       setUploadingFiles(prev => ({ ...prev, [field]: false }));
     }
-  }, [formData.incidentNumber]);
+  }, [formData, setHasUnsavedChanges]);
+
+  const handleRemoveFile = useCallback((field: keyof IncidentAttachmentsFormData, fileName: string) => {
+    setFormData(prev => {
+      const currentFiles = prev[field] as AttachmentItem[];
+      const updatedFiles = currentFiles.filter(file => file.name !== fileName);
+      return { ...prev, [field]: updatedFiles };
+    });
+    if (setHasUnsavedChanges) setHasUnsavedChanges(true);
+  }, [setHasUnsavedChanges]);
 
   const handleSaveAsDraft = () => {
     onSave(formData, true);
-    if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-    // Não redirecionar - permanecer no formulário
-    toast.success("Rascunho salvo!", {
-      description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
+    toast.info("Rascunho salvo!", {
+      description: "A ocorrência foi salva como rascunho e pode ser retomada mais tarde.",
     });
   };
 
@@ -375,116 +314,22 @@ const sectionFields = {
   const renderSectionContent = (sectionId: string) => {
     switch (sectionId) {
       case "identification":
-        return (
-          <IncidentIdentificationSection
-            formData={formData}
-            onFormDataChange={handleIdentificationSectionChange}
-            isLoadingIncidentNumber={isLoadingIncidentNumber} // Pass loading state
-          />
-        );
+        return <IncidentIdentificationSection formData={formData} onFormDataChange={handleIdentificationSectionChange} />;
       case "vehicle":
-        return (
-          <VehicleDriverSection
-            formData={{
-              boFiles: formData.boFiles,
-              sapScreenshots: formData.sapScreenshots,
-              riskReports: formData.riskReports,
-              omnilinkPhoto: formData.omnilinkPhoto,
-            }}
-            handleInputChange={handleInputChange}
-            isLoadingDrivers={false}
-            drivers={[]}
-            handleDriverSelect={(driverId: string) => {
-              handleInputChange('driverId', driverId);
-            }}
-            setIsNewDriverDialogOpen={setIsNewDriverDialogOpen}
-            isLoadingVehicles={false}
-            vehicles={[]}
-            handleVehicleSelect={(vehicleId: string) => {
-              handleInputChange('vehicleId', vehicleId);
-            }}
-            setIsNewVehicleDialogOpen={setIsNewVehicleDialogOpen}
-            cnhStatus={cnhStatus}
-          />
-        );
+        return <VehicleDriverSection formData={formData} onInputChange={handleInputChange} cnhStatus={cnhStatus} />;
       case "omnilink":
-        return (
-          <OmnilinkReportSection
-            formData={{
-              boFiles: formData.boFiles,
-              sapScreenshots: formData.sapScreenshots,
-              riskReports: formData.riskReports,
-              omnilinkPhoto: formData.omnilinkPhoto,
-            }}
-            handleInputChange={handleInputChange}
-          />
-        );
+        return <OmnilinkReportSection formData={formData} onInputChange={handleInputChange} handleFileUpload={handleFileUpload} uploadingFiles={uploadingFiles} handleRemoveFile={handleRemoveFile} />;
       case "tracking":
-        return (
-          <TrackingReportSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-          />
-        );
+        return <TrackingReportSection formData={formData} onInputChange={handleInputChange} />;
       case "evaluation":
-        return (
-          <DriverEvaluationSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "cargo":
-        return (
-          <CargoEvaluationSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "risk":
-        return (
-          <RiskMonitoringSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "final":
-        return (
-          <FinalReportSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-          />
-        );
+        return <DriverEvaluationSection formData={formData} onInputChange={handleInputChange} />;      case "cargo":
+        return <CargoEvaluationSection formData={formData} onInputChange={handleInputChange} />;      case "risk":
+        return <RiskMonitoringSection formData={formData} onInputChange={handleInputChange} />;      case "final":
+        return <FinalReportSection formData={formData} onInputChange={handleInputChange} />;
       case "attachments":
-        return (
-          <IncidentAttachmentsSection
-            handleFileUpload={handleFileUpload}
-
-            formData={{
-              boFiles: formData.boFiles,
-              sapScreenshots: formData.sapScreenshots,
-              riskReports: formData.riskReports,
-              omnilinkPhoto: formData.omnilinkPhoto,
-            }}
-            // onFormDataChange={(updatedAttachments: Partial<typeof formData>) => {
-            //   return setFormData(prev => ({ ...prev, ...updatedAttachments }));
-            // }}
-            uploadingFiles={uploadingFiles}
-            handleRemoveAttachment={() => {}}
-          />
-        );
-      case "pdf-customization":
-        return (
-          <ReportCustomizationTab
-            formData={formData}
-            onGeneratePdf={generatePDF}
-          />
-        );
-      default:
-        return (
-          <div className="text-center py-12">
-            <p className="text-slate-400">Seção em desenvolvimento...</p>
-          </div>
-        );
+        return <IncidentAttachmentsSection formData={formData} handleFileUpload={handleFileUpload} uploadingFiles={uploadingFiles} handleRemoveFile={handleRemoveFile} />;      case "pdf-customization":
+        return <ReportCustomizationTab formData={formData} onInputChange={handleInputChange} generatePDF={generatePDF} />;      default:
+        return null;
     }
   };
 
@@ -515,10 +360,7 @@ const sectionFields = {
           <div className="flex items-center gap-3">
             {/* Botão Cancelar Ocorrência */}
             <Button 
-              onClick={() => {
-                if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-                onClose();
-              }} 
+              onClick={() => setIsCancelConfirmOpen(true)} // Open confirmation modal
               size="sm" 
               variant="ghost" 
               className="hidden sm:flex text-white hover:bg-white/10"
@@ -549,24 +391,16 @@ const sectionFields = {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[180px] bg-card/20 backdrop-blur-md border border-border/50">
-                  <DropdownMenuItem onClick={() => {
-                    if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-                    onClose();
-                  }}>
+                  <DropdownMenuItem onClick={() => setIsCancelConfirmOpen(true)}>
                     <X className="mr-2 h-4 w-4" />
                     Cancelar Ocorrência
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSaveAsDraft}>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar Rascunho
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => generatePDF()}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Gerar PDF
+                    Salvar como Rascunho
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSave}>
-                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <Save className="mr-2 h-4 w-4" />
                     Salvar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -576,87 +410,39 @@ const sectionFields = {
         </div>
       </div>
 
-      <div className="flex-1 p-4 sm:p-6"> {/* Ajustado padding */}
-        <div className="mx-auto max-w-7xl">
-          {isMobile ? (
-            // Mobile Accordion View
-            <div className="space-y-4">
-              {sections.map((section) => {
-                const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
-                const IconComponent = section.icon;
-                
-                return (
-                  <Card key={section.id} className="bg-card/20 border-border/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-blue-500/20">
-                            <IconComponent className="h-5 w-5 text-blue-400" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-white text-base">{section.label}</CardTitle> {/* Ajustado para text-base */}
-                            <div className="flex items-center gap-2 mt-1">
-                              <Progress value={completion} className="w-20 h-2" />
-                              <span className="text-xs text-slate-400">{completion}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {renderSectionContent(section.id)}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            // Desktop Modern Tabs View
-            <div className="space-y-6">
-              {/* Enhanced Tab Navigation */}
-              <div className="bg-card/20 rounded-2xl p-2 backdrop-blur-xl border border-border/50">
-                <div className="flex flex-wrap scrollbar-hide gap-2">
-                  {sections.map((section) => {
-                    const completion = calculateSectionCompletion(formData, section.id as keyof typeof sectionFields | 'evaluation');
-                    const IconComponent = section.icon;
-                    const isActive = activeTab === section.id;
-                    
-                    return (
-                      <button
-                        key={section.id}
-                        onClick={() => setActiveTab(section.id)}
-                        className={cn(
-                          "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-300", // Ajustado padding e font-size
-                          "hover:bg-card/30",
-                          isActive
-                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105"
-                            : "text-slate-300 hover:text-white"
-                        )}
-                      >
-                        <IconComponent className="h-4 w-4" />
-                        <div className="text-left">
-                          <div className="font-medium">{section.label}</div>
-                          <div className="text-xs opacity-75">{completion}%</div>
-                        </div>
-                        {isActive && (
-                          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+      {/* Main Content */}
+      <div className="container py-8 px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar for Navigation */}
+          <Card className="lg:col-span-1 modern-card h-fit">
+            <CardContent className="p-0">
+              <nav className="grid gap-2 p-4">
+                {sections.map((section) => (
+                  <Button
+                    key={section.id}
+                    variant={activeTab === section.id ? "secondary" : "ghost"}
+                    className="justify-start text-left px-3 py-2 rounded-lg text-white hover:bg-white/10"
+                    onClick={() => setActiveTab(section.id)}
+                  >
+                    <section.icon className="mr-3 h-5 w-5" />
+                    {section.label}
+                  </Button>
+                ))}
+              </nav>
+            </CardContent>
+          </Card>
 
-              {/* Content Area */}
-              <Card className="bg-card/20 border-border/50 backdrop-blur-xl rounded-2xl overflow-hidden">
-                <CardContent className="py-8 px-6">
-                  <div className="pr-4">
-                    {renderSectionContent(activeTab)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {/* Main Form Area */}
+          {/* Main Form Area */}
+          <div className="lg:col-span-3">
+            <Card className="bg-card/20 border-border/50 backdrop-blur-xl rounded-2xl overflow-hidden">
+              <CardContent className="py-8 px-6">
+                <div className="pr-4">
+                  {renderSectionContent(activeTab)}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
@@ -694,6 +480,47 @@ const sectionFields = {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Confirmation Modal */}
+      <AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
+        <AlertDialogContent className="bg-card text-card-foreground p-6 rounded-lg shadow-xl max-w-md mx-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold text-white">Deseja cancelar a ocorrência atual?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400 mt-2">
+              Você está prestes a sair da página de criação de ocorrência. Escolha uma opção abaixo:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row-reverse gap-3 mt-6">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onCancelConfirm();
+                setIsCancelConfirmOpen(false);
+              }}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              Sim, cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleSaveAsDraft();
+                setIsCancelConfirmOpen(false);
+              }}
+              className="w-full sm:w-auto border-gray-600 text-gray-200 hover:bg-gray-700 hover:text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              Salvar rascunho
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setIsCancelConfirmOpen(false)}
+              className="w-full sm:w-auto text-gray-300 hover:bg-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              Não, continuar editando
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

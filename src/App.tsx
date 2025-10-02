@@ -54,7 +54,15 @@ const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: ()
     navigate('/'); // Navegação SPA sem recarregar a página
   };
 
-  return <ModernNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} />;
+  const handleCancelConfirm = () => {
+    setHasUnsavedChanges(false);
+    if (draftId) {
+      setInitialDraftData(undefined); // Clear draft data if canceling a draft
+    }
+    navigate('/');
+  };
+
+  return <ModernNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} onCancelConfirm={handleCancelConfirm} />;
 };
 
 const App = () => {

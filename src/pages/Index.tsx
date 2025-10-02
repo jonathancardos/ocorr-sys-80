@@ -66,6 +66,36 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   const [pendingNavigationPath, setPendingNavigationPath] = useState<string | undefined>(undefined); // Novo estado para o caminho de navegação pendente
   const [drafts, setDrafts] = useState<any[]>([]);
 
+  const [saveDraftCallback, setSaveDraftCallback] = useState<(() => void) | undefined>(undefined); // New state for draft save callback
+
+  const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState(false);
+
+  const handleCancelConfirmation = () => {
+    setShowCancelConfirmationModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    // Logic to delete draft from localStorage if it exists
+    const currentPath = location.pathname;
+    if (currentPath.startsWith('/new-incident/')) {
+      const draftId = currentPath.split('/')[2];
+      if (draftId) {
+        const updatedDrafts = drafts.filter(draft => draft.id !== draftId);
+        setDrafts(updatedDrafts);
+        localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
+        toast.info("Rascunho descartado.", {
+          description: "O rascunho foi removido e as alterações não salvas foram perdidas.",
+        });
+      }
+    }
+    setShowCancelConfirmationModal(false);
+    navigate('/dashboard');
+  };
+
+  const handleKeepEditing = () => {
+    setShowCancelConfirmationModal(false);
+  };
+
   useEffect(() => {
     const storedDrafts = localStorage.getItem('incidentDrafts');
     if (storedDrafts) {
@@ -124,10 +154,11 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   };
 
   const handlePageChange = (pageId: string, path?: string) => {
+    console.log("Index.tsx: handlePageChange called. pageId:", pageId, "path:", path, "hasUnsavedChanges:", hasUnsavedChanges, "currentPath:", location.pathname);
     if (hasUnsavedChanges && location.pathname.startsWith('/new-incident')) {
       setPendingNavigationPath(path || '/');
       setShowConfirmationModal(true);
-      return;
+      return; // Prevent navigation until user confirms
     }
 
     setCurrentPage(pageId as PageView);
@@ -145,25 +176,37 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   };
 
   const handleConfirmNavigation = () => {
+    console.log("Index.tsx: handleConfirmNavigation called. pendingNavigationPath:", pendingNavigationPath);
     setHasUnsavedChanges(false);
     setShowConfirmationModal(false);
     if (pendingNavigationPath) {
+      console.log("Index.tsx: Confirming navigation to:", pendingNavigationPath);
       navigate(pendingNavigationPath);
       setPendingNavigationPath(undefined);
     }
   };
 
   const handleCancelNavigation = () => {
+    console.log("Index.tsx: handleCancelNavigation called.");
     setShowConfirmationModal(false);
     setPendingNavigationPath(undefined);
   };
 
   const handleSaveDraftAndNavigate = () => {
+    console.log("Index.tsx: handleSaveDraftAndNavigate called. pendingNavigationPath:", pendingNavigationPath);
     setShowConfirmationModal(false);
-    // Não redirecionar - apenas fechar o modal
-    setPendingNavigationPath(undefined);
-    toast.info("Salve o rascunho antes de sair", {
-      description: "Use o botão 'Salvar Rascunho' na página de ocorrência.",
+    if (saveDraftCallback) {
+      console.log("Index.tsx: Calling saveDraftCallback.");
+      saveDraftCallback(); // Trigger save draft in NewIncidentForm
+    }
+    setHasUnsavedChanges(false); // Reset unsaved changes after handling draft
+    if (pendingNavigationPath) {
+      console.log("Index.tsx: Navigating after saving draft to:", pendingNavigationPath);
+      navigate(pendingNavigationPath);
+      setPendingNavigationPath(undefined);
+    }
+    toast.info("Rascunho salvo e navegação continuada.", {
+      description: "A ocorrência foi salva como rascunho e você foi redirecionado.",
     });
   };
 
@@ -288,7 +331,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
                       "w-full justify-start text-left py-2 transition-all duration-200 group",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-md"
-                        : "hover:bg-primary/10",
+                        : "hover:bg-bg-primary/10",
                       !isSidebarOpen && "justify-center px-0"
                     )}
                     onClick={() => handlePageChange(item.id, item.path)}
@@ -317,7 +360,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
         {/* Main Content - Render nested routes here */}
         <main className="flex-1 bg-gradient-to-br from-background to-muted/20 p-4 sm:p-8">
           <div className="mx-auto w-full max-w-7xl">
-            <Outlet context={{ handleSaveIncident }} /> {/* This is where the content of the nested routes will be rendered */}
+            <Outlet context={{ handleSaveIncident, setSaveDraftCallback, onCancelConfirm: handleCancelConfirmation }} /> {/* This is where the content of the nested routes will be rendered */}
           </div>
         </main>
       </div>
@@ -332,6 +375,17 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
           confirmText="Sim, cancelar"
           cancelText="Não, continuar editando"
           saveDraftText="Salvar rascunho"
+        />
+      )}
+      {showCancelConfirmationModal && (
+        <ConfirmationModal
+          isOpen={showCancelConfirmationModal}
+          onClose={handleKeepEditing}
+          onConfirm={handleConfirmCancel}
+          title="Confirmar Cancelamento"
+          description="Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas."
+          confirmText="Sim, cancelar e sair"
+          cancelText="Não, continuar editando"
         />
       )}
     </div>

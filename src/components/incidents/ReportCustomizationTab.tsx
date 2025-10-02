@@ -202,7 +202,7 @@ const fieldLabels: { [key: string]: string } = {
 };
 
 
-const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formData, onGeneratePdf }) => {
+export const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ formData, onGeneratePdf }) => {
   // Removido: const { toast } = useToast();
   const [pdfConfig, setPdfConfig] = useState<PdfConfig>(defaultPdfConfig);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("Padrão Detalhado");

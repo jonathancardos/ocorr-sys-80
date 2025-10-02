@@ -66,7 +66,7 @@ const formSchema = z.object({
 
 type DriverFormValues = z.infer<typeof formSchema>;
 
-const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose, initialFormData }) => {
+export const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, onClose, initialFormData }) => {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;

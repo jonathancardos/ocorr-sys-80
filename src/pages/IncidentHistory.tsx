@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +32,9 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { IncidentsOverviewCharts } from "@/components/history/IncidentsOverviewCharts"; // Import the new charts component
 import { formatDate, formatTime } from '@/lib/driver-utils'; // Import new utility functions
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-type Incident = Tables<'incidents'>;
+type Incident = Tables<'incidents'> & { isDraft?: boolean }; // Add isDraft property
 type SortColumn = keyof Incident | null;
 type SortDirection = 'asc' | 'desc';
 
@@ -44,6 +45,15 @@ export const IncidentHistory = () => {
   const [filterSeverity, setFilterSeverity] = useState("all");
   const [sortColumn, setSortColumn] = useState<SortColumn>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [localDrafts, setLocalDrafts] = useState<Incident[]>([]); // State to store local drafts
+
+  // Load drafts from localStorage on component mount
+  useEffect(() => {
+    const storedDrafts = localStorage.getItem('incidentDrafts');
+    if (storedDrafts) {
+      setLocalDrafts(JSON.parse(storedDrafts).map((draft: any) => ({ ...draft, isDraft: true })));
+    }
+  }, []);
 
   // Fetch real incidents data
   const { data: incidents, isLoading, error } = useQuery<Incident[], Error>({
@@ -56,7 +66,7 @@ export const IncidentHistory = () => {
   });
 
   const filteredAndSortedIncidents = useMemo(() => {
-    let currentIncidents = incidents || [];
+    let currentIncidents = [...(incidents || []), ...localDrafts]; // Combine incidents and local drafts
 
     // Apply search term
     if (searchTerm) {
@@ -71,7 +81,11 @@ export const IncidentHistory = () => {
 
     // Apply status filter
     if (filterStatus !== "all") {
-      currentIncidents = currentIncidents.filter(incident => incident.status === filterStatus);
+      currentIncidents = currentIncidents.filter(incident => {
+        if (filterStatus === "draft" && incident.isDraft) return true;
+        if (filterStatus !== "draft" && !incident.isDraft && incident.status === filterStatus) return true;
+        return false;
+      });
     }
 
     // Apply severity filter
@@ -99,29 +113,31 @@ export const IncidentHistory = () => {
     }
 
     return currentIncidents;
-  }, [incidents, searchTerm, filterStatus, filterSeverity, sortColumn, sortDirection]);
+  }, [incidents, localDrafts, searchTerm, filterStatus, filterSeverity, sortColumn, sortDirection]); // Add localDrafts to dependencies
 
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "resolved":
-        return "success";
+        return "default"; // Changed from "success"
       case "open": // For 'Em análise' or 'Pendente'
-        return "warning";
+        return "secondary"; // Changed from "warning"
+      case "draft":
+        return "outline"; // Changed from "info"
       default:
-        return "outline";
+        return "secondary"; // Changed from "outline"
     }
   };
 
   const getSeverityVariant = (severity: string | null) => {
     switch (severity) {
       case "baixo":
-        return "riskLow";
+        return "default"; // Changed from "riskLow"
       case "moderado":
-        return "riskModerate";
+        return "secondary"; // Changed from "riskModerate"
       case "grave":
-        return "riskGrave";
+        return "destructive"; // Changed from "riskGrave"
       case "critico": // Mapping 'gravissimo' to 'critico' for badge variant
-        return "riskCritical";
+        return "destructive"; // Changed from "riskCritical"
       default:
         return "secondary";
     }
@@ -153,6 +169,8 @@ export const IncidentHistory = () => {
       description: "Todos os filtros foram removidos.",
     });
   };
+
+  const navigate = useNavigate(); // Initialize useNavigate
 
   if (isLoading) {
     return (
@@ -225,6 +243,7 @@ export const IncidentHistory = () => {
                   <SelectItem value="all">Todos Status</SelectItem>
                   <SelectItem value="open">Em Análise/Pendente</SelectItem>
                   <SelectItem value="resolved">Concluído</SelectItem>
+                  <SelectItem value="draft">Rascunho</SelectItem> {/* New option for drafts */}
                 </SelectContent>
               </Select>
 
@@ -303,46 +322,55 @@ export const IncidentHistory = () => {
               </TableHeader>
               <TableBody>
                 {filteredAndSortedIncidents.length > 0 ? (
-                  filteredAndSortedIncidents.map((incident) => (
-                    <TableRow key={incident.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        <div>
-                          <div className="font-semibold">{incident.incident_number || '-'}</div>
-                          <div className="text-xs text-muted-foreground">{incident.bo_number || '-'}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{formatDate(incident.date_occurred)}</div>
-                          <div className="text-xs text-muted-foreground">{formatTime(incident.date_occurred)}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium max-w-[150px] truncate">{incident.title || '-'}</TableCell>
-                      <TableCell>
-                        <div className="max-w-32 truncate" title={incident.location || ''}>
-                          {incident.location || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium text-foreground">
-                        {incident.cost_estimate ? `R$ ${incident.cost_estimate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getSeverityVariant(incident.severity)}>
-                          {incident.severity || 'N/A'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(incident.status)}>
-                          {incident.status === 'open' ? 'Em Análise' : incident.status === 'resolved' ? 'Concluído' : 'N/A'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredAndSortedIncidents.map((incident) => {
+                    console.log("Rendering incident:", incident); // Add this line for debugging
+                    return (
+                      <TableRow key={incident.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          <div>
+                            <div className="font-semibold">{incident.incident_number || '-'}</div>
+                            <div className="text-xs text-muted-foreground">{incident.bo_number || '-'}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{incident.date_occurred ? formatDate(incident.date_occurred) : '-'}</div>
+                            <div className="text-xs text-muted-foreground">{incident.date_occurred ? formatTime(incident.date_occurred) : '-'}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium max-w-[150px] truncate">{incident.title || '-'}</TableCell>
+                        <TableCell>
+                          <div className="max-w-32 truncate" title={incident.location || ''}>
+                            {incident.location || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium text-foreground">
+                          {incident.cost_estimate ? `R$ ${incident.cost_estimate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getSeverityVariant(incident.severity)}>
+                            {incident.severity || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(incident.isDraft ? "draft" : incident.status)}>
+                            {incident.isDraft ? 'Rascunho' : (incident.status === 'open' ? 'Em Análise' : incident.status === 'resolved' ? 'Concluído' : 'N/A')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {incident.isDraft ? (
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/new-incident/${incident.id}`)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
