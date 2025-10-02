@@ -35,16 +35,16 @@ export const GeneratedReportsLog: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
 
-  const { data: reports, isLoading, error } = useQuery<ReportWithProfile[], Error>({
+  const { data: reports, isLoading, error } = useQuery({
     queryKey: ['reportsWithProfiles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('reports_with_profiles')
+        .from('reports_with_profiles' as any)
         .select('*')
         .order('generated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as any[];
     },
   });
 
@@ -92,13 +92,14 @@ export const GeneratedReportsLog: React.FC = () => {
         .delete()
         .eq('id', reportId);
       if (error) throw error;
+      return reportId;
     },
-    onSuccess: () => {
+    onSuccess: (deletedReportId) => {
       queryClient.invalidateQueries({ queryKey: ['reportsWithProfiles'] });
       toast.success("Relatório excluído!", {
         description: "O registro do relatório foi removido do histórico.",
       });
-      setSelectedReportIds(prev => prev.filter(id => id !== reportId));
+      setSelectedReportIds(prev => prev.filter(id => id !== deletedReportId));
     },
     onError: (err: any) => {
       console.error('Error deleting report:', err);
@@ -130,6 +131,11 @@ export const GeneratedReportsLog: React.FC = () => {
       });
     },
   });
+
+  const handleDeleteSelectedReports = () => {
+    if (selectedReportIds.length === 0) return;
+    bulkDeleteReportsMutation.mutate(selectedReportIds);
+  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {

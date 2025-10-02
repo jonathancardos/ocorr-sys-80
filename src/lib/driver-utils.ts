@@ -1,4 +1,4 @@
-import { format, isPast, differenceInMonths, differenceInDays, startOfDay, differenceInYears, addMonths, parseISO } from 'date-fns';
+import { format, isPast, differenceInMonths, differenceInDays, startOfDay, differenceInYears, addMonths, parseISO, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface CnhStatus {

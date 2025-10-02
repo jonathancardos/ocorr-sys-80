@@ -275,7 +275,7 @@ const BulkVehicleUpload: React.FC<BulkVehicleUploadProps> = ({ onUploadComplete,
             uploaded_by: uploadedById,
           });
         } else {
-          vehiclesToInsert.push({ ...vehicle, uploaded_by: uploadedById });
+          vehiclesToInsert.push(vehicle as any);
         }
       }
 

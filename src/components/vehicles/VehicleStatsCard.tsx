@@ -20,7 +20,7 @@ export const VehicleStatsCard: React.FC<VehicleStatsCardProps> = ({ title, value
         label: "veículos",
         isPositive: true,
       }}
-      icon={icon}
+      icon={icon as any}
       onClick={onClick}
       variant={variant}
     />

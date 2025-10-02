@@ -232,7 +232,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
         isOpen={isPdfPreviewOpen}
         onClose={() => setIsPdfPreviewOpen(false)}
         vehicles={vehicles || []}
-        filterType={filterType}
+        filterType={filterType as any}
         onDownloadSuccess={handleDownloadPdfFromPreview}
       />
     </div>

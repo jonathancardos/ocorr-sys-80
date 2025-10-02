@@ -873,7 +873,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
               <Save className="mr-2 h-4 w-4" />
               Salvar como Rascunho
             </Button>
-            <Button onClick={handleSubmit} size="sm">
+            <Button onClick={handleSave} size="sm">
               Salvar
             </Button>
 

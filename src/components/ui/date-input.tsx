@@ -3,10 +3,13 @@ import { Input } from '@/components/ui/input';
 import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface DateInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface DateInputProps {
   value: string;
   onChange: (value: string | null) => void;
   className?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  id?: string;
 }
 
 export function DateInput({ value, onChange, className, ...props }: DateInputProps) {

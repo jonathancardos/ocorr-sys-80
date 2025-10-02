@@ -21,8 +21,8 @@ import { format } from 'date-fns';
 import { DateInput } from '@/components/ui/date-input';
 
 interface IncidentIdentificationSectionProps {
-  formData: z.infer<typeof IncidentFormSchema>;
-  onFormDataChange: (data: Partial<z.infer<typeof IncidentFormSchema>>) => void;
+  formData: any;
+  onFormDataChange: (data: any) => void;
   isEditing?: boolean;
 }
 
@@ -46,7 +46,7 @@ export function IncidentIdentificationSection({
     onFormDataChange({ [field]: value });
   };
 
-  const handleInputChange = (field: keyof z.infer<typeof IncidentFormSchema>, value: any) => {
+  const handleInputChange = (field: string, value: any) => {
     onFormDataChange({ [field]: value });
   };
 

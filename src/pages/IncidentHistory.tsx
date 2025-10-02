@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import { 
   Table,
   TableBody,
@@ -64,7 +65,7 @@ export const IncidentHistory = () => {
         incident.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         incident.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         incident.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        incident.boNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+        incident.bo_number?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -307,7 +308,7 @@ export const IncidentHistory = () => {
                       <TableCell className="font-medium">
                         <div>
                           <div className="font-semibold">{incident.incident_number || '-'}</div>
-                          <div className="text-xs text-muted-foreground">{incident.boNumber || '-'}</div>
+                          <div className="text-xs text-muted-foreground">{incident.bo_number || '-'}</div>
                         </div>
                       </TableCell>
                       <TableCell>
