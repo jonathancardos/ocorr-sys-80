@@ -159,12 +159,14 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   };
 
   const handleSaveDraftAndNavigate = () => {
-    // A lógica de salvar rascunho será tratada no NewIncidentForm
-    // Por enquanto, apenas cancela a navegação e espera o usuário salvar
     setShowConfirmationModal(false);
+    setHasUnsavedChanges(false);
+    // Redirecionar para o histórico de ocorrências
+    navigate('/history');
     setPendingNavigationPath(undefined);
-    // Poderíamos adicionar um toast aqui para instruir o usuário a salvar o rascunho manualmente
-    // toast.info("Por favor, salve seu rascunho antes de sair.");
+    toast.info("Salve o rascunho antes de sair", {
+      description: "Use o botão 'Salvar Rascunho' na página de ocorrência.",
+    });
   };
 
   const getInitials = (name: string) => {
@@ -327,8 +329,11 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
           onClose={handleCancelNavigation}
           onConfirm={handleConfirmNavigation}
           onSaveDraft={handleSaveDraftAndNavigate}
-          title="Alterações não salvas"
-          description="Você tem alterações não salvas. Deseja descartá-las, salvar como rascunho ou continuar editando?"
+          title="Deseja cancelar a ocorrência atual?"
+          description="Você está prestes a sair da página de criação de ocorrência. Escolha uma opção abaixo:"
+          confirmText="Sim, cancelar"
+          cancelText="Não, continuar editando"
+          saveDraftText="Salvar rascunho"
         />
       )}
     </div>

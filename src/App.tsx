@@ -36,6 +36,7 @@ const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: ()
   const { draftId } = useParams<{ draftId: string }>();
   const [initialDraftData, setInitialDraftData] = useState<any | undefined>(undefined);
   const { handleSaveIncident } = useOutletContext<{ handleSaveIncident: (formData: any, isDraft?: boolean) => void }>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (draftId) {
@@ -48,7 +49,12 @@ const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: ()
     }
   }, [draftId]);
 
-  return <ModernNewIncidentForm onClose={onClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} />;
+  const handleClose = () => {
+    setHasUnsavedChanges(false);
+    navigate('/');
+  };
+
+  return <ModernNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} />;
 };
 
 const App = () => {

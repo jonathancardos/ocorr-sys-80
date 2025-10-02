@@ -30,9 +30,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onSaveDraft,
   title,
   description,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
-  saveDraftText = "Salvar Rascunho",
+  confirmText = "Sim, cancelar",
+  cancelText = "Não, continuar editando",
+  saveDraftText = "Salvar rascunho",
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -41,14 +41,18 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogCancel onClick={onClose} className="mt-0">
+            {cancelText}
+          </AlertDialogCancel>
           {onSaveDraft && (
             <Button variant="secondary" onClick={onSaveDraft}>
               {saveDraftText}
             </Button>
           )}
-          <AlertDialogCancel onClick={onClose}>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm} className="bg-destructive hover:bg-destructive/90">
+            {confirmText}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

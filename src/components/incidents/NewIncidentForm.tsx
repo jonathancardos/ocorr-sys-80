@@ -123,94 +123,94 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
       incidentDate: currentDate,
       incidentTime: currentTime,
       location: "", // General location field, might be used for both types
-    locationType: "" as "establishment" | "public_road" | "", // New field for location type
-    establishmentName: "", // New field for establishment
-    establishmentAddress: "", // New field for establishment
-    establishmentCircumstances: "", // New field for establishment
-    hasDock: "" as "yes" | "no" | "",
-    hasParking: "" as "yes" | "no" | "",
-    roadDetailedLocation: "", // New field for public road
-    roadSuspicions: "", // New field for public road
-    roadTrafficConditions: "", // New field for public road
-    roadWitnesses: "", // New field for public road
-    boNumber: "",
-    boDate: "",
-    sameDay: "" as "yes" | "no" | "",
-    responsible: "",
-    
-    // Dados do Veículo e Motorista
-    vehicleId: "" as string | null, // New field to store selected vehicle's ID
-    vehiclePlate: "", // Will be populated from selected vehicle
-    vehicleModel: "", // Will be populated from selected vehicle
-    vehicleTechnology: [] as string[], // New field for vehicle technology
-    vehiclePriority: null as number | null, // NEW FIELD
-    vehicleBlockerInstalled: null as boolean | null, // NEW FIELD
-    driverId: "" as string | null, // New field to store selected driver's ID
-    driverName: "", // Will be populated from selected driver
-    driverCpf: "", // Will be populated from selected driver
-    driverPhone: "", // Will be populated from selected driver
-    driverLicense: "", // Will be populated from selected driver
-    licenseExpiry: "", // Will be populated from selected driver
-    omnilinkScoreRegistrationDate: "" as string | null, // NEW: Omnilink registration date
-    omnilinkScoreExpiryDate: "" as string | null, // NEW: Omnilink expiry date
-    omnilinkScoreStatus: "" as string | null, // NEW: Omnilink status (em_dia/inapto)
-    
-    // Laudo Omnilink
-    omnilinkStatus: "" as "yes" | "no" | "", // Changed to string
-    omnilinkObservations: "",
-    omnilinkAnalystVerdict: "", // New field
-    
-    // Laudo Siga+ (Rastreamento)
-    signalLoss: "" as "yes" | "no" | "",
-    signalLossTime: "",
-    unauthorizedStop: "" as "yes" | "no" | "",
-    unauthorizedStopLocation: "",
-    prolongedStop: "" as "yes" | "no" | "",
-    prolongedStopTime: "",
-    prolongedStopJustification: "",
-    
-    // Apuração do Condutor - Perguntas com Pesos
-    vehicleLocked: "" as "yes" | "no" | "", // Changed to string
-    driverNearVehicle: "" as "yes" | "no" | "", // Changed to string
-    authorizedParking: "" as "yes" | "no" | "", // Changed to string
-    leftVehicleTime: "" as "yes" | "no" | "", // Changed to string
-    vehicleRunning: "" as "yes" | "no" | "", // Changed to string
-    keyToThird: "" as "yes" | "no" | "", // Changed to string
-    doorsOpen: "" as "yes" | "no" | "", // Changed to string
-    followedInstructions: "" as "yes" | "no" | "", // Changed to string
-    reportedAnomalies: "" as "yes" | "no" | "", // Changed to string
-    contradictions: "" as "yes" | "no" | "", // Changed to string
-    stoppedInSafePlace: "" as "yes" | "no" | "",
-    activatedPanicButton: "" as "yes" | "no" | "",
-    driverScore: 0,
-    riskLevel: "",
-    
-    // Apuração da Carga
-    totalCargoValue: "",
-    stolenCargoValue: "",
-    cargoObservations: "",
-    
-    // Monitoramento de Risco
-    riskObservations: "",
-    
-    // Laudo Final
-    omnilinkSummary: "",
-    driverSummary: "",
-    trackingSummary: "",
-    cargoSummary: "",
-    riskSummary: "",
-    finalConclusion: "",
-    recommendations: "",
-    analystName: "",
-    
-    // Anexos (agora armazenarão URLs públicas)
-    boFiles: [] as AttachmentItem[],
-    sapScreenshots: [] as AttachmentItem[],
-    riskReports: [] as AttachmentItem[],
-    omnilinkPhoto: null as AttachmentItem | null,
+      locationType: "" as "establishment" | "public_road" | "", // New field for location type
+      establishmentName: "", // New field for establishment
+      establishmentAddress: "", // New field for establishment
+      establishmentCircumstances: "", // New field for establishment
+      hasDock: "" as "yes" | "no" | "",
+      hasParking: "" as "yes" | "no" | "",
+      roadDetailedLocation: "", // New field for public road
+      roadSuspicions: "", // New field for public road
+      roadTrafficConditions: "", // New field for public road
+      roadWitnesses: "", // New field for public road
+      boNumber: "",
+      boDate: "",
+      sameDay: "" as "yes" | "no" | "",
+      responsible: "",
+      
+      // Dados do Veículo e Motorista
+      vehicleId: "" as string | null, // New field to store selected vehicle's ID
+      vehiclePlate: "", // Will be populated from selected vehicle
+      vehicleModel: "", // Will be populated from selected vehicle
+      vehicleTechnology: [] as string[], // New field for vehicle technology
+      vehiclePriority: null as number | null, // NEW FIELD
+      vehicleBlockerInstalled: null as boolean | null, // NEW FIELD
+      driverId: "" as string | null, // New field to store selected driver's ID
+      driverName: "", // Will be populated from selected driver
+      driverCpf: "", // Will be populated from selected driver
+      driverPhone: "", // Will be populated from selected driver
+      driverLicense: "", // Will be populated from selected driver
+      licenseExpiry: "", // Will be populated from selected driver
+      omnilinkScoreRegistrationDate: "" as string | null, // NEW: Omnilink registration date
+      omnilinkScoreExpiryDate: "" as string | null, // NEW: Omnilink expiry date
+      omnilinkScoreStatus: "" as string | null, // NEW: Omnilink status (em_dia/inapto)
+      
+      // Laudo Omnilink
+      omnilinkStatus: "" as "yes" | "no" | "", // Changed to string
+      omnilinkObservations: "",
+      omnilinkAnalystVerdict: "", // New field
+      
+      // Laudo Siga+ (Rastreamento)
+      signalLoss: "" as "yes" | "no" | "",
+      signalLossTime: "",
+      unauthorizedStop: "" as "yes" | "no" | "",
+      unauthorizedStopLocation: "",
+      prolongedStop: "" as "yes" | "no" | "",
+      prolongedStopTime: "",
+      prolongedStopJustification: "",
+      
+      // Apuração do Condutor - Perguntas com Pesos
+      vehicleLocked: "" as "yes" | "no" | "", // Changed to string
+      driverNearVehicle: "" as "yes" | "no" | "", // Changed to string
+      authorizedParking: "" as "yes" | "no" | "", // Changed to string
+      leftVehicleTime: "" as "yes" | "no" | "", // Changed to string
+      vehicleRunning: "" as "yes" | "no" | "", // Changed to string
+      keyToThird: "" as "yes" | "no" | "", // Changed to string
+      doorsOpen: "" as "yes" | "no" | "", // Changed to string
+      followedInstructions: "" as "yes" | "no" | "", // Changed to string
+      reportedAnomalies: "" as "yes" | "no" | "", // Changed to string
+      contradictions: "" as "yes" | "no" | "", // Changed to string
+      stoppedInSafePlace: "" as "yes" | "no" | "",
+      activatedPanicButton: "" as "yes" | "no" | "",
+      driverScore: 0,
+      riskLevel: "",
+      
+      // Apuração da Carga
+      totalCargoValue: "",
+      stolenCargoValue: "",
+      cargoObservations: "",
+      
+      // Monitoramento de Risco
+      riskObservations: "",
+      
+      // Laudo Final
+      omnilinkSummary: "",
+      driverSummary: "",
+      trackingSummary: "",
+      cargoSummary: "",
+      riskSummary: "",
+      finalConclusion: "",
+      recommendations: "",
+      analystName: "",
+      
+      // Anexos (agora armazenarão URLs públicas)
+      boFiles: [] as AttachmentItem[],
+      sapScreenshots: [] as AttachmentItem[],
+      riskReports: [] as AttachmentItem[],
+      omnilinkPhoto: null as AttachmentItem | null
+    };
   });
-
-
+  
   const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({
     boFiles: false,
     sapScreenshots: false,

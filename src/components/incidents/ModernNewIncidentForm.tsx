@@ -109,7 +109,7 @@ const sections = [
 // Helper function to get CNH status
 export const getCnhStatus = getCnhStatusUtil;
 
-export const NewIncidentForm = ({ onClose, onSave, initialData }: NewIncidentFormProps) => {
+export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedChanges }: NewIncidentFormProps) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("identification");
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false);
@@ -196,6 +196,20 @@ export const NewIncidentForm = ({ onClose, onSave, initialData }: NewIncidentFor
   }, [formData]);
 
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
+  
+  const [hasInitialData] = useState(!!initialData);
+  
+  // Detectar mudanças não salvas
+  useEffect(() => {
+    if (setHasUnsavedChanges && !hasInitialData) {
+      const hasData = !!(formData.incidentNumber || 
+                      formData.vehicleId || 
+                      formData.driverId ||
+                      formData.incidentDescription ||
+                      formData.boFiles.length > 0);
+      setHasUnsavedChanges(hasData);
+    }
+  }, [formData, setHasUnsavedChanges, hasInitialData]);
 
 const sectionFields = {
     identification: [
@@ -469,8 +483,21 @@ const sectionFields = {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* Desktop Buttons */}
+            {/* Botão Cancelar Ocorrência */}
+            <Button 
+              onClick={() => {
+                if (setHasUnsavedChanges) setHasUnsavedChanges(false);
+                window.location.href = '/';
+              }} 
+              size="sm" 
+              variant="ghost" 
+              className="hidden sm:flex text-white hover:bg-white/10"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancelar Ocorrência
+            </Button>
 
+            {/* Desktop Buttons */}
             <Button onClick={handleSaveAsDraft} size="sm" variant="outline" className="hidden sm:flex">
               <Save className="mr-2 h-4 w-4" />
               Salvar como Rascunho
@@ -492,17 +519,24 @@ const sectionFields = {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[180px] bg-card/20 backdrop-blur-md border border-border/50">
-                  <DropdownMenuItem onClick={onClose}>
+                  <DropdownMenuItem onClick={() => {
+                    if (setHasUnsavedChanges) setHasUnsavedChanges(false);
+                    window.location.href = '/';
+                  }}>
                     <X className="mr-2 h-4 w-4" />
-                    Cancelar
+                    Cancelar Ocorrência
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSaveAsDraft}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar Rascunho
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => generatePDF()}>
                     <Download className="mr-2 h-4 w-4" />
                     Gerar PDF
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSave}>
-                    <Save className="mr-2 h-4 w-4" />
+                    <CheckCircle className="mr-2 h-4 w-4" />
                     Salvar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
