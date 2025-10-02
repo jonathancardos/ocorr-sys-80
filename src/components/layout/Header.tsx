@@ -204,7 +204,7 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px] w-56 bg-card/20 backdrop-blur-md border border-border/50"> {/* Adicionado min-w */}
+            <DropdownMenuContent align="end" className="min-w-[180px] w-56 bg-card/20 border border-border/50"> {/* Adicionado min-w */}
               <DropdownMenuLabel>
                 <div className="text-wrap">
                   <div className="font-medium">@{profile?.username}</div>

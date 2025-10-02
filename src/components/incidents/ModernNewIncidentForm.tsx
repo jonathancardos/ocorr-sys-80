@@ -18,6 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { z } from "zod";
 import { incidentFormSchema } from "@/lib/validations/incident-form-schema";
+import { supabase } from "@/integrations/supabase/client"; // Corrected import path
 
 interface PdfConfig {
   includeCoverPage: boolean;
@@ -114,6 +115,7 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
   const [activeTab, setActiveTab] = useState("identification");
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false);
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
+  const [isLoadingIncidentNumber, setIsLoadingIncidentNumber] = useState(true); // New state for loading
 
   // Usando a interface IncidentFormData já definida
   const [formData, setFormData] = useState<IncidentFormData>(initialData || {
@@ -188,7 +190,32 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
     if (savedFormData) {
       setFormData(JSON.parse(savedFormData));
     }
-  }, []);
+
+    // Fetch incident number only if it's a new incident and not already set
+    if (!initialData?.incidentNumber) {
+      const fetchIncidentNumber = async () => {
+        setIsLoadingIncidentNumber(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('get-next-incident-number');
+          console.log("Supabase function invoke result:", { data, error }); // Added console.log
+          if (error) {
+            console.error("Error fetching incident number:", error);
+            toast.error("Erro ao gerar número da ocorrência", { description: error.message });
+          } else {
+            setFormData(prev => ({ ...prev, incidentNumber: data.nextIncidentNumber }));
+          }
+        } catch (error) {
+          console.error("Unhandled error fetching incident number:", error);
+          toast.error("Erro inesperado ao gerar número da ocorrência");
+        } finally {
+          setIsLoadingIncidentNumber(false);
+        }
+      };
+      fetchIncidentNumber();
+    } else {
+      setIsLoadingIncidentNumber(false);
+    }
+  }, [initialData?.incidentNumber]);
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -352,6 +379,7 @@ const sectionFields = {
           <IncidentIdentificationSection
             formData={formData}
             onFormDataChange={handleIdentificationSectionChange}
+            isLoadingIncidentNumber={isLoadingIncidentNumber} // Pass loading state
           />
         );
       case "vehicle":

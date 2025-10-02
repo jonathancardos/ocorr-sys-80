@@ -85,7 +85,7 @@
     --card: 0 0% 100% / 0.05; /* Base transparente para cards */
     --card-foreground: 220 15% 95%;
 
-    --popover: 0 0% 100% / 0.05; /* Base transparente para popovers/menus */
+    --popover: 220 25% 10%; /* Base opaca para popovers/menus */
     --popover-foreground: 220 15% 95%;
 
     /* Azul Corporativo no Escuro - Mais vibrante */

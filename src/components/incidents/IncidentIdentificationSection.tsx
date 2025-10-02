@@ -24,12 +24,14 @@ interface IncidentIdentificationSectionProps {
   formData: any;
   onFormDataChange: (data: any) => void;
   isEditing?: boolean;
+  isLoadingIncidentNumber?: boolean; // New prop
 }
 
 export function IncidentIdentificationSection({
   formData,
   onFormDataChange,
   isEditing = false,
+  isLoadingIncidentNumber = false, // Default to false
 }: IncidentIdentificationSectionProps) {
   const now = new Date();
 
@@ -62,8 +64,9 @@ export function IncidentIdentificationSection({
           <Input
             id="incidentNumber"
             value={formData.incidentNumber}
-            onChange={(e) => handleInputChange('incidentNumber', e.target.value)}
-            disabled={isEditing}
+            readOnly
+            disabled={isLoadingIncidentNumber} // Disable when loading
+            placeholder={isLoadingIncidentNumber ? "Gerando..." : ""} // Placeholder for loading state
           />
         </div>
 

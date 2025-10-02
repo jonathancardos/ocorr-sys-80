@@ -88,7 +88,7 @@ type Incident = Tables<'incidents'>; // Define type for incident
 
 export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const handleCancel = () => {
-    // Redireciona para o dashboard sem salvar alterações
+    setFormData(prev => ({ ...prev, incidentNumber: "" }));
     window.location.href = '/dashboard';
   };
 
@@ -331,52 +331,16 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   const { data: nextIncidentNumber, isLoading: isIncidentNumberLoading } = useQuery<string, Error>({
     queryKey: ['nextIncidentNumber'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('incidents')
-        .select('incident_number, created_at')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      const currentDate = new Date();
-      const currentMonth = format(currentDate, 'MM');
-      const currentYear = format(currentDate, 'yyyy');
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-        console.error("Error fetching last incident number:", error);
-        throw error;
+      const response = await fetch('/functions/v1/get-next-incident-number', {
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch next incident number');
       }
-
-      let sequentialNumber = 1;
-      let lastIncidentMonth = currentMonth;
-      let lastIncidentYear = currentYear;
-
-      if (data) {
-        const lastIncidentNumber = data.incident_number;
-        const lastIncidentCreatedAt = new Date(data.created_at);
-        lastIncidentMonth = format(lastIncidentCreatedAt, 'MM');
-        lastIncidentYear = format(lastIncidentCreatedAt, 'yyyy');
-
-        if (lastIncidentNumber && lastIncidentNumber.startsWith('OC')) {
-          const parts = lastIncidentNumber.split('OC')[1].split('-');
-          const seqNum = parseInt(parts[0], 10);
-          const monthYear = parts[1];
-
-          if (monthYear) {
-            const lastMonth = monthYear.substring(0, 2);
-            const lastYear = monthYear.substring(2, 6);
-
-            if (lastMonth === currentMonth && lastYear === currentYear) {
-              sequentialNumber = seqNum + 1;
-            } else {
-              sequentialNumber = 1; // Reset if month or year changed
-            }
-          }
-        }
-      }
-
-      const formattedSequentialNumber = String(sequentialNumber).padStart(3, '0');
-      return `OC${formattedSequentialNumber}${currentMonth}${currentYear}`;
+      const data = await response.json();
+      return data.nextIncidentNumber;
     },
     staleTime: Infinity, // The incident number should not change during the session
     refetchOnWindowFocus: false,

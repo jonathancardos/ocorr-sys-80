@@ -224,7 +224,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
         {/* Desktop Sidebar Navigation */}
         {!isMobile && (
           <aside className={cn(
-            "min-h-[calc(100vh-4rem)] bg-card/20 backdrop-blur-sm border-r border-border/50 transition-all duration-300 ease-in-out flex flex-col", /* Adjusted transparency */
+            "min-h-[calc(100vh-4rem)] bg-card/20 border-r border-border/50 transition-all duration-300 ease-in-out flex flex-col", /* Adjusted transparency */
             isSidebarOpen ? "w-64" : "w-20"
           )}>
             {isSidebarOpen && (
