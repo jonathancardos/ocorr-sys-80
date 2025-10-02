@@ -33,7 +33,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
   const { data: vehicles, isLoading: isLoadingVehicles, error: vehiclesError } = useQuery<Vehicle[], Error>({
     queryKey: ['reportVehicles', filterType],
     queryFn: async () => {
-      let query = supabase.from('vehicles').select('*');
+      let query: any = supabase.from('vehicles').select('*');
 
       if (filterType === 'has_workshop') {
         query = query.eq('has_workshop', true);
