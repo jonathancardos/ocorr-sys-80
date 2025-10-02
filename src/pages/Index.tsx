@@ -160,9 +160,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
 
   const handleSaveDraftAndNavigate = () => {
     setShowConfirmationModal(false);
-    setHasUnsavedChanges(false);
-    // Redirecionar para o histórico de ocorrências
-    navigate('/history');
+    // Não redirecionar - apenas fechar o modal
     setPendingNavigationPath(undefined);
     toast.info("Salve o rascunho antes de sair", {
       description: "Use o botão 'Salvar Rascunho' na página de ocorrência.",

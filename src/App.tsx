@@ -51,7 +51,7 @@ const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: ()
 
   const handleClose = () => {
     setHasUnsavedChanges(false);
-    navigate('/');
+    navigate('/'); // Navegação SPA sem recarregar a página
   };
 
   return <ModernNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} />;

@@ -309,6 +309,8 @@ const sectionFields = {
 
   const handleSaveAsDraft = () => {
     onSave(formData, true);
+    if (setHasUnsavedChanges) setHasUnsavedChanges(false);
+    // Não redirecionar - permanecer no formulário
     toast.success("Rascunho salvo!", {
       description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
     });
@@ -487,7 +489,7 @@ const sectionFields = {
             <Button 
               onClick={() => {
                 if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-                window.location.href = '/';
+                onClose();
               }} 
               size="sm" 
               variant="ghost" 
@@ -521,7 +523,7 @@ const sectionFields = {
                 <DropdownMenuContent align="end" className="min-w-[180px] bg-card/20 backdrop-blur-md border border-border/50">
                   <DropdownMenuItem onClick={() => {
                     if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-                    window.location.href = '/';
+                    onClose();
                   }}>
                     <X className="mr-2 h-4 w-4" />
                     Cancelar Ocorrência
