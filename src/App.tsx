@@ -1,7 +1,7 @@
 import { Toaster as Sonner, toast } from "sonner"; // Importar Sonner diretamente
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams, useOutletContext } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Index from "./pages/Index"; // Index will now be a layout component
@@ -32,9 +32,10 @@ const SettingsPageWrapper = () => {
 };
 
 // New Wrapper component for ModernNewIncidentForm to handle draft loading
-const NewIncidentFormWrapper = ({ onSave, onClose }: { onSave: (data: any, isDraft?: boolean) => void; onClose: () => void }) => {
+const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: () => void; setHasUnsavedChanges: (hasChanges: boolean) => void }) => {
   const { draftId } = useParams<{ draftId: string }>();
   const [initialDraftData, setInitialDraftData] = useState<any | undefined>(undefined);
+  const { handleSaveIncident } = useOutletContext<{ handleSaveIncident: (formData: any, isDraft?: boolean) => void }>();
 
   useEffect(() => {
     if (draftId) {
@@ -47,38 +48,11 @@ const NewIncidentFormWrapper = ({ onSave, onClose }: { onSave: (data: any, isDra
     }
   }, [draftId]);
 
-  return <ModernNewIncidentForm onClose={onClose} onSave={onSave} initialData={initialDraftData} />;
+  return <ModernNewIncidentForm onClose={onClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} />;
 };
 
 const App = () => {
-  const [drafts, setDrafts] = useState<any[]>([]);
-
-  useEffect(() => {
-    const storedDrafts = localStorage.getItem('incidentDrafts');
-    if (storedDrafts) {
-      setDrafts(JSON.parse(storedDrafts));
-    }
-  }, []);
-
-  const handleSaveIncident = (formData: any, isDraft?: boolean) => {
-    if (isDraft) {
-      const draftId = `draft-${Date.now()}`;
-      const newDraft = { id: draftId, ...formData };
-      const updatedDrafts = [...drafts, newDraft];
-      setDrafts(updatedDrafts);
-      localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
-      toast.success("Rascunho salvo!", {
-        description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
-      });
-      console.log("Draft Saved:", newDraft);
-    } else {
-      // Logic for final save
-      console.log("Form Data:", formData, "Is Draft:", isDraft);
-      toast.success("Ocorrência salva!", {
-        description: "A ocorrência foi registrada com sucesso.",
-      });
-    }
-  };
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Novo estado
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -103,14 +77,14 @@ const App = () => {
                 path="/" 
                 element={
                   <ProtectedRoute>
-                    <Index /> {/* Index will render Header, Sidebar, and Outlet */}
+                    <Index hasUnsavedChanges={hasUnsavedChanges} setHasUnsavedChanges={setHasUnsavedChanges} /> {/* Index will render Header, Sidebar, and Outlet */}
                   </ProtectedRoute>
                 } 
               >
                 {/* Nested routes */}
                 <Route index element={<Dashboard />} /> {/* Default route for / */}
-                <Route path="new-incident" element={<NewIncidentFormWrapper onClose={() => {}} onSave={handleSaveIncident} />} />
-                <Route path="new-incident/:draftId" element={<NewIncidentFormWrapper onClose={() => {}} onSave={handleSaveIncident} />} />
+                <Route path="new-incident" element={<NewIncidentFormWrapper onClose={() => {}} setHasUnsavedChanges={setHasUnsavedChanges} />} />
+                <Route path="new-incident/:draftId" element={<NewIncidentFormWrapper onClose={() => {}} setHasUnsavedChanges={setHasUnsavedChanges} />} />
                 <Route path="history" element={<IncidentHistory />} />
                 <Route path="reports" element={<ReportsPage />} /> {/* UPDATED: Use ReportsPage */}
                 <Route path="users" element={<UserManagement />} />

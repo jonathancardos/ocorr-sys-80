@@ -3,7 +3,7 @@ import * as z from "zod";
 export const incidentFormSchema = z.object({
   incidentId: z.string().optional(),
   incidentType: z.string().min(1, { message: "Incident type is required." }),
-  incidentDate: z.date().optional(),
+  incidentDate: z.string().optional(),
   incidentTime: z.string().optional(),
   location: z.string().min(1, { message: "Location is required." }),
   description: z.string().min(1, { message: "Description is required." }),

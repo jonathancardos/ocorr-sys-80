@@ -90,6 +90,7 @@ interface NewIncidentFormProps {
   onClose: () => void;
   onSave: (data: IncidentFormData, isDraft?: boolean) => void;
   initialData?: any; // Add this line
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
 const sections = [

@@ -11,10 +11,18 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  path?: string;
+  children?: NavigationItem[]; // Add children for nested navigation
+}
+
 interface HeaderProps {
-  navigationItems?: { id: string; label: string; icon: React.ElementType; path?: string }[];
+  navigationItems?: NavigationItem[];
   currentPage?: string;
-  onNavigate?: (pageId: string) => void;
+  onNavigate?: (pageId: string, path?: string) => void; // Update onNavigate to accept path
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
 }
@@ -54,24 +62,70 @@ export const Header = ({ navigationItems, currentPage, onNavigate, onToggleSideb
                     <h1 className="text-lg font-bold text-foreground leading-tight">Sistema de Laudos</h1> {/* Ajustado para text-lg */}
                   </div>
                 </div>
-                <nav className="p-6 space-y-3">
+                <nav className="p-6 space-y-3 flex-1">
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPage === item.id;
+  
+                    if (item.children) {
+                      return (
+                        <DropdownMenu key={item.id}>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant={isActive ? "default" : "ghost"}
+                              className={cn(
+                                "w-full justify-start text-left py-2 transition-all duration-200 group",
+                                isActive
+                                  ? "bg-primary text-primary-foreground shadow-md"
+                                  : "hover:bg-primary/10"
+                              )}
+                            >
+                              <Icon className="h-4 w-4 mr-3" />
+                              <span className="font-medium text-wrap">
+                                {item.label}
+                              </span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="right" align="start" className="w-48">
+                            <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {item.children.map((child) => (
+                              <DropdownMenuItem key={child.id} onClick={() => onNavigate(child.id, child.path)}>
+                                <child.icon className="mr-2 h-4 w-4" />
+                                {child.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
+  
                     return (
                       <Button
                         key={item.id}
                         variant={isActive ? "default" : "ghost"}
                         className={cn(
-                          "w-full justify-start text-left py-2 transition-all duration-200",
-                          isActive 
-                            ? "bg-primary text-primary-foreground shadow-md" 
-                            : "hover:bg-primary/10 hover:text-primary hover:translate-x-1"
+                          "w-full justify-start text-left py-2 transition-all duration-200 group",
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "hover:bg-primary/10", // Alterado para hover:bg-primary/10
+                          !isSidebarOpen && "justify-center px-0"
                         )}
-                        onClick={() => onNavigate(item.id)}
+                        onClick={() => onNavigate(item.id, item.path)}
                       >
-                        <Icon className="mr-3 h-4 w-4" />
-                        <span className="font-medium text-wrap">{item.label}</span>
+                        <Icon className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          isSidebarOpen ? "mr-3" : "mr-0",
+                          !isActive && "group-hover:translate-x-1 group-hover:text-primary" // Alterado para group-hover:text-primary
+                        )} />
+                        {isSidebarOpen && (
+                          <span className={cn(
+                            "font-medium transition-transform duration-200 text-wrap",
+                            !isActive && "group-hover:text-primary group-hover:scale-105" // Alterado para group-hover:text-primary
+                          )}>
+                            {item.label}
+                          </span>
+                        )}
                       </Button>
                     );
                   })}

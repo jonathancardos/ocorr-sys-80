@@ -1,5 +1,26 @@
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ModernWelcomeSection } from "@/components/dashboard/ModernWelcomeSection";
+import {
+  Home,
+  FileText,
+  History,
+  BarChart3,
+  Users,
+  Truck,
+  Car,
+  ShieldCheck,
+  Settings,
+  Loader2,
+  Activity,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { NewIncidentForm } from "@/components/incidents/NewIncidentForm";
 import { IncidentHistory } from "@/pages/IncidentHistory";
@@ -8,35 +29,24 @@ import UserManagement from "@/components/admin/UserManagement";
 import DriverManagement from "@/components/admin/DriverManagement";
 import { VehicleManagement } from "@/components/admin/VehicleManagement";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  BarChart3, // Used for Reports
-  FileText,
-  History,
-  Home,
-  Settings,
-  Users,
-  Loader2,
-  Truck,
-  Car,
-  Activity,
-  LogOut,
-  User as UserIcon, // Renomeado User para UserIcon
-  ShieldCheck // Added ShieldCheck for the new page
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useNavigate, Outlet, useLocation } from "react-router-dom"; // Import Outlet and useLocation
-import { ModernWelcomeSection } from "@/components/dashboard/ModernWelcomeSection"; // Import ModernWelcomeSection
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal"; // Importar ConfirmationModal
 
-type PageView = "dashboard" | "new-incident" | "history" | "reports" | "settings" | "users" | "drivers" | "vehicles" | "driver-omnilink-status"; // Added new page
+type PageView = "dashboard" | "incidents" | "reports" | "settings" | "users" | "drivers" | "vehicles" | "driver-omnilink-status"; // Updated to "incidents"
 
 const defaultNavigationItems = [
   { id: "dashboard", label: "Dashboard", icon: Home, path: "/" },
-  { id: "new-incident", label: "Nova Ocorrência", icon: FileText, path: "/new-incident" },
-  { id: "history", label: "Histórico", icon: History, path: "/history" },
+  {
+    id: "incidents",
+    label: "Gerenciamento de Ocorrências",
+    icon: FileText,
+    children: [
+      { id: "new-incident", label: "Nova Ocorrência", icon: FileText, path: "/new-incident" },
+      { id: "history", label: "Histórico", icon: History, path: "/history" },
+    ],
+  },
+  // { id: "history", label: "Histórico", icon: History, path: "/history" }, // Removed
   { id: "reports", label: "Relatórios", icon: BarChart3, path: "/reports" }, // UPDATED: Added Reports
   { id: "users", label: "Gerenciamento de Usuários", icon: Users, path: "/users" },
   { id: "drivers", label: "Gerenciamento de Motoristas", icon: Truck, path: "/drivers" },
@@ -45,13 +55,45 @@ const defaultNavigationItems = [
   { id: "settings", label: "Configurações", icon: Settings, path: "/settings" },
 ];
 
-const Index = () => {
+const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges: boolean; setHasUnsavedChanges: (hasChanges: boolean) => void }) => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageView>("dashboard");
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation(); // Use useLocation to get current path
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false); // Novo estado para o modal
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | undefined>(undefined); // Novo estado para o caminho de navegação pendente
+  const [drafts, setDrafts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const storedDrafts = localStorage.getItem('incidentDrafts');
+    if (storedDrafts) {
+      setDrafts(JSON.parse(storedDrafts));
+    }
+  }, []);
+
+  const handleSaveIncident = (formData: any, isDraft?: boolean) => {
+    if (isDraft) {
+      const draftId = `draft-${Date.now()}`;
+      const newDraft = { id: draftId, ...formData };
+      const updatedDrafts = [...drafts, newDraft];
+      setDrafts(updatedDrafts);
+      localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
+      toast.success("Rascunho salvo!", {
+        description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
+      });
+      console.log("Draft Saved:", newDraft);
+      setHasUnsavedChanges(false);
+    } else {
+      console.log("Form Data:", formData, "Is Draft:", isDraft);
+      toast.success("Ocorrência salva!", {
+        description: "A ocorrência foi registrada com sucesso.",
+      });
+      setHasUnsavedChanges(false);
+      navigate('/history');
+    }
+  };
 
   // Debugging logs
   console.log("Index.tsx: Current user:", user);
@@ -81,14 +123,48 @@ const Index = () => {
     return items;
   };
 
-  const handlePageChange = (pageId: string) => {
-    setCurrentPage(pageId as PageView);
-    const selectedItem = defaultNavigationItems.find(item => item.id === pageId);
-    if (selectedItem && selectedItem.path) {
-      navigate(selectedItem.path);
-    } else {
-      navigate('/'); 
+  const handlePageChange = (pageId: string, path?: string) => {
+    if (hasUnsavedChanges && location.pathname.startsWith('/new-incident')) {
+      setPendingNavigationPath(path || '/');
+      setShowConfirmationModal(true);
+      return;
     }
+
+    setCurrentPage(pageId as PageView);
+    if (path) {
+      navigate(path);
+    }
+    else {
+      const selectedItem = defaultNavigationItems.find(item => item.id === pageId);
+      if (selectedItem && selectedItem.path) {
+        navigate(selectedItem.path);
+      } else {
+        navigate('/');
+      }
+    }
+  };
+
+  const handleConfirmNavigation = () => {
+    setHasUnsavedChanges(false);
+    setShowConfirmationModal(false);
+    if (pendingNavigationPath) {
+      navigate(pendingNavigationPath);
+      setPendingNavigationPath(undefined);
+    }
+  };
+
+  const handleCancelNavigation = () => {
+    setShowConfirmationModal(false);
+    setPendingNavigationPath(undefined);
+  };
+
+  const handleSaveDraftAndNavigate = () => {
+    // A lógica de salvar rascunho será tratada no NewIncidentForm
+    // Por enquanto, apenas cancela a navegação e espera o usuário salvar
+    setShowConfirmationModal(false);
+    setPendingNavigationPath(undefined);
+    // Poderíamos adicionar um toast aqui para instruir o usuário a salvar o rascunho manualmente
+    // toast.info("Por favor, salve seu rascunho antes de sair.");
   };
 
   const getInitials = (name: string) => {
@@ -103,7 +179,19 @@ const Index = () => {
   // Update currentPage based on URL path
   useEffect(() => {
     const currentPath = location.pathname;
-    const matchedItem = defaultNavigationItems.find(item => item.path === currentPath);
+    let matchedItem: { id: string; path?: string } | undefined;
+
+    for (const item of defaultNavigationItems) {
+      if (item.path === currentPath) {
+        matchedItem = item;
+        break;
+      }
+      if (item.children) {
+        matchedItem = item.children.find(child => child.path === currentPath);
+        if (matchedItem) break;
+      }
+    }
+
     if (matchedItem && matchedItem.id !== currentPage) {
       setCurrentPage(matchedItem.id as PageView);
     } else if (!matchedItem && currentPath === '/') {
@@ -148,28 +236,72 @@ const Index = () => {
               {visibleNavigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
+
+                if (item.children) {
+                  return (
+                    <DropdownMenu key={item.id}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant={isActive ? "default" : "ghost"}
+                          className={cn(
+                            "w-full justify-start text-left py-2 transition-all duration-200 group",
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-md"
+                              : "hover:bg-primary/10",
+                            !isSidebarOpen && "justify-center px-0"
+                          )}
+                        >
+                          <Icon className={cn(
+                            "h-4 w-4 transition-transform duration-200",
+                            isSidebarOpen ? "mr-3" : "mr-0",
+                            !isActive && "group-hover:translate-x-1 group-hover:text-primary"
+                          )} />
+                          {isSidebarOpen && (
+                            <span className={cn(
+                              "font-medium transition-transform duration-200 text-wrap",
+                              !isActive && "group-hover:text-primary group-hover:scale-105"
+                            )}>
+                              {item.label}
+                            </span>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" className="w-48">
+                        <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {item.children.map((child) => (
+                          <DropdownMenuItem key={child.id} onClick={() => handlePageChange(child.id, child.path)}>
+                            <child.icon className="mr-2 h-4 w-4" />
+                            {child.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+
                 return (
                   <Button
                     key={item.id}
                     variant={isActive ? "default" : "ghost"}
                     className={cn(
                       "w-full justify-start text-left py-2 transition-all duration-200 group",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-md" 
-                        : "hover:bg-primary/10", // Alterado para hover:bg-primary/10
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "hover:bg-primary/10",
                       !isSidebarOpen && "justify-center px-0"
                     )}
-                    onClick={() => handlePageChange(item.id)}
+                    onClick={() => handlePageChange(item.id, item.path)}
                   >
                     <Icon className={cn(
                       "h-4 w-4 transition-transform duration-200",
                       isSidebarOpen ? "mr-3" : "mr-0",
-                      !isActive && "group-hover:translate-x-1 group-hover:text-primary" // Alterado para group-hover:text-primary
+                      !isActive && "group-hover:translate-x-1 group-hover:text-primary"
                     )} />
                     {isSidebarOpen && (
                       <span className={cn(
                         "font-medium transition-transform duration-200 text-wrap",
-                        !isActive && "group-hover:text-primary group-hover:scale-105" // Alterado para group-hover:text-primary
+                        !isActive && "group-hover:text-primary group-hover:scale-105"
                       )}>
                         {item.label}
                       </span>
@@ -185,10 +317,20 @@ const Index = () => {
         {/* Main Content - Render nested routes here */}
         <main className="flex-1 bg-gradient-to-br from-background to-muted/20 p-4 sm:p-8">
           <div className="mx-auto w-full max-w-7xl">
-            <Outlet /> {/* This is where the content of the nested routes will be rendered */}
+            <Outlet context={{ handleSaveIncident }} /> {/* This is where the content of the nested routes will be rendered */}
           </div>
         </main>
       </div>
+      {showConfirmationModal && (
+        <ConfirmationModal
+          isOpen={showConfirmationModal}
+          onClose={handleCancelNavigation}
+          onConfirm={handleConfirmNavigation}
+          onSaveDraft={handleSaveDraftAndNavigate}
+          title="Alterações não salvas"
+          description="Você tem alterações não salvas. Deseja descartá-las, salvar como rascunho ou continuar editando?"
+        />
+      )}
     </div>
   );
 };

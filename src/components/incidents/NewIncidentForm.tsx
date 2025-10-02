@@ -13,7 +13,9 @@ import { toast } from 'sonner'; // Importar toast do sonner
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas'; // Corrected import
 import { cn } from "@/lib/utils";
-import { format, isPast, differenceInMonths, differenceInDays, startOfDay, differenceInYears } from 'date-fns';
+import { z } from 'zod';
+import { incidentFormSchema } from '@/lib/validations/incident-form-schema';
+import { format, isPast, differenceInMonths, differenceInDays, startOfDay, differenceInYears, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +87,11 @@ type Driver = Tables<'drivers'>;
 type Incident = Tables<'incidents'>; // Define type for incident
 
 export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
+  const handleCancel = () => {
+    // Redireciona para o dashboard sem salvar alterações
+    window.location.href = '/dashboard';
+  };
+
   // Removido: const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isNewDriverDialogOpen, setIsNewDriverDialogOpen] = useState(false); // State for new driver dialog
@@ -92,11 +99,16 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
   
   // Define PdfConfig interface
   interface PdfConfig {
-    showLogo: boolean;
-    showHeader: boolean;
-    showFooter: boolean;
-    showSignature: boolean;
-    customTitle?: string;
+    sections: {
+      [key: string]: {
+        isVisible: boolean;
+        fields: { [key: string]: boolean };
+        customText?: string;
+      };
+    };
+    globalHeader?: string;
+    globalFooter?: string;
+    templateName?: string;
   }
   
   const [pdfConfig, setPdfConfig] = useState<PdfConfig | null>(null); // State to hold PDF configuration
@@ -198,11 +210,12 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
     omnilinkPhoto: null as AttachmentItem | null,
   });
 
+
   const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({
     boFiles: false,
     sapScreenshots: false,
     riskReports: false,
-    omnilinkPhoto: false,
+    omnilinkPhoto: false
   });
 
   console.log('NewIncidentForm: Re-rendering. Current formData.omnilinkPhoto:', formData.omnilinkPhoto); // ADDED LOG
@@ -718,6 +731,26 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
 
   const cnhStatus = getCnhStatus(formData.licenseExpiry);
 
+  const handleIdentificationSectionChange = (data: Partial<z.infer<typeof incidentFormSchema>>) => {
+    setFormData(prev => {
+      const updatedData = { ...data };
+      if (updatedData.incidentDate !== undefined) {
+        // If it's a string, ensure it's in 'yyyy-MM-dd' format
+        if (typeof updatedData.incidentDate === 'string' && !/\d{4}-\d{2}-\d{2}/.test(updatedData.incidentDate)) {
+          try {
+            const parsedDate = parseISO(updatedData.incidentDate);
+            if (isValid(parsedDate)) {
+              updatedData.incidentDate = format(parsedDate, 'yyyy-MM-dd');
+            }
+          } catch (error) {
+            console.error("Error parsing incidentDate string:", error);
+          }
+        }
+      }
+      return { ...prev, ...updatedData };
+    });
+  };
+
   // Helper to render each section's content
   const renderSectionContent = (sectionId: string) => {
     switch (sectionId) {
@@ -725,7 +758,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
         return (
           <IncidentIdentificationSection
             formData={formData}
-            onFormDataChange={handleInputChange}
+            onFormDataChange={handleIdentificationSectionChange}
           />
         );
       case "vehicle":
@@ -796,10 +829,13 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
           />
         );
       case "pdf-customization":
+        const handleGeneratePdf = (config: PdfConfig) => {
+          generatePDF(config);
+        };
         return (
           <ReportCustomizationTab
             formData={formData}
-            onGeneratePdf={generatePDF}
+            onGeneratePdf={handleGeneratePdf}
           />
         );
       default:
@@ -837,8 +873,7 @@ export const NewIncidentForm = ({ onClose, onSave }: NewIncidentFormProps) => {
               <Save className="mr-2 h-4 w-4" />
               Salvar como Rascunho
             </Button>
-            <Button onClick={handleSave} size="sm" className="hidden sm:flex">
-              <Save className="mr-2 h-4 w-4" />
+            <Button onClick={handleSubmit} size="sm">
               Salvar
             </Button>
 
