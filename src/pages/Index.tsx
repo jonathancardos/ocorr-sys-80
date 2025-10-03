@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,11 +70,11 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
 
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState(false);
 
-  const handleCancelConfirmation = useCallback(() => {
+  const handleCancelConfirmation = () => {
     setShowCancelConfirmationModal(true);
-  }, []);
+  };
 
-  const handleConfirmCancel = useCallback(() => {
+  const handleConfirmCancel = () => {
     // Logic to delete draft from localStorage if it exists
     const currentPath = location.pathname;
     if (currentPath.startsWith('/new-incident/')) {
@@ -89,12 +89,12 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       }
     }
     setShowCancelConfirmationModal(false);
-    navigate('/');
-  }, [location.pathname, drafts, navigate]);
+    navigate('/dashboard');
+  };
 
-  const handleKeepEditing = useCallback(() => {
+  const handleKeepEditing = () => {
     setShowCancelConfirmationModal(false);
-  }, []);
+  };
 
   useEffect(() => {
     const storedDrafts = localStorage.getItem('incidentDrafts');
@@ -103,21 +103,18 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     }
   }, []);
 
-  const handleSaveIncident = useCallback((formData: any, isDraft?: boolean) => {
+  const handleSaveIncident = (formData: any, isDraft?: boolean) => {
     if (isDraft) {
       const draftId = `draft-${Date.now()}`;
-      const newDraft = { id: draftId, ...formData, isDraft: true };
-      setDrafts(prev => {
-        const updatedDrafts = [...prev, newDraft];
-        localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
-        return updatedDrafts;
-      });
+      const newDraft = { id: draftId, ...formData };
+      const updatedDrafts = [...drafts, newDraft];
+      setDrafts(updatedDrafts);
+      localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
       toast.success("Rascunho salvo!", {
         description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
       });
       console.log("Draft Saved:", newDraft);
       setHasUnsavedChanges(false);
-      navigate('/history?status=draft');
     } else {
       console.log("Form Data:", formData, "Is Draft:", isDraft);
       toast.success("Ocorrência salva!", {
@@ -126,7 +123,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       setHasUnsavedChanges(false);
       navigate('/history');
     }
-  }, [navigate, setHasUnsavedChanges]);
+  };
 
   // Debugging logs
   console.log("Index.tsx: Current user:", user);
@@ -178,7 +175,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     }
   };
 
-  const handleConfirmNavigation = useCallback(() => {
+  const handleConfirmNavigation = () => {
     console.log("Index.tsx: handleConfirmNavigation called. pendingNavigationPath:", pendingNavigationPath);
     setHasUnsavedChanges(false);
     setShowConfirmationModal(false);
@@ -187,15 +184,15 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       navigate(pendingNavigationPath);
       setPendingNavigationPath(undefined);
     }
-  }, [pendingNavigationPath, navigate, setHasUnsavedChanges]);
+  };
 
-  const handleCancelNavigation = useCallback(() => {
+  const handleCancelNavigation = () => {
     console.log("Index.tsx: handleCancelNavigation called.");
     setShowConfirmationModal(false);
     setPendingNavigationPath(undefined);
-  }, []);
+  };
 
-  const handleSaveDraftAndNavigate = useCallback(() => {
+  const handleSaveDraftAndNavigate = () => {
     console.log("Index.tsx: handleSaveDraftAndNavigate called. pendingNavigationPath:", pendingNavigationPath);
     setShowConfirmationModal(false);
     if (saveDraftCallback) {
@@ -211,7 +208,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     toast.info("Rascunho salvo e navegação continuada.", {
       description: "A ocorrência foi salva como rascunho e você foi redirecionado.",
     });
-  }, [pendingNavigationPath, saveDraftCallback, navigate, setHasUnsavedChanges]);
+  };
 
   const getInitials = (name: string) => {
     return name

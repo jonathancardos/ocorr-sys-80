@@ -12,7 +12,7 @@ import UserManagement from "./components/admin/UserManagement";
 import DriverManagement from "./components/admin/DriverManagement";
 import { VehicleManagement } from "./components/admin/VehicleManagement";
 import { Dashboard } from "./components/dashboard/Dashboard"; // Import Dashboard
-import { NewIncidentForm as SimpleNewIncidentForm } from "./components/incidents/NewIncidentForm"; // Use simple NewIncidentForm instead of Modern
+import { NewIncidentForm as ModernNewIncidentForm } from "./components/incidents/ModernNewIncidentForm"; // Import NewIncidentForm
 import { IncidentHistory } from "./pages/IncidentHistory"; // Import IncidentHistory
 import { DriverOmnilinkStatusDetails } from "./pages/DriverOmnilinkStatusDetails"; // Import new details page
 import { ReportsPage } from "./pages/ReportsPage"; // NEW: Import ReportsPage
@@ -62,7 +62,7 @@ const NewIncidentFormWrapper = ({ onClose, setHasUnsavedChanges }: { onClose: ()
     navigate('/');
   };
 
-  return <SimpleNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} onCancelConfirm={handleCancelConfirm} />;
+  return <ModernNewIncidentForm onClose={handleClose} onSave={handleSaveIncident} initialData={initialDraftData} setHasUnsavedChanges={setHasUnsavedChanges} onCancelConfirm={handleCancelConfirm} />;
 };
 
 const App = () => {
