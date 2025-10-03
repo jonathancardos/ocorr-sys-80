@@ -89,7 +89,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       }
     }
     setShowCancelConfirmationModal(false);
-    navigate('/dashboard');
+    navigate('/');
   };
 
   const handleKeepEditing = () => {
@@ -106,7 +106,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   const handleSaveIncident = (formData: any, isDraft?: boolean) => {
     if (isDraft) {
       const draftId = `draft-${Date.now()}`;
-      const newDraft = { id: draftId, ...formData };
+      const newDraft = { id: draftId, ...formData, isDraft: true };
       const updatedDrafts = [...drafts, newDraft];
       setDrafts(updatedDrafts);
       localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
@@ -115,6 +115,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       });
       console.log("Draft Saved:", newDraft);
       setHasUnsavedChanges(false);
+      navigate('/history?status=draft');
     } else {
       console.log("Form Data:", formData, "Is Draft:", isDraft);
       toast.success("Ocorrência salva!", {

@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 
 export interface NewIncidentFormProps {
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any, isDraft?: boolean) => void;
   initialData?: any;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   onCancelConfirm: () => void;
@@ -16,14 +16,14 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
   const [formData, setFormData] = useState(initialData || {});
 
   useEffect(() => {
-    // Placeholder for save draft callback
+    // Save draft callback to be triggered from layout modal
     const handleSaveAsDraft = () => {
       console.log("Saving draft:", formData);
-      // Implement actual draft saving logic here
+      onSave({ ...formData }, true);
     };
     setSaveDraftCallback(() => handleSaveAsDraft);
     return () => setSaveDraftCallback(undefined);
-  }, [setSaveDraftCallback, formData]);
+  }, [setSaveDraftCallback, formData, onSave]);
 
   const handleCancel = () => {
     onCancelConfirm();

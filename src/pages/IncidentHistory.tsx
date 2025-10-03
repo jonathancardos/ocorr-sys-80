@@ -32,7 +32,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { IncidentsOverviewCharts } from "@/components/history/IncidentsOverviewCharts"; // Import the new charts component
 import { formatDate, formatTime } from '@/lib/driver-utils'; // Import new utility functions
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate and useLocation
 
 type Incident = Tables<'incidents'> & { isDraft?: boolean }; // Add isDraft property
 type SortColumn = keyof Incident | null;
@@ -47,13 +47,21 @@ export const IncidentHistory = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [localDrafts, setLocalDrafts] = useState<Incident[]>([]); // State to store local drafts
 
-  // Load drafts from localStorage on component mount
+  // Load drafts from localStorage on component mount and set initial status filter from URL
   useEffect(() => {
     const storedDrafts = localStorage.getItem('incidentDrafts');
     if (storedDrafts) {
       setLocalDrafts(JSON.parse(storedDrafts).map((draft: any) => ({ ...draft, isDraft: true })));
     }
   }, []);
+
+  // Set initial filterStatus based on URL query param
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get('status');
+    if (status) setFilterStatus(status);
+  }, [location.search]);
 
   // Fetch real incidents data
   const { data: incidents, isLoading, error } = useQuery<Incident[], Error>({
