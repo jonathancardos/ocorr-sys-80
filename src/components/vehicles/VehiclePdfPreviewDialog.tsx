@@ -16,7 +16,7 @@ interface VehiclePdfPreviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   vehicles: Vehicle[];
-  filterType: 'all' | 'has_workshop' | 'no_workshop';
+  filterType: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3' | 'selected_plates';
   onDownloadSuccess?: (fileUrl: string) => void;
 }
 
@@ -41,6 +41,8 @@ export const VehiclePdfPreviewDialog: React.FC<VehiclePdfPreviewDialogProps> = (
     const generatePdfBlob = async () => {
       setIsGeneratingPdf(true);
       setGeneratedPdfBlob(null);
+
+      console.log("Generating PDF for", vehicles.length, "vehicles with filter type", filterType);
 
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';

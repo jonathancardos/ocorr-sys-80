@@ -12,16 +12,18 @@ import { format } from 'date-fns';
 import { Vehicle } from '@/types/vehicles';
 import { VehiclePdfPreviewDialog } from '../vehicles/VehiclePdfPreviewDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { VehiclePlateSelector } from './VehiclePlateSelector';
 
 interface VehicleReportGeneratorProps {
   onClose: () => void;
-  initialFilterType?: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3'; // Updated prop
+  initialFilterType?: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3' | 'selected_plates'; // Updated prop
 }
 
 export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ onClose, initialFilterType = 'all' }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [filterType, setFilterType] = useState<'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3'>(initialFilterType);
+  const [filterType, setFilterType] = useState<'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3' | 'selected_plates'>(initialFilterType);
+  const [selectedPlates, setSelectedPlates] = useState<string[]>([]);
   const [isSharingWhatsapp, setIsSharingWhatsapp] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
 
@@ -31,8 +33,12 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
   }, [initialFilterType]);
 
   const { data: vehicles, isLoading: isLoadingVehicles, error: vehiclesError } = useQuery<Vehicle[], Error>({
-    queryKey: ['reportVehicles', filterType],
+    queryKey: ['reportVehicles', filterType, selectedPlates], // Adicionado selectedPlates ao queryKey para re-executar a query quando as placas selecionadas mudam
     queryFn: async () => {
+      if (filterType === 'selected_plates' && selectedPlates.length === 0) {
+        return []; // Retorna um array vazio se o filtro for por placas e nenhuma placa for selecionada
+      }
+
       let query: any = supabase.from('vehicles').select('*');
 
       if (filterType === 'has_workshop') {
@@ -41,14 +47,16 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
         query = query.eq('has_workshop', false);
       } else if (filterType === 'double_blocker') {
         query = query.contains('technology', ['Bloqueador Duplo']);
-      } else if (filterType === 'blocker_installed') { // NEW: Filter for blocker_installed
+      } else if (filterType === 'blocker_installed') {
         query = query.eq('blocker_installed', true);
-      } else if (filterType === 'priority_1') { // NEW: Filter for priority 1
+      } else if (filterType === 'priority_1') {
         query = query.eq('priority', 1);
-      } else if (filterType === 'priority_2') { // NEW: Filter for priority 2
+      } else if (filterType === 'priority_2') {
         query = query.eq('priority', 2);
-      } else if (filterType === 'priority_3') { // NEW: Filter for priority 3
+      } else if (filterType === 'priority_3') {
         query = query.eq('priority', 3);
+      } else if (filterType === 'selected_plates' && selectedPlates.length > 0) {
+        query = query.in('plate', selectedPlates);
       }
 
       query = query.order('plate', { ascending: true });
@@ -90,6 +98,21 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
     setIsPdfPreviewOpen(true);
   };
 
+  const getFilterLabel = (type: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3' | 'selected_plates') => {
+    switch (type) {
+      case 'all': return 'Todos os Veículos';
+      case 'has_workshop': return 'Veículos com Oficina';
+      case 'no_workshop': return 'Veículos sem Oficina';
+      case 'double_blocker': return 'Veículos com Bloqueador Duplo';
+      case 'blocker_installed': return 'Veículos com Bloqueador Instalado';
+      case 'priority_1': return 'Veículos Prioridade 1 (Baixa)';
+      case 'priority_2': return 'Veículos Prioridade 2 (Média)';
+      case 'priority_3': return 'Veículos Prioridade 3 (Alta)';
+      case 'selected_plates': return `Placas Selecionadas: ${selectedPlates.join(', ')}`;
+      default: return 'N/A';
+    }
+  };
+
   const handleShareWhatsapp = () => {
     if (!vehicles || vehicles.length === 0) {
       toast.info("Nenhum veículo encontrado", {
@@ -100,22 +123,11 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
 
     setIsSharingWhatsapp(true);
     try {
-      const getFilterLabel = (type: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3') => {
-        switch (type) {
-          case 'all': return 'Todos os Veículos';
-          case 'has_workshop': return 'Veículos com Oficina';
-          case 'no_workshop': return 'Veículos sem Oficina';
-          case 'double_blocker': return 'Veículos com Bloqueador Duplo';
-          case 'blocker_installed': return 'Veículos com Bloqueador Instalado'; // NEW
-          case 'priority_1': return 'Veículos Prioridade 1 (Baixa)'; // NEW
-          case 'priority_2': return 'Veículos Prioridade 2 (Média)'; // NEW
-          case 'priority_3': return 'Veículos Prioridade 3 (Alta)'; // NEW
-          default: return 'N/A';
-        }
-      };
-
       let message = `*Relatório de Veículos Cadastrados*\n`;
-      message += `Filtro: ${getFilterLabel(filterType)}\n\n`;
+      message += `Filtro: ${getFilterLabel(filterType as any)}\n\n`;
+      if (filterType === 'selected_plates' && selectedPlates.length > 0) {
+        message += `Placas Selecionadas: ${selectedPlates.join(', ')}\n\n`;
+      }
       message += `*Total de Veículos:* ${vehicles.length}\n\n`;
       message += `---`;
 
@@ -142,7 +154,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
         report_type: 'vehicle_report',
         generated_by: user?.id || null,
         file_name: `relatorio-veiculos-${filterType}-${format(new Date(), 'dd-MM-yyyy')}.txt`,
-        metadata: { sharedVia: 'whatsapp', vehicleCount: vehicles.length, filter: filterType },
+        metadata: { sharedVia: 'whatsapp', vehicleCount: vehicles.length, filter: filterType, selectedPlates: filterType === 'selected_plates' ? selectedPlates : undefined },
       });
 
     } catch (error) {
@@ -161,7 +173,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
       generated_by: user?.id || null,
       file_name: `relatorio-veiculos-${filterType}-${format(new Date(), 'dd-MM-yyyy')}.pdf`,
       file_url: fileUrl,
-      metadata: { vehicleCount: vehicles?.length || 0, filter: filterType, sharedVia: 'pdf_download' },
+      metadata: { vehicleCount: vehicles?.length || 0, filter: filterType, sharedVia: 'pdf_download', selectedPlates: filterType === 'selected_plates' ? selectedPlates : undefined },
     });
   };
 
@@ -171,7 +183,12 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="filter-type">Filtrar Veículos</Label>
-        <Select value={filterType} onValueChange={(value: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3') => setFilterType(value)}>
+        <Select value={filterType} onValueChange={(value: 'all' | 'has_workshop' | 'no_workshop' | 'double_blocker' | 'blocker_installed' | 'priority_1' | 'priority_2' | 'priority_3' | 'selected_plates') => {
+          setFilterType(value);
+          if (value !== 'selected_plates') {
+            setSelectedPlates([]); // Clear selected plates if filter type changes
+          }
+        }}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione o tipo de filtro" />
           </SelectTrigger>
@@ -184,9 +201,17 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
             <SelectItem value="priority_1">Veículos Prioridade 1 (Baixa)</SelectItem> {/* NEW */}
             <SelectItem value="priority_2">Veículos Prioridade 2 (Média)</SelectItem> {/* NEW */}
             <SelectItem value="priority_3">Veículos Prioridade 3 (Alta)</SelectItem> {/* NEW */}
+            <SelectItem value="selected_plates">Selecionar Placas de Veículos</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+      {filterType === 'selected_plates' && (
+        <VehiclePlateSelector
+          selectedPlates={selectedPlates}
+          onPlatesChange={setSelectedPlates}
+        />
+      )}
 
       {isLoadingVehicles && (
         <div className="flex items-center justify-center py-4">
@@ -205,7 +230,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
       {!isLoadingVehicles && !vehiclesError && (
         <div className="text-muted-foreground text-sm text-center py-2">
           <CheckCircle className="h-4 w-4 inline-block mr-1 text-success" />
-          {vehicles?.length} veículo(s) encontrado(s) com o filtro "{filterType === 'all' ? 'Todos' : filterType === 'has_workshop' ? 'Com Oficina' : filterType === 'no_workshop' ? 'Sem Oficina' : filterType === 'double_blocker' ? 'Com Bloqueador Duplo' : filterType === 'blocker_installed' ? 'Com Bloqueador Instalado' : filterType === 'priority_1' ? 'Prioridade 1' : filterType === 'priority_2' ? 'Prioridade 2' : 'Prioridade 3'}".
+          {vehicles?.length} veículo(s) encontrado(s) com o filtro "{getFilterLabel(filterType as any)}".
         </div>
       )}
 
