@@ -7,6 +7,7 @@ interface VehicleReportPDFLayoutProps {
   vehicles: Vehicle[];
   startDate?: Date;
   endDate?: Date;
+  filterType: 'all' | 'has_workshop' | 'no_workshop';
   onRenderComplete?: () => void;
 }
 

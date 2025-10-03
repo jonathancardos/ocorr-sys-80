@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { createRoot } from 'react-dom/client';
-import { VehicleReportPDFLayout } from './VehicleReportPDFLayout';
+import { VehicleReportPDFLayout } from '../reports/VehicleReportPDFLayout';
 import { Vehicle } from '@/types/vehicles';
 import { toast } from 'sonner';
 import { uploadFile } from '@/integrations/supabase/storage';
