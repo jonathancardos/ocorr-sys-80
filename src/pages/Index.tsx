@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,11 +70,11 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
 
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState(false);
 
-  const handleCancelConfirmation = () => {
+  const handleCancelConfirmation = useCallback(() => {
     setShowCancelConfirmationModal(true);
-  };
+  }, []);
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = useCallback(() => {
     // Logic to delete draft from localStorage if it exists
     const currentPath = location.pathname;
     if (currentPath.startsWith('/new-incident/')) {
@@ -90,11 +90,11 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     }
     setShowCancelConfirmationModal(false);
     navigate('/');
-  };
+  }, [location.pathname, drafts, navigate]);
 
-  const handleKeepEditing = () => {
+  const handleKeepEditing = useCallback(() => {
     setShowCancelConfirmationModal(false);
-  };
+  }, []);
 
   useEffect(() => {
     const storedDrafts = localStorage.getItem('incidentDrafts');
@@ -103,13 +103,15 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     }
   }, []);
 
-  const handleSaveIncident = (formData: any, isDraft?: boolean) => {
+  const handleSaveIncident = useCallback((formData: any, isDraft?: boolean) => {
     if (isDraft) {
       const draftId = `draft-${Date.now()}`;
       const newDraft = { id: draftId, ...formData, isDraft: true };
-      const updatedDrafts = [...drafts, newDraft];
-      setDrafts(updatedDrafts);
-      localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
+      setDrafts(prev => {
+        const updatedDrafts = [...prev, newDraft];
+        localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
+        return updatedDrafts;
+      });
       toast.success("Rascunho salvo!", {
         description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
       });
@@ -124,7 +126,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       setHasUnsavedChanges(false);
       navigate('/history');
     }
-  };
+  }, [navigate, setHasUnsavedChanges]);
 
   // Debugging logs
   console.log("Index.tsx: Current user:", user);
@@ -176,7 +178,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     }
   };
 
-  const handleConfirmNavigation = () => {
+  const handleConfirmNavigation = useCallback(() => {
     console.log("Index.tsx: handleConfirmNavigation called. pendingNavigationPath:", pendingNavigationPath);
     setHasUnsavedChanges(false);
     setShowConfirmationModal(false);
@@ -185,15 +187,15 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
       navigate(pendingNavigationPath);
       setPendingNavigationPath(undefined);
     }
-  };
+  }, [pendingNavigationPath, navigate, setHasUnsavedChanges]);
 
-  const handleCancelNavigation = () => {
+  const handleCancelNavigation = useCallback(() => {
     console.log("Index.tsx: handleCancelNavigation called.");
     setShowConfirmationModal(false);
     setPendingNavigationPath(undefined);
-  };
+  }, []);
 
-  const handleSaveDraftAndNavigate = () => {
+  const handleSaveDraftAndNavigate = useCallback(() => {
     console.log("Index.tsx: handleSaveDraftAndNavigate called. pendingNavigationPath:", pendingNavigationPath);
     setShowConfirmationModal(false);
     if (saveDraftCallback) {
@@ -209,7 +211,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
     toast.info("Rascunho salvo e navegação continuada.", {
       description: "A ocorrência foi salva como rascunho e você foi redirecionado.",
     });
-  };
+  }, [pendingNavigationPath, saveDraftCallback, navigate, setHasUnsavedChanges]);
 
   const getInitials = (name: string) => {
     return name

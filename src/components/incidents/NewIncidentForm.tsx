@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 
 export interface NewIncidentFormProps {
@@ -14,16 +14,23 @@ export const NewIncidentForm = ({ onClose, onSave, initialData, setHasUnsavedCha
 
   // Placeholder for actual form data and logic
   const [formData, setFormData] = useState(initialData || {});
+  
+  // Use ref to store latest formData without causing re-renders
+  const formDataRef = useRef(formData);
+  
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   useEffect(() => {
     // Save draft callback to be triggered from layout modal
     const handleSaveAsDraft = () => {
-      console.log("Saving draft:", formData);
-      onSave({ ...formData }, true);
+      console.log("Saving draft:", formDataRef.current);
+      onSave({ ...formDataRef.current }, true);
     };
     setSaveDraftCallback(() => handleSaveAsDraft);
     return () => setSaveDraftCallback(undefined);
-  }, [setSaveDraftCallback, formData, onSave]);
+  }, [setSaveDraftCallback, onSave]);
 
   const handleCancel = () => {
     onCancelConfirm();
