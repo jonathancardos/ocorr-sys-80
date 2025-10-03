@@ -14,8 +14,7 @@ interface VehicleBlockerAndPriorityStatsCardProps {
   totalVehicles: number;
   vehiclesWithBlockerInstalled: number;
   vehiclesBlockerNotInstalledExplicitly: number;
-  vehiclesBlockerNotInstalling: number;
-  vehiclesBlockerStatusUnknown: number;
+  vehiclesBlockerStatusUnknown: number; // Renamed from vehiclesBlockerNotInstalling
   vehiclesPriority1: number;
   vehiclesPriority2: number;
   vehiclesPriority3: number;
@@ -27,8 +26,7 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
   totalVehicles,
   vehiclesWithBlockerInstalled,
   vehiclesBlockerNotInstalledExplicitly,
-  vehiclesBlockerNotInstalling,
-  vehiclesBlockerStatusUnknown,
+  vehiclesBlockerStatusUnknown, // Updated prop name
   vehiclesPriority1,
   vehiclesPriority2,
   vehiclesPriority3,
@@ -37,8 +35,7 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
 }) => {
   const blockerInstalledPercentage = totalVehicles > 0 ? Math.round((vehiclesWithBlockerInstalled / totalVehicles) * 100) : 0;
   const blockerNotInstalledPercentage = totalVehicles > 0 ? Math.round((vehiclesBlockerNotInstalledExplicitly / totalVehicles) * 100) : 0;
-  const blockerNotInstallingPercentage = totalVehicles > 0 ? Math.round((vehiclesBlockerNotInstalling / totalVehicles) * 100) : 0;
-  const blockerUnknownPercentage = totalVehicles > 0 ? Math.round((vehiclesBlockerStatusUnknown / totalVehicles) * 100) : 0;
+  const blockerUnknownPercentage = totalVehicles > 0 ? Math.round((vehiclesBlockerStatusUnknown / totalVehicles) * 100) : 0; // Updated prop name
 
   // NEW: Calculate vehicles without blocker for each priority
   const vehiclesPriority1NoBlocker = allVehicles.filter(v => v.priority === 1 && v.blocker_installed === false).length;
@@ -134,11 +131,8 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
                       e.stopPropagation();
                       handleOpenDetailsDialog(
                         "Veículos com Bloqueador Não Instalado",
-                        "Lista de veículos que não possuem bloqueador instalado e não há indicação de 'não vai instalar'.",
-                        allVehicles.filter(v => 
-                          v.blocker_installed === false && 
-                          !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
-                        ),
+                        "Lista de veículos que não possuem bloqueador instalado.",
+                        allVehicles.filter(v => v.blocker_installed === false),
                         'blocker'
                       );
                     }}

@@ -25,12 +25,7 @@ export const VehicleFleetReportPDFLayout: React.FC<VehicleFleetReportPDFLayoutPr
   const totalVehicles = vehicles.length;
   const vehiclesWithBlockerInstalled = vehicles.filter(v => v.blocker_installed === true).length;
   const vehiclesBlockerNotInstalledExplicitly = vehicles.filter(v => 
-    v.blocker_installed === false && 
-    !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
-  ).length;
-  const vehiclesBlockerNotInstalling = vehicles.filter(v => 
-    v.blocker_installed === false && 
-    (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
+    v.blocker_installed === false
   ).length;
   const vehiclesBlockerStatusUnknown = vehicles.filter(v => v.blocker_installed === null).length;
 
@@ -43,9 +38,6 @@ export const VehicleFleetReportPDFLayout: React.FC<VehicleFleetReportPDFLayoutPr
   const getBlockerStatusLabel = (vehicle: Vehicle) => {
     if (vehicle.blocker_installed === true) return 'Instalado';
     if (vehicle.blocker_installed === false) {
-      if (vehicle.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || vehicle.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar')) {
-        return 'Não Vai Instalar';
-      }
       return 'Não Instalado';
     }
     return 'Não Classificado';
@@ -87,7 +79,6 @@ export const VehicleFleetReportPDFLayout: React.FC<VehicleFleetReportPDFLayoutPr
               <p><span className="font-semibold">Total de Veículos:</span> {totalVehicles}</p>
               <p><span className="font-semibold">Instalado:</span> {vehiclesWithBlockerInstalled} ({totalVehicles > 0 ? (vehiclesWithBlockerInstalled / totalVehicles * 100).toFixed(0) : 0}%)</p>
               <p><span className="font-semibold">Não Instalado:</span> {vehiclesBlockerNotInstalledExplicitly} ({totalVehicles > 0 ? (vehiclesBlockerNotInstalledExplicitly / totalVehicles * 100).toFixed(0) : 0}%)</p>
-              <p><span className="font-semibold">Não Vai Instalar:</span> {vehiclesBlockerNotInstalling} ({totalVehicles > 0 ? (vehiclesBlockerNotInstalling / totalVehicles * 100).toFixed(0) : 0}%)</p>
               <p><span className="font-semibold">Não Classificado:</span> {vehiclesBlockerStatusUnknown} ({totalVehicles > 0 ? (vehiclesBlockerStatusUnknown / totalVehicles * 100).toFixed(0) : 0}%)</p>
             </div>
           </div>
@@ -98,11 +89,10 @@ export const VehicleFleetReportPDFLayout: React.FC<VehicleFleetReportPDFLayoutPr
             const priorityNum = parseInt(priorityKey, 10);
             const priorityVehicles = vehiclesByPriority[priorityNum];
             const installedCount = priorityVehicles.filter(v => v.blocker_installed === true).length;
-            const notInstalledCount = priorityVehicles.filter(v => v.blocker_installed === false && !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))).length;
-            const notInstallingCount = priorityVehicles.filter(v => v.blocker_installed === false && (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))).length;
+            const notInstalledCount = priorityVehicles.filter(v => v.blocker_installed === false).length;
             const unknownStatusCount = priorityVehicles.filter(v => v.blocker_installed === null).length;
 
-            const vehiclesWithOtherStatus = priorityVehicles.filter(v => v.blocker_installed === null || (v.blocker_installed === false && v.raw_blocker_installed_text && !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar')) && !(v.raw_blocker_installed_text?.toLowerCase().includes('não') || v.raw_blocker_installed_text?.toLowerCase().includes('nao'))));
+            const vehiclesWithOtherStatus = priorityVehicles.filter(v => v.blocker_installed === null || (v.blocker_installed === false && v.raw_blocker_installed_text && !(v.raw_blocker_installed_text?.toLowerCase().includes('não') || v.raw_blocker_installed_text?.toLowerCase().includes('nao'))));
 
             return (
               <div key={priorityNum} className="mb-6 p-4 border rounded-lg bg-gray-50">
@@ -110,7 +100,6 @@ export const VehicleFleetReportPDFLayout: React.FC<VehicleFleetReportPDFLayoutPr
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-3">
                   <p><span className="font-semibold">Instalado:</span> {installedCount}</p>
                   <p><span className="font-semibold">Não Instalado:</span> {notInstalledCount}</p>
-                  <p><span className="font-semibold">Não Vai Instalar:</span> {notInstallingCount}</p>
                   <p><span className="font-semibold">Não Classificado:</span> {unknownStatusCount}</p>
                 </div>
 

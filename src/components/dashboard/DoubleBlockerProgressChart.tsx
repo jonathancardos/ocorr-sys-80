@@ -21,8 +21,7 @@ export const DoubleBlockerProgressChart: React.FC = () => {
     totalFleet,
     installedBlockersCount,
     notInstalledExplicitlyCount,
-    willNotInstallCount,
-    unknownBlockerStatusCount,
+    nonClassifiedReasons,
     priority1InstalledCount,
     priority2InstalledCount,
     priority3InstalledCount,
@@ -33,8 +32,7 @@ export const DoubleBlockerProgressChart: React.FC = () => {
         totalFleet: 0,
         installedBlockersCount: 0,
         notInstalledExplicitlyCount: 0,
-        willNotInstallCount: 0,
-        unknownBlockerStatusCount: 0,
+        nonClassifiedReasons: new Map<string, number>(),
         priority1InstalledCount: 0,
         priority2InstalledCount: 0,
         priority3InstalledCount: 0,
@@ -45,8 +43,7 @@ export const DoubleBlockerProgressChart: React.FC = () => {
     const totalFleet = vehicles.length;
     let installedBlockersCount = 0;
     let notInstalledExplicitlyCount = 0;
-    let willNotInstallCount = 0;
-    let unknownBlockerStatusCount = 0;
+    const nonClassifiedReasons = new Map<string, number>();
 
     let priority1InstalledCount = 0;
     let priority2InstalledCount = 0;
@@ -59,13 +56,11 @@ export const DoubleBlockerProgressChart: React.FC = () => {
         else if (v.priority === 2) priority2InstalledCount++;
         else if (v.priority === 3) priority3InstalledCount++;
       } else if (v.blocker_installed === false) {
-        if (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar')) {
-          willNotInstallCount++;
-        } else {
-          notInstalledExplicitlyCount++;
-        }
+        // This now covers all 'not installed' cases, including those that 'will not install'
+        notInstalledExplicitlyCount++;
       } else if (v.blocker_installed === null) {
-        unknownBlockerStatusCount++;
+        const reason = v.raw_blocker_installed_text || 'Não Classificado';
+        nonClassifiedReasons.set(reason, (nonClassifiedReasons.get(reason) || 0) + 1);
       }
     });
 
@@ -77,8 +72,7 @@ export const DoubleBlockerProgressChart: React.FC = () => {
       totalFleet,
       installedBlockersCount,
       notInstalledExplicitlyCount,
-      willNotInstallCount,
-      unknownBlockerStatusCount,
+      nonClassifiedReasons,
       priority1InstalledCount,
       priority2InstalledCount,
       priority3InstalledCount: priority3InstalledCount,
@@ -179,12 +173,11 @@ export const DoubleBlockerProgressChart: React.FC = () => {
             <div className="status-item-new">
               <XCircle className="h-4 w-4 text-destructive" /> Não Instalado: {notInstalledExplicitlyCount}
             </div>
-            <div className="status-item-new">
-              <Wrench className="h-4 w-4 text-warning" /> Não Vai Instalar: {willNotInstallCount}
-            </div>
-            <div className="status-item-new">
-              <Info className="h-4 w-4 text-muted-foreground" /> Não Classificado: {unknownBlockerStatusCount}
-            </div>
+            {Array.from(nonClassifiedReasons.entries()).map(([reason, count]) => (
+              <div key={reason} className="status-item-new">
+                <Info className="h-4 w-4 text-muted-foreground" /> {reason}: {count}
+              </div>
+            ))}
           </div>
 
           <div className="priority-cards-new">

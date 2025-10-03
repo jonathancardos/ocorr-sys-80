@@ -213,11 +213,11 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       const vehiclesWithBlockerInstalled = vehicles.filter(v => v.blocker_installed === true).length;
       const vehiclesBlockerNotInstalledExplicitly = vehicles.filter(v => 
         v.blocker_installed === false && 
-        !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
+        !(v.raw_blocker_installed_text && /nao vai instalar/i.test(v.raw_blocker_installed_text))
       ).length;
       const vehiclesBlockerNotInstalling = vehicles.filter(v => 
         v.blocker_installed === false && 
-        (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
+        (v.raw_blocker_installed_text && /nao vai instalar/i.test(v.raw_blocker_installed_text))
       ).length;
       const vehiclesBlockerStatusUnknown = vehicles.filter(v => v.blocker_installed === null).length;
 
@@ -230,7 +230,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       const getBlockerStatusLabel = (vehicle: Vehicle) => {
         if (vehicle.blocker_installed === true) return 'Instalado';
         if (vehicle.blocker_installed === false) {
-          if (vehicle.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || vehicle.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar')) {
+          if (vehicle.raw_blocker_installed_text && /nao vai instalar/i.test(vehicle.raw_blocker_installed_text)) {
             return 'Não Vai Instalar';
           }
           return 'Não Instalado';
@@ -261,8 +261,8 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
         const priorityNum = parseInt(priorityKey, 10);
         const priorityVehicles = vehiclesByPriority[priorityNum];
         const installedCount = priorityVehicles.filter(v => v.blocker_installed === true).length;
-        const notInstalledCount = priorityVehicles.filter(v => v.blocker_installed === false && !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))).length;
-        const notInstallingCount = priorityVehicles.filter(v => v.blocker_installed === false && (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))).length;
+        const notInstalledCount = priorityVehicles.filter(v => v.blocker_installed === false && !(v.raw_blocker_installed_text && /nao vai instalar/i.test(v.raw_blocker_installed_text))).length;
+        const notInstallingCount = priorityVehicles.filter(v => v.blocker_installed === false && (v.raw_blocker_installed_text && /nao vai instalar/i.test(v.raw_blocker_installed_text))).length;
         const unknownStatusCount = priorityVehicles.filter(v => v.blocker_installed === null).length;
 
         message += `\n*Prioridade ${priorityNum} (${getPriorityLabel(priorityNum)}) - ${priorityVehicles.length} Veículos*\n`;

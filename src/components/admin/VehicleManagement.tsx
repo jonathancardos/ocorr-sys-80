@@ -885,7 +885,6 @@ export const VehicleManagement = () => {
   const getBlockerStatusLabel = (blockerInstalled: boolean | null, rawText: string | null) => {
     if (blockerInstalled === true) return 'Instalado';
     if (blockerInstalled === false) {
-      if (rawText === 'Não Vai Instalar') return 'Não Vai Instalar';
       return 'Não Instalado';
     }
     return rawText || 'Não Classificado';
@@ -894,7 +893,6 @@ export const VehicleManagement = () => {
   const getBlockerBadgeVariant = (blockerInstalled: boolean | null, rawText: string | null) => {
     if (blockerInstalled === true) return 'success';
     if (blockerInstalled === false) {
-      if (rawText === 'Não Vai Instalar') return 'warning';
       return 'destructive';
     }
     return 'secondary';
@@ -920,13 +918,7 @@ export const VehicleManagement = () => {
   const vehiclesPriority3 = vehicles?.filter(v => v.priority === 3).length || 0;
 
   const vehiclesBlockerNotInstalledExplicitly = vehicles?.filter(v => 
-    v.blocker_installed === false && 
-    !(v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
-  ).length || 0;
-
-  const vehiclesBlockerNotInstalling = vehicles?.filter(v => 
-    v.blocker_installed === false && 
-    (v.raw_blocker_installed_text?.toLowerCase().includes('não vai instalar') || v.raw_blocker_installed_text?.toLowerCase().includes('nao vai instalar'))
+    v.blocker_installed === false
   ).length || 0;
 
   const vehiclesBlockerStatusUnknown = vehicles?.filter(v => v.blocker_installed === null).length || 0;
@@ -1249,7 +1241,6 @@ export const VehicleManagement = () => {
           totalVehicles={totalVehicles}
           vehiclesWithBlockerInstalled={vehiclesWithBlockerInstalled}
           vehiclesBlockerNotInstalledExplicitly={vehiclesBlockerNotInstalledExplicitly}
-          vehiclesBlockerNotInstalling={vehiclesBlockerNotInstalling}
           vehiclesBlockerStatusUnknown={vehiclesBlockerStatusUnknown}
           vehiclesPriority1={vehiclesPriority1}
           vehiclesPriority2={vehiclesPriority2}
@@ -1475,19 +1466,17 @@ export const VehicleManagement = () => {
                             options={[
                               { label: 'Instalado', value: true, variant: 'success', icon: Lock },
                               { label: 'Não Instalado', value: false, variant: 'destructive', icon: X },
-                              { label: 'Não Vai Instalar', value: false, variant: 'warning', icon: Info },
                               { label: 'Não Classificado', value: null, variant: 'secondary', icon: Info },
                             ]}
                             onSave={(newValue) => {
                               let rawText: string | null = null;
                               if (newValue === true) rawText = 'Instalado';
-                              else if (newValue === false && (item as any).raw_blocker_installed_text === 'Não Vai Instalar') rawText = 'Não Vai Instalar';
                               else if (newValue === false) rawText = 'Não Instalado';
                               updateBlockerStatusMutation.mutate({ id: item.id, blocker_installed: newValue as boolean | null, raw_blocker_installed_text: rawText });
                             }}
                             isLoading={updateBlockerStatusMutation.isPending}
                             badgeVariant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)}
-                            icon={item.blocker_installed === true ? Lock : item.blocker_installed === false && (item as any).raw_blocker_installed_text === 'Não Vai Instalar' ? Info : item.blocker_installed === false ? X : Info}
+                            icon={item.blocker_installed === true ? Lock : item.blocker_installed === false ? X : Info}
                           />
                         ) : (
                           <Badge variant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)}>
@@ -1615,7 +1604,7 @@ export const VehicleManagement = () => {
 
       <VehicleFleetReportPreviewDialog
         isOpen={isFleetReportPreviewDialogOpen}
-        onClose={() => setIsFleetReportPreviewDialogOpen(false)}
+        onClose={() => setIsFleetReportReportPreviewDialogOpen(false)}
         vehicles={vehicles || []}
       />
     </div>
