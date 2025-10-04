@@ -1604,7 +1604,7 @@ export const VehicleManagement = () => {
 
       <VehicleFleetReportPreviewDialog
         isOpen={isFleetReportPreviewDialogOpen}
-        onClose={() => setIsFleetReportReportPreviewDialogOpen(false)}
+        onClose={() => setIsFleetReportPreviewDialogOpen(false)}
         vehicles={vehicles || []}
       />
     </div>

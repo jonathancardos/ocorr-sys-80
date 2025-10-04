@@ -96,6 +96,7 @@ export const PdfPreviewPanel: React.FC<PdfPreviewPanelProps> = ({
           vehicles={vehicles}
           startDate={startDate}
           endDate={endDate}
+          filterType="all"
           onRenderComplete={resolveRenderPromise}
         />
       );
