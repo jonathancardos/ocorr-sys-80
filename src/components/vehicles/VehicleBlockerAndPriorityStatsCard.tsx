@@ -66,196 +66,226 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
   return (
     <Card
       className={cn(
-        "modern-card col-span-full sm:col-span-2 lg:col-span-2",
+        "modern-card col-span-full sm:col-span-2 lg:col-span-2 overflow-hidden",
         isCardClickable && "cursor-pointer hover:shadow-elevated transition-all duration-300"
       )}
       onClick={isCardClickable ? onClick : undefined}
     >
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="fleet-stats" className="border-none">
-          <AccordionTrigger className="p-6 flex flex-row items-center justify-between space-y-0 hover:no-underline">
-            <CardTitle className="text-lg font-medium flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-primary" />
-              Estatísticas da Frota
-            </CardTitle>
-            <Info className="h-4 w-4 text-muted-foreground" />
-          </AccordionTrigger>
-          <AccordionContent>
-            <CardContent className="space-y-6 pt-0"> {/* Removed top padding as AccordionContent adds its own */}
-              {/* Total de Veículos */}
-              <div className="flex items-center justify-between pb-4 border-b border-border/50">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
-                    <div className="relative rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 p-3 text-background transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Car className="h-5 w-5" />
-                    </div>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <BarChart2 className="h-5 w-5 text-primary" />
+          Estatísticas da Frota
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Total de Veículos - Destaque */}
+        <div className="flex items-center justify-center p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Total de Veículos na Frota</p>
+            <p className="text-5xl font-bold bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
+              {totalVehicles}
+            </p>
+          </div>
+        </div>
+
+        {/* Status do Bloqueador - Melhorado */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+            <Lock className="h-4 w-4" />
+            Status do Bloqueador
+          </h4>
+          
+          <div className="grid gap-3">
+            {/* Instalado */}
+            <div 
+              className="group relative overflow-hidden rounded-xl border border-border bg-card/50 hover:bg-card transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos com Bloqueador Instalado",
+                  "Lista de veículos que possuem bloqueador instalado.",
+                  allVehicles.filter(v => v.blocker_installed === true),
+                  'blocker'
+                );
+              }}
+            >
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-success/10 p-2">
+                    <Lock className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-muted-foreground">Total de Veículos</h4>
-                    <p className="text-3xl font-bold text-foreground">{totalVehicles}</p>
+                    <p className="text-sm font-medium text-foreground">Instalado</p>
+                    <p className="text-xs text-muted-foreground">Bloqueador funcionando</p>
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-sm">Veículos Cadastrados</Badge>
-              </div>
-
-              {/* Bloqueador Instalado */}
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-3">Status do Bloqueador</h4>
-                <div className="space-y-3">
-                  {/* Instalado */}
-                  <div 
-                    className="flex items-center justify-between cursor-pointer hover:bg-muted/20 p-2 rounded-md transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos com Bloqueador Instalado",
-                        "Lista de veículos que possuem bloqueador instalado.",
-                        allVehicles.filter(v => v.blocker_installed === true),
-                        'blocker'
-                      );
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-success" />
-                      <span className="text-sm font-medium">Instalado</span>
-                    </div>
-                    <span className="text-sm text-foreground">{vehiclesWithBlockerInstalled} ({blockerInstalledPercentage}%)</span>
-                  </div>
-                  <Progress value={blockerInstalledPercentage} className="h-2 [&>div]:bg-success" />
-
-                  {/* Não Instalado (Explicitamente) */}
-                  <div 
-                    className="flex items-center justify-between cursor-pointer hover:bg-muted/20 p-2 rounded-md transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos com Bloqueador Não Instalado",
-                        "Lista de veículos que não possuem bloqueador instalado.",
-                        allVehicles.filter(v => v.blocker_installed === false),
-                        'blocker'
-                      );
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-destructive" />
-                      <span className="text-sm font-medium">Não Instalado</span>
-                    </div>
-                    <span className="text-sm text-foreground">{vehiclesBlockerNotInstalledExplicitly} ({blockerNotInstalledPercentage}%)</span>
-                  </div>
-                  <Progress value={blockerNotInstalledPercentage} className="h-2 [&>div]:bg-destructive" />
-
-                  {/* Outros Status Não Classificados */}
-                  <div 
-                    className="flex items-center justify-between cursor-pointer hover:bg-muted/20 p-2 rounded-md transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos com Outros Status de Bloqueador",
-                        "Lista de veículos cujo status de bloqueador não foi classificado (nulo ou texto não reconhecido).",
-                        allVehicles.filter(v => v.blocker_installed === null),
-                        'blocker'
-                      );
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Outros Status Não Classificados</span>
-                    </div>
-                    <span className="text-sm text-foreground">{vehiclesBlockerStatusUnknown} ({blockerUnknownPercentage}%)</span>
-                  </div>
-                  <Progress value={blockerUnknownPercentage} className="h-2 [&>div]:bg-muted-foreground" />
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-success">{vehiclesWithBlockerInstalled}</p>
+                  <p className="text-xs text-muted-foreground">{blockerInstalledPercentage}%</p>
                 </div>
               </div>
+            </div>
 
-              {/* Prioridades */}
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-3">Veículos por Prioridade</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Prioridade 1 */}
-                  <div 
-                    className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/40 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos Prioridade 1 (Alta)",
-                        "Lista de veículos classificados com Prioridade 1 (Alta).",
-                        allVehicles.filter(v => v.priority === 1),
-                        'priority'
-                      );
-                    }}
-                  >
-                    <Badge variant="destructive" className="mb-1">Prioridade 1</Badge>
-                    <span className="text-xl font-bold text-foreground">{vehiclesPriority1}</span>
-                    <span className="text-xs text-muted-foreground">Alta</span>
-                    {vehiclesPriority1NoBlocker > 0 ? (
-                      <Badge variant="destructive" className="mt-1 text-xs">
-                        {vehiclesPriority1NoBlocker} Não Instalados
-                      </Badge>
-                    ) : (
-                      <Badge variant="success" className="mt-1 text-xs">
-                        Todos Instalados
-                      </Badge>
-                    )}
+            {/* Não Instalado */}
+            <div 
+              className="group relative overflow-hidden rounded-xl border border-border bg-card/50 hover:bg-card transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos com Bloqueador Não Instalado",
+                  "Lista de veículos que não possuem bloqueador instalado.",
+                  allVehicles.filter(v => v.blocker_installed === false),
+                  'blocker'
+                );
+              }}
+            >
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-destructive/10 p-2">
+                    <XCircle className="h-5 w-5 text-destructive" />
                   </div>
-                  {/* Prioridade 2 */}
-                  <div 
-                    className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/40 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos Prioridade 2 (Média)",
-                        "Lista de veículos classificados com Prioridade 2 (Média).",
-                        allVehicles.filter(v => v.priority === 2),
-                        'priority'
-                      );
-                    }}
-                  >
-                    <Badge variant="warning" className="mb-1">Prioridade 2</Badge>
-                    <span className="text-xl font-bold text-foreground">{vehiclesPriority2}</span>
-                    <span className="text-xs text-muted-foreground">Média</span>
-                    {vehiclesPriority2NoBlocker > 0 ? (
-                      <Badge variant="destructive" className="mt-1 text-xs">
-                        {vehiclesPriority2NoBlocker} Não Instalados
-                      </Badge>
-                    ) : (
-                      <Badge variant="success" className="mt-1 text-xs">
-                        Todos Instalados
-                      </Badge>
-                    )}
-                  </div>
-                  {/* Prioridade 3 */}
-                  <div 
-                    className="flex flex-col items-center justify-center p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/40 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDetailsDialog(
-                        "Veículos Prioridade 3 (Baixa)",
-                        "Lista de veículos classificados com Prioridade 3 (Baixa).",
-                        allVehicles.filter(v => v.priority === 3),
-                        'priority'
-                      );
-                    }}
-                  >
-                    <Badge variant="default" className="mb-1">Prioridade 3</Badge>
-                    <span className="text-xl font-bold text-foreground">{vehiclesPriority3}</span>
-                    <span className="text-xs text-muted-foreground">Baixa</span>
-                    {vehiclesPriority3NoBlocker > 0 ? (
-                      <Badge variant="destructive" className="mt-1 text-xs">
-                        {vehiclesPriority3NoBlocker} Não Instalados
-                      </Badge>
-                    ) : (
-                      <Badge variant="success" className="mt-1 text-xs">
-                        Todos Instalados
-                      </Badge>
-                    )}
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Não Instalado</p>
+                    <p className="text-xs text-muted-foreground">Aguardando instalação</p>
                   </div>
                 </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-destructive">{vehiclesBlockerNotInstalledExplicitly}</p>
+                  <p className="text-xs text-muted-foreground">{blockerNotInstalledPercentage}%</p>
+                </div>
               </div>
-            </CardContent>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            </div>
+
+            {/* Outros Status */}
+            <div 
+              className="group relative overflow-hidden rounded-xl border border-border bg-card/50 hover:bg-card transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos com Outros Status de Bloqueador",
+                  "Lista de veículos cujo status de bloqueador não foi classificado (nulo ou texto não reconhecido).",
+                  allVehicles.filter(v => v.blocker_installed === null),
+                  'blocker'
+                );
+              }}
+            >
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-muted p-2">
+                    <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Outros Status</p>
+                    <p className="text-xs text-muted-foreground">Não classificados</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-muted-foreground">{vehiclesBlockerStatusUnknown}</p>
+                  <p className="text-xs text-muted-foreground">{blockerUnknownPercentage}%</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Prioridades - Layout Moderno */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Car className="h-4 w-4" />
+            Veículos por Prioridade
+          </h4>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {/* Prioridade 1 */}
+            <div 
+              className="relative overflow-hidden rounded-xl border border-destructive/20 bg-gradient-to-br from-destructive/10 to-destructive/5 p-4 cursor-pointer hover:shadow-lg transition-all group"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos Prioridade 1 (Alta)",
+                  "Lista de veículos classificados com Prioridade 1 (Alta).",
+                  allVehicles.filter(v => v.priority === 1),
+                  'priority'
+                );
+              }}
+            >
+              <div className="text-center space-y-2">
+                <Badge variant="destructive" className="text-xs font-semibold">P1</Badge>
+                <p className="text-4xl font-bold text-destructive">{vehiclesPriority1}</p>
+                <p className="text-xs text-muted-foreground">Instalados</p>
+                {vehiclesPriority1NoBlocker > 0 ? (
+                  <Badge variant="destructive" className="text-xs w-full">
+                    {vehiclesPriority1NoBlocker} Pendentes
+                  </Badge>
+                ) : (
+                  <Badge variant="success" className="text-xs w-full">
+                    ✓ Completo
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Prioridade 2 */}
+            <div 
+              className="relative overflow-hidden rounded-xl border border-warning/20 bg-gradient-to-br from-warning/10 to-warning/5 p-4 cursor-pointer hover:shadow-lg transition-all group"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos Prioridade 2 (Média)",
+                  "Lista de veículos classificados com Prioridade 2 (Média).",
+                  allVehicles.filter(v => v.priority === 2),
+                  'priority'
+                );
+              }}
+            >
+              <div className="text-center space-y-2">
+                <Badge variant="warning" className="text-xs font-semibold">P2</Badge>
+                <p className="text-4xl font-bold text-warning">{vehiclesPriority2}</p>
+                <p className="text-xs text-muted-foreground">Instalados</p>
+                {vehiclesPriority2NoBlocker > 0 ? (
+                  <Badge variant="destructive" className="text-xs w-full">
+                    {vehiclesPriority2NoBlocker} Pendentes
+                  </Badge>
+                ) : (
+                  <Badge variant="success" className="text-xs w-full">
+                    ✓ Completo
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Prioridade 3 */}
+            <div 
+              className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 cursor-pointer hover:shadow-lg transition-all group"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsDialog(
+                  "Veículos Prioridade 3 (Baixa)",
+                  "Lista de veículos classificados com Prioridade 3 (Baixa).",
+                  allVehicles.filter(v => v.priority === 3),
+                  'priority'
+                );
+              }}
+            >
+              <div className="text-center space-y-2">
+                <Badge variant="default" className="text-xs font-semibold">P3</Badge>
+                <p className="text-4xl font-bold text-primary">{vehiclesPriority3}</p>
+                <p className="text-xs text-muted-foreground">Instalados</p>
+                {vehiclesPriority3NoBlocker > 0 ? (
+                  <Badge variant="destructive" className="text-xs w-full">
+                    {vehiclesPriority3NoBlocker} Pendentes
+                  </Badge>
+                ) : (
+                  <Badge variant="success" className="text-xs w-full">
+                    ✓ Completo
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
 
       {/* Details Dialog */}
       <VehicleStatusDetailsDialog
