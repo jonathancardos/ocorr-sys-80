@@ -142,8 +142,32 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans; /* font-sans agora é Inter */
+    @apply bg-background text-foreground font-sans text-sm; /* font-sans agora é Inter, e tamanho de fonte base reduzido */
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Adicionando responsividade geral para containers */
+  .responsive-container {
+    @apply w-full max-w-full px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Ajustes para tipografia em telas menores */
+  @media (max-width: 768px) {
+    h1 {
+      @apply text-2xl;
+    }
+    h2 {
+      @apply text-xl;
+    }
+    h3 {
+      @apply text-lg;
+    }
+    .text-base {
+      @apply text-sm;
+    }
+    .text-lg {
+      @apply text-base;
+    }
   }
 
   /* Aprimoramentos de estilo corporativo moderno */

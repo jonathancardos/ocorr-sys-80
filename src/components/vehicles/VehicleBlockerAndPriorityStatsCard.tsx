@@ -71,14 +71,18 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
       )}
       onClick={isCardClickable ? onClick : undefined}
     >
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <BarChart2 className="h-5 w-5 text-primary" />
-          Estatísticas da Frota
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
+      <Accordion type="single" collapsible defaultValue="">
+        <AccordionItem value="fleet-stats">
+          <CardHeader className="pb-4">
+            <AccordionTrigger className="flex items-center justify-between w-full">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-primary" />
+                Estatísticas da Frota
+              </CardTitle>
+            </AccordionTrigger>
+          </CardHeader>
+          <AccordionContent>
+            <CardContent className="space-y-6">
         {/* Total de Veículos - Destaque */}
         <div className="flex items-center justify-center p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
           <div className="text-center">
@@ -285,7 +289,10 @@ export const VehicleBlockerAndPriorityStatsCard: React.FC<VehicleBlockerAndPrior
             </div>
           </div>
         </div>
-      </CardContent>
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Details Dialog */}
       <VehicleStatusDetailsDialog
