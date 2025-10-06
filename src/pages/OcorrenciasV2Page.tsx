@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 const SINISTRO_CONFIG = {
   danos_materiais: {
     nome: "Danos Materiais",
-    icon: Hammer,
+    // icon: Hammer, // REMOVIDO
     perguntas: [
       { id: "local_danos", label: "Local Exato do Dano", type: "text", required: true, placeholder: "Ex: Corredor B, Sala 101" },
       { id: "descricao_danos", label: "Descrição Detalhada dos Danos", type: "textarea", required: true, placeholder: "Detalhe o que foi danificado, a causa e a extensão.", colSpan: true },
@@ -31,7 +31,7 @@ const SINISTRO_CONFIG = {
   },
   roubo: {
     nome: "Roubo / Furto",
-    icon: AlertTriangle,
+    // icon: AlertTriangle, // REMOVIDO
     perguntas: [
       { id: "data_hora_roubo", label: "Data e Hora do Sinistro", type: "datetime-local", required: true },
       { id: "itens_roubados", label: "Itens Roubados / Furtados (Breve Descrição)", type: "textarea", required: true, placeholder: "Descreva brevemente os itens e a situação.", colSpan: true },
@@ -44,7 +44,7 @@ const SINISTRO_CONFIG = {
   },
   acidente_pessoal: {
     nome: "Acidente Pessoal",
-    icon: Heart,
+    // icon: Heart, // REMOVIDO
     perguntas: [
       { id: "nome_pessoa", label: "Nome Completo da Pessoa Envolvida", type: "text", required: true },
       { id: "natureza_lesao", label: "Natureza e Local da Lesão", type: "text", required: true, placeholder: "Ex: Corte no braço, Entorse no tornozelo" },
@@ -57,7 +57,7 @@ const SINISTRO_CONFIG = {
   },
   vandalismo: {
     nome: "Vandalismo",
-    icon: Palette,
+    // icon: Palette, // REMOVIDO
     perguntas: [
       { id: "tipo_vandalismo", label: "Tipo de Ação de Vandalismo", type: "text", required: true, placeholder: "Ex: Grafite, Quebra de vidros" },
       { id: "acao_tomada", label: "Ações Tomadas Imediatamente", type: "textarea", required: false, placeholder: "Ex: Acionamento de segurança, limpeza parcial", colSpan: true },
@@ -284,7 +284,7 @@ const OcorrenciasV2Page: React.FC = () => {
           <CardContent>
             <div id="incident-selection-container" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.entries(SINISTRO_CONFIG).map(([key, config]) => {
-                const Icon = config.icon;
+                // const Icon = config.icon; // REMOVIDO
                 const isSelected = selectedTypes.includes(key);
                 return (
                   <label htmlFor={`sinistro-${key}`} key={key} className={cn(
@@ -301,12 +301,14 @@ const OcorrenciasV2Page: React.FC = () => {
                       checked={isSelected}
                     />
                     <div className="flex flex-col items-center text-center">
+                      {/* REMOVIDO:
                       <div className={cn(
                         "p-3 rounded-full mb-2 transition-all duration-200",
                         isSelected ? "bg-primary text-primary-foreground" : "bg-muted/20 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                       )}>
                         <Icon className="w-6 h-6" />
                       </div>
+                      */}
                       <span className="text-base font-medium text-foreground">{config.nome}</span>
                     </div>
                   </label>
