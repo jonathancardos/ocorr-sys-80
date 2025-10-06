@@ -63,7 +63,6 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.width = '210mm'; // A4 width
-      tempDiv.style.padding = '10mm'; // Add some padding to avoid cutting content
       document.body.appendChild(tempDiv);
 
       const root = createRoot(tempDiv);
@@ -99,20 +98,37 @@ export const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
         });
 
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        const imgWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
+        const imgData = canvas.toDataURL('image/png');
+        const margin = 5; // 5mm margin on all sides
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const contentWidth = pdfWidth - (margin * 2);
+        const contentHeight = pdfHeight - (margin * 2);
+        const imgWidth = contentWidth;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
-        let yOffset = 0;
+        let yOffset = 0; // Y offset for the canvas image
 
         while (heightLeft > 0) {
-            pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-            yOffset -= pageHeight; // Move up for the next page
-            if (heightLeft > 0) {
-                pdf.addPage();
-            }
+          if (yOffset > 0) {
+            pdf.addPage();
+          }
+
+          const pageHeight = pdfHeight - (margin * 2); // Usable height for content on each page
+          const sHeight = Math.min(heightLeft, pageHeight); // Height of the slice to take from the canvas
+
+          pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, sHeight, undefined, 'FAST', 0, yOffset);
+
+          // Add footer to each page
+          pdf.setFontSize(8);
+          pdf.setTextColor(150);
+          const footerText = `Gerado em ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} pelo Sistema de Gestão Karne & Keijo.`;
+          const textWidth = pdf.getStringUnitWidth(footerText) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
+          const centerX = (pdf.internal.pageSize.getWidth() - textWidth) / 2;
+          pdf.text(footerText, centerX, pdf.internal.pageSize.getHeight() - margin);
+
+          heightLeft -= sHeight;
+          yOffset += sHeight;
         }
         const blob = pdf.output('blob');
         setGeneratedPdfBlob(blob);

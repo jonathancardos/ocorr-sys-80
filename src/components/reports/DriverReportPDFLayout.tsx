@@ -40,8 +40,8 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
   };
 
   return (
-    <div className="font-sans text-gray-900 p-10 bg-white h-fit print:p-0 print:bg-white"> {/* Alterado p-8 para p-10 */}
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none border border-gray-300">
+    <div className="font-sans text-gray-900 p-0 bg-white h-fit print:p-0 print:bg-white">
+      <div className="w-full bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none border border-gray-300">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-700 to-cyan-600 text-white p-6 flex items-center justify-between">
           <div>
@@ -113,10 +113,6 @@ export const DriverReportPDFLayout: React.FC<DriverReportPDFLayoutProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 text-center text-xs border-t border-gray-200 bg-gray-100 text-gray-600">
-          Gerado em {generationDate} pelo Sistema de Gestão Karne & Keijo.
-        </div>
       </div>
     </div>
   );
