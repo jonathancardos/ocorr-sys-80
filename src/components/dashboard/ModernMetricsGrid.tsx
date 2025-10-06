@@ -19,10 +19,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { OmnilinkStatusCard } from "./OmnilinkStatusCard"; // Import the new unified card
 import { getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // NEW: Import getDetailedOmnilinkStatus
-import { startOfMonth, endOfMonth } from 'date-fns'; // Import date-fns utilities
+import { startOfMonth, endOfMonth, format } from 'date-fns'; // Import date-fns utilities
+import { ptBR } from 'date-fns/locale'; // Import ptBR locale
 
 export const ModernMetricsGrid = () => {
   const navigate = useNavigate();
+
+  const currentMonthName = format(new Date(), 'MMMM', { locale: ptBR }); // Get current month name in Portuguese
 
   // Fetch incidents data
   const { data: incidents } = useQuery({
@@ -110,11 +113,11 @@ export const ModernMetricsGrid = () => {
       onClick: () => navigate("/history"),
     },
     {
-      title: "Motoristas Ativos",
+      title: "Cadastros de motoristas",
       value: driversThisMonth,
       change: {
         value: driversThisMonth,
-        label: "novos este mês",
+        label: `novos em ${currentMonthName}`,
         isPositive: driversThisMonth > 0,
       },
       icon: Users,
