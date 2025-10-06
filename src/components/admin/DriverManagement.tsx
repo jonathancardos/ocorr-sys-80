@@ -31,6 +31,8 @@ import { DriverReportGenerator } from '@/components/reports/DriverReportGenerato
 import NewDriverForm from '@/components/drivers/NewDriverForm'; // Ensure this is imported
 import { NewDriverMethodSelectionDialog } from '@/components/drivers/NewDriverMethodSelectionDialog'; // NEW
 import { CnhOcrInputAndPreviewDialog } from '@/components/drivers/CnhOcrInputAndPreviewDialog'; // NEW
+import { useLocation } from 'react-router-dom'; // Import useLocation
+import { startOfMonth, endOfMonth } from 'date-fns'; // Import date-fns for date manipulation
 
 type Driver = Tables<'drivers'>;
 type DriverPendingApproval = Tables<'drivers_pending_approval'>;
@@ -56,6 +58,10 @@ type SortDirection = 'asc' | 'desc';
 const DriverManagement = () => {
   const { profile, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const location = useLocation(); // Initialize useLocation
+  const queryParams = new URLSearchParams(location.search); // Get query parameters
+  const monthFilter = queryParams.get('month');
+  const yearFilter = queryParams.get('year');
 
   // Ensure profile and user are not null/undefined before proceeding
   if (authLoading || !profile || !user) {
@@ -119,9 +125,17 @@ const DriverManagement = () => {
   }
 
   const { data: drivers, isLoading: isLoadingRegisteredDrivers, error: registeredDriversError } = useQuery<Driver[], Error>({
-    queryKey: ['drivers'],
+    queryKey: ['drivers', monthFilter, yearFilter], // Add monthFilter and yearFilter to queryKey
     queryFn: async () => {
-      const { data, error } = await supabase.from('drivers').select('*').order('full_name', { ascending: true });
+      let query = supabase.from('drivers').select('*');
+
+      if (monthFilter && yearFilter) {
+        const startDate = startOfMonth(new Date(parseInt(yearFilter), parseInt(monthFilter) - 1, 1));
+        const endDate = endOfMonth(new Date(parseInt(yearFilter), parseInt(monthFilter) - 1, 1));
+        query = query.gte('omnilink_score_registration_date', startDate.toISOString()).lte('omnilink_score_registration_date', endDate.toISOString());
+      }
+
+      const { data, error } = await query.order('full_name', { ascending: true });
       if (error) throw error;
       return data;
     },

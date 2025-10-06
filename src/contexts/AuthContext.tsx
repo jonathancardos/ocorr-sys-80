@@ -83,9 +83,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(fetchedProfile);
       queryClient.invalidateQueries({ queryKey: ['profile', userId] }); // Invalidate specific profile query
       return fetchedProfile; // Return the fetched profile
-    } catch (error) {
+    } catch (error: any) {
       console.error('AuthContext: Exception fetching profile:', error);
       setProfile(null);
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error("Erro de Conexão", {
+          description: "Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou tente novamente mais tarde.",
+        });
+      } else {
+        toast.error("Erro ao Carregar Perfil", {
+          description: "Ocorreu um erro ao carregar suas informações de perfil.",
+        });
+      }
       return null;
     }
   }, [queryClient]);

@@ -19,6 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { OmnilinkStatusCard } from "./OmnilinkStatusCard"; // Import the new unified card
 import { getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // NEW: Import getDetailedOmnilinkStatus
+import { startOfMonth, endOfMonth } from 'date-fns'; // Import date-fns utilities
 
 export const ModernMetricsGrid = () => {
   const navigate = useNavigate();
@@ -33,9 +34,9 @@ export const ModernMetricsGrid = () => {
     },
   });
 
-  // Fetch drivers data
-  const { data: drivers } = useQuery({
-    queryKey: ['dashboard-drivers'],
+  // Fetch ALL drivers data
+  const { data: allDrivers } = useQuery({
+    queryKey: ['dashboard-all-drivers'],
     queryFn: async () => {
       const { data, error } = await supabase.from('drivers').select('*');
       if (error) throw error;
@@ -56,13 +57,22 @@ export const ModernMetricsGrid = () => {
   // Calculate metrics
   const totalIncidents = incidents?.length || 0;
   const graveIncidents = incidents?.filter(i => i.severity === 'grave' || i.severity === 'critico').length || 0;
-  const totalDrivers = drivers?.length || 0; // Total drivers for the new card
+  const totalDrivers = allDrivers?.length || 0; // Total drivers for the new card
   
+  // Calculate drivers registered this month from allDrivers based on omnilink_score_registration_date
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const driversThisMonth = allDrivers?.filter(driver => {
+    if (!driver.omnilink_score_registration_date) return false; // Only count if Omnilink registration date exists
+    const registrationDate = new Date(driver.omnilink_score_registration_date);
+    return registrationDate.getMonth() === currentMonth && registrationDate.getFullYear() === currentYear;
+  }).length || 0;
+
   let omnilinkEmDiaCount = 0;
   let omnilinkPrestVencerCount = 0;
   let omnilinkVencidoCount = 0;
 
-  drivers?.forEach(driver => {
+  allDrivers?.forEach(driver => {
     const detailedStatus = getDetailedOmnilinkStatus(driver.omnilink_score_registration_date);
     switch (detailedStatus.status) {
       case 'em_dia':
@@ -77,9 +87,9 @@ export const ModernMetricsGrid = () => {
     }
   });
 
-  const activeDrivers = drivers?.length || 0; // Assuming all registered drivers are active for this metric
-  const indicados = drivers?.filter(d => d.status_indicacao === 'indicado' || d.status_indicacao === 'retificado').length || 0;
-  const naoIndicados = drivers?.filter(d => d.status_indicacao === 'nao_indicado').length || 0;
+  const activeDrivers = allDrivers?.length || 0; // Assuming all registered drivers are active for this metric
+  const indicados = allDrivers?.filter(d => d.status_indicacao === 'indicado' || d.status_indicacao === 'retificado').length || 0;
+  const naoIndicados = allDrivers?.filter(d => d.status_indicacao === 'nao_indicado').length || 0;
   const totalVehicles = vehicles?.length || 0;
 
   // Calculate changes (mock data for demo)
@@ -101,14 +111,14 @@ export const ModernMetricsGrid = () => {
     },
     {
       title: "Motoristas Ativos",
-      value: activeDrivers,
+      value: driversThisMonth,
       change: {
-        value: driverChange,
-        label: "novos motoristas",
-        isPositive: true,
+        value: driversThisMonth,
+        label: "novos este mês",
+        isPositive: driversThisMonth > 0,
       },
       icon: Users,
-      onClick: () => navigate("/drivers"),
+      onClick: () => navigate(`/drivers?month=${currentMonth + 1}&year=${currentYear}`),
     },
     {
       title: "Frota Ativa",
