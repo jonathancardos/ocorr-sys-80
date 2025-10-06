@@ -1,0 +1,13 @@
+{
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.42.0",
+    "date-fns": "https://esm.sh/date-fns@2.30.0"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.window"],
+    "strict": true,
+    "checkJs": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
+}
