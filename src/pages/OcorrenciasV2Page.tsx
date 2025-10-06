@@ -1,10 +1,22 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Edit, Hammer, AlertTriangle, Heart, Palette, Upload, X, Paperclip, CheckCircle, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const SINISTRO_CONFIG = {
   danos_materiais: {
     nome: "Danos Materiais",
-    icone: "🔨",
+    icon: Hammer,
     perguntas: [
       { id: "local_danos", label: "Local Exato do Dano", type: "text", required: true, placeholder: "Ex: Corredor B, Sala 101" },
       { id: "descricao_danos", label: "Descrição Detalhada dos Danos", type: "textarea", required: true, placeholder: "Detalhe o que foi danificado, a causa e a extensão.", colSpan: true },
@@ -19,7 +31,7 @@ const SINISTRO_CONFIG = {
   },
   roubo: {
     nome: "Roubo / Furto",
-    icone: "🚨",
+    icon: AlertTriangle,
     perguntas: [
       { id: "data_hora_roubo", label: "Data e Hora do Sinistro", type: "datetime-local", required: true },
       { id: "itens_roubados", label: "Itens Roubados / Furtados (Breve Descrição)", type: "textarea", required: true, placeholder: "Descreva brevemente os itens e a situação.", colSpan: true },
@@ -32,7 +44,7 @@ const SINISTRO_CONFIG = {
   },
   acidente_pessoal: {
     nome: "Acidente Pessoal",
-    icone: "🩹",
+    icon: Heart,
     perguntas: [
       { id: "nome_pessoa", label: "Nome Completo da Pessoa Envolvida", type: "text", required: true },
       { id: "natureza_lesao", label: "Natureza e Local da Lesão", type: "text", required: true, placeholder: "Ex: Corte no braço, Entorse no tornozelo" },
@@ -45,7 +57,7 @@ const SINISTRO_CONFIG = {
   },
   vandalismo: {
     nome: "Vandalismo",
-    icone: "🎨",
+    icon: Palette,
     perguntas: [
       { id: "tipo_vandalismo", label: "Tipo de Ação de Vandalismo", type: "text", required: true, placeholder: "Ex: Grafite, Quebra de vidros" },
       { id: "acao_tomada", label: "Ações Tomadas Imediatamente", type: "textarea", required: false, placeholder: "Ex: Acionamento de segurança, limpeza parcial", colSpan: true },
@@ -63,6 +75,7 @@ const OcorrenciasV2Page: React.FC = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showMessage = (text: string, type: 'error' | 'success') => {
     setMessage({ text, type });
@@ -83,6 +96,7 @@ const OcorrenciasV2Page: React.FC = () => {
   };
 
   const submitToSupabase = async () => {
+    setIsSubmitting(true);
     try {
       // 1. Upload files to Supabase Storage
       const filePaths: string[] = [];
@@ -124,6 +138,8 @@ const OcorrenciasV2Page: React.FC = () => {
     } catch (error: any) {
       console.error('Erro ao enviar relatório:', error.message);
       showMessage(`Erro ao enviar relatório: ${error.message}`, 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -135,7 +151,6 @@ const OcorrenciasV2Page: React.FC = () => {
       selectedTypes.forEach(typeKey => {
         const config = SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG];
         config.perguntas.forEach((question: any) => {
-          const fieldId = `${typeKey}-${question.id}`;
           const isVisible = !question.dependeDe || (formData[typeKey]?.[question.dependeDe.id] === question.dependeDe.valor);
 
           if (question.required && isVisible) {
@@ -149,12 +164,11 @@ const OcorrenciasV2Page: React.FC = () => {
     setIsFormValid(valid);
   };
 
-  const handleSelectionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
+  const handleSelectionChange = (event: boolean, value: string) => {
     setSelectedTypes(prevSelectedTypes => {
-      const newSelectedTypes = checked ? [...prevSelectedTypes, value] : prevSelectedTypes.filter(type => type !== value);
+      const newSelectedTypes = event ? [...prevSelectedTypes, value] : prevSelectedTypes.filter(type => type !== value);
       // Initialize or clear form data for the selected/deselected type
-      if (checked) {
+      if (event) {
         setFormData(prevData => ({ ...prevData, [value]: {} }));
       } else {
         setFormData(prevData => {
@@ -167,9 +181,8 @@ const OcorrenciasV2Page: React.FC = () => {
     });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
-    const [incidentType, fieldName] = name.split('-');
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, incidentType: string, fieldName: string) => {
+    const { value, type, checked } = e.target;
 
     setFormData(prevData => ({
       ...prevData,
@@ -186,9 +199,9 @@ const OcorrenciasV2Page: React.FC = () => {
       id: fieldId,
       name: fieldId,
       value: formData[incidentType]?.[question.id] || '',
-      onChange: handleInputChange,
+      onChange: (e: any) => handleInputChange(e, incidentType, question.id),
       required: question.required,
-      className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm",
+      className: "h-11",
     };
 
     let inputElement;
@@ -197,31 +210,36 @@ const OcorrenciasV2Page: React.FC = () => {
       case "text":
       case "number":
       case "datetime-local":
-        inputElement = <input type={question.type} placeholder={question.placeholder} {...commonProps} />;
+        inputElement = <Input type={question.type} placeholder={question.placeholder} {...commonProps} />;
         break;
       case "textarea":
-        inputElement = <textarea rows={3} placeholder={question.placeholder} {...commonProps}></textarea>;
+        inputElement = <Textarea rows={3} placeholder={question.placeholder} {...commonProps}></Textarea>;
         break;
       case "select":
         inputElement = (
-          <select {...commonProps}>
-            {question.options.map((option: string) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+          <Select onValueChange={(value) => handleInputChange({ target: { value, type: 'select', name: fieldId } } as React.ChangeEvent<HTMLSelectElement>, incidentType, question.id)} value={formData[incidentType]?.[question.id] || ''}>
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder={question.placeholder || "Selecione uma opção"} />
+            </SelectTrigger>
+            <SelectContent>
+              {question.options.map((option: string) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         );
         break;
       default:
-        inputElement = <input type="text" {...commonProps} />;
+        inputElement = <Input type="text" {...commonProps} />;
     }
 
     const isVisible = !question.dependeDe || (formData[incidentType]?.[question.dependeDe.id] === question.dependeDe.valor);
 
     return isVisible ? (
-      <div key={fieldId} className={question.colSpan ? "md:col-span-2" : ""}>
-        <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700">
-          {question.label} {question.required && <span className="text-red-500">*</span>}
-        </label>
+      <div key={fieldId} className={cn("space-y-2", question.colSpan && "md:col-span-2")}>
+        <Label htmlFor={fieldId} className="block text-sm font-medium text-foreground">
+          {question.label} {question.required && <span className="text-destructive">*</span>}
+        </Label>
         {inputElement}
       </div>
     ) : null;
@@ -232,106 +250,152 @@ const OcorrenciasV2Page: React.FC = () => {
   }, [selectedTypes, formData]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
 
       {/* Header */}
       <header className="text-center mb-10">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground">
           Relatório de Ocorrências <span className="text-primary">V4</span>
         </h1>
-        <p className="mt-2 text-lg text-gray-500">
+        <p className="mt-2 text-lg text-muted-foreground">
           Preencha os dados de registro, envolvidos e selecione o(s) tipo(s) de sinistro.
         </p>
         {message.text && (
-          <div className={`mt-4 p-3 rounded-lg ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`} role="alert">
+          <Badge variant={message.type === 'error' ? 'destructive' : 'success'} className="mt-4 p-3 text-base">
             {message.text}
-          </div>
+          </Badge>
         )}
       </header>
 
       {/* Container Principal do Formulário */}
-      <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-8 lg:p-10">
+      <div className="modern-card p-6 sm:p-8 lg:p-10">
 
-        {/* Passo 2: Seleção de Sinistros (Filtro) */}
-        <section id="selection-section" className="mb-8 p-4 border border-gray-200 rounded-xl bg-secondary">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-            1. Tipos de Sinistro Ocorridos
-          </h2>
-          <div id="incident-selection-container" className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(SINISTRO_CONFIG).map(([key, config]) => (
-              <label htmlFor={`sinistro-${key}`} key={key} className="flex items-center p-4 bg-white rounded-xl shadow-md cursor-pointer hover:ring-2 hover:ring-primary transition duration-150">
-                <input
-                  type="checkbox"
-                  id={`sinistro-${key}`}
-                  name="sinistro-type"
-                  value={key}
-                  className="h-5 w-5 text-primary focus:ring-primary rounded-md"
-                  onChange={handleSelectionChange}
-                  checked={selectedTypes.includes(key)}
-                />
-                <div className="ml-3">
-                  <span className="text-xl mr-2">{config.icone}</span>
-                  <span className="text-base font-medium text-gray-900">{config.nome}</span>
-                </div>
-              </label>
-            ))}
-          </div>
-        </section>
+        {/* Passo 1: Seleção de Sinistros (Filtro) */}
+        <Card className="mb-8 modern-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Edit className="w-5 h-5" />
+              1. Tipos de Sinistro Ocorridos
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Selecione um ou mais tipos de sinistro que ocorreram.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div id="incident-selection-container" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(SINISTRO_CONFIG).map(([key, config]) => {
+                const Icon = config.icon;
+                const isSelected = selectedTypes.includes(key);
+                return (
+                  <label htmlFor={`sinistro-${key}`} key={key} className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-xl shadow-md cursor-pointer transition-all duration-200",
+                    "bg-card border border-border",
+                    isSelected ? "ring-2 ring-primary border-primary" : "hover:ring-1 hover:ring-muted-foreground"
+                  )}>
+                    <Checkbox
+                      id={`sinistro-${key}`}
+                      name="sinistro-type"
+                      value={key}
+                      className="sr-only" // Hide native checkbox
+                      onCheckedChange={(checked: boolean) => handleSelectionChange(checked, key)}
+                      checked={isSelected}
+                    />
+                    <div className="flex flex-col items-center text-center">
+                      <div className={cn(
+                        "p-3 rounded-full mb-2 transition-all duration-200",
+                        isSelected ? "bg-primary text-primary-foreground" : "bg-muted/20 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                      )}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-base font-medium text-foreground">{config.nome}</span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Passo 1: Formulário Dinâmico de Perguntas */}
-        <section id="form-section" className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            2. Detalhamento da Ocorrência
-          </h2>
-          <form id="dynamic-report-form" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {selectedTypes.map(typeKey => (
-              <React.Fragment key={typeKey}>
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2">{SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG].nome}</h3>
-                </div>
-                {SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG].perguntas.map((question: any) =>
-                  createField(question, typeKey)
-                )}
-              </React.Fragment>
-            ))}
-          </form>
-        </section>
+        {/* Passo 2: Formulário Dinâmico de Perguntas */}
+        <Card className="mb-8 modern-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <FileText className="w-5 h-5" />
+              2. Detalhamento da Ocorrência
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Preencha os detalhes específicos para cada tipo de sinistro selecionado.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form id="dynamic-report-form" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {selectedTypes.length === 0 ? (
+                <p className="md:col-span-2 text-center text-muted-foreground py-4">
+                  Selecione um tipo de sinistro acima para começar a preencher.
+                </p>
+              ) : (
+                selectedTypes.map(typeKey => (
+                  <React.Fragment key={typeKey}>
+                    <div className="md:col-span-2">
+                      <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">{SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG].nome}</h3>
+                    </div>
+                    {SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG].perguntas.map((question: any) =>
+                      createField(question, typeKey)
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </form>
+          </CardContent>
+        </Card>
 
         {/* Passo 3: Upload de Anexos */}
-        <section id="attachments-section" className="mb-10 p-4 border border-gray-200 rounded-xl bg-secondary">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-            3. Anexos (Fotos, Documentos)
-          </h2>
-          <p className="text-sm text-gray-500 mb-3">
-            Por favor, inclua fotos da ocorrência, **cópia da CNH do motorista** e o B.O. (se registrado).
-          </p>
-          <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition duration-150">
-            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <p className="mt-2 text-sm font-medium text-gray-600">Clique para selecionar os arquivos</p>
-            <p className="text-xs text-gray-500">Fotos, CNH, B.O. e outros documentos (Múltiplos arquivos permitidos)</p>
-          </label>
-          <input id="file-upload" type="file" multiple className="hidden" onChange={handleFileSelect} />
-          <div id="file-list" className="mt-4 space-y-2">
-            {selectedFiles.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-2 border border-gray-200 rounded-md bg-white shadow-sm">
-                <span className="text-sm text-gray-700">{file.name}</span>
-                <button type="button" onClick={() => removeFile(file.name)} className="text-red-500 hover:text-red-700 focus:outline-none">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+        <Card className="mb-10 modern-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Paperclip className="w-5 h-5" />
+              3. Anexos (Fotos, Documentos)
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Por favor, inclua fotos da ocorrência, **cópia da CNH do motorista** e o B.O. (se registrado).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl hover:bg-muted/20 transition duration-150">
+              <Upload className="w-10 h-10 text-muted-foreground" />
+              <p className="mt-2 text-sm font-medium text-foreground">Clique para selecionar os arquivos</p>
+              <p className="text-xs text-muted-foreground">Fotos, CNH, B.O. e outros documentos (Múltiplos arquivos permitidos)</p>
+            </label>
+            <input id="file-upload" type="file" multiple className="hidden" onChange={handleFileSelect} />
+            <div id="file-list" className="mt-4 space-y-2">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex items-center justify-between p-2 border border-border rounded-md bg-muted/50">
+                  <span className="text-sm text-foreground">{file.name}</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeFile(file.name)} className="text-destructive hover:bg-destructive/10">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Passo 4: Geração do Relatório */}
-        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <button onClick={submitToSupabase} id="submit-to-supabase-btn" disabled={!isFormValid} className="px-8 py-3 bg-gray-400 text-white font-bold rounded-xl shadow-lg transition duration-300 ease-in-out hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
-              Gerar Relatório em PDF
-            </button>
-          <p className="mt-2 text-sm text-gray-500">Preencha o formulário para habilitar o botão.</p>
+        <div className="mt-8 pt-6 border-t border-border text-center">
+            <Button onClick={submitToSupabase} id="submit-to-supabase-btn" disabled={!isFormValid || isSubmitting} className="px-8 py-3 bg-gradient-corporate text-primary-foreground font-bold rounded-xl shadow-corporate transition duration-300 ease-in-out hover:shadow-elevated disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Gerar Relatório em PDF
+                </>
+              )}
+            </Button>
+          <p className="mt-2 text-sm text-muted-foreground">Preencha o formulário para habilitar o botão.</p>
         </div>
 
       </div>
