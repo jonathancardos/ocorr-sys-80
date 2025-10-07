@@ -33,6 +33,7 @@ import { NewDriverMethodSelectionDialog } from '@/components/drivers/NewDriverMe
 import { CnhOcrInputAndPreviewDialog } from '@/components/drivers/CnhOcrInputAndPreviewDialog'; // NEW
 import { useLocation } from 'react-router-dom'; // Import useLocation
 import { startOfMonth, endOfMonth } from 'date-fns'; // Import date-fns for date manipulation
+import { DriverDetailsDrawer } from '@/components/drivers/DriverDetailsDrawer';
 
 type Driver = Tables<'drivers'>;
 type DriverPendingApproval = Tables<'drivers_pending_approval'>;
@@ -111,6 +112,9 @@ const DriverManagement = () => {
     pendingDriver: DriverPendingApprovalWithInfo;
     duplicateDriverInfo: Pick<Driver, 'id' | 'full_name' | 'cpf' | 'cnh' | 'cnh_expiry' | 'phone' | 'type' | 'omnilink_score_registration_date' | 'omnilink_score_expiry_date' | 'omnilink_score_status' | 'status_indicacao' | 'reason_nao_indicacao'>;
   } | null>(null);
+
+  const [selectedDriverForDetails, setSelectedDriverForDetails] = useState<CombinedDriverItem | null>(null);
+  const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
 
   if (profile.role !== 'admin') {
     return (
@@ -971,6 +975,11 @@ const DriverManagement = () => {
     setOcrPrefillData(undefined); // Clear prefill data on close
   };
 
+  const handleRowClick = (item: CombinedDriverItem) => {
+    setSelectedDriverForDetails(item);
+    setIsDetailsDrawerOpen(true);
+  };
+
   if (isLoadingAny) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -1238,62 +1247,39 @@ const DriverManagement = () => {
                       aria-label="Selecionar todos os motoristas"
                     />
                   </TableHead>
-                  <TableHead onClick={() => handleSort('full_name')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Nome Completo {renderSortIcon('full_name')}
+                  <TableHead onClick={() => handleSort('full_name')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      nome {renderSortIcon('full_name')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('cpf')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      CPF {renderSortIcon('cpf')}
+                  <TableHead onClick={() => handleSort('cpf')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      cpf {renderSortIcon('cpf')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Tipo {renderSortIcon('type')}
+                  <TableHead onClick={() => handleSort('cnh_expiry')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      validade cnh {renderSortIcon('cnh_expiry')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('cnh')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      CNH {renderSortIcon('cnh')}
+                  <TableHead onClick={() => handleSort('omnilink_score_status')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      omnilink {renderSortIcon('omnilink_score_status')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('cnh_expiry')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Validade CNH {renderSortIcon('cnh_expiry')}
+                  <TableHead onClick={() => handleSort('status_indicacao')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      indicação {renderSortIcon('status_indicacao')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('phone')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Telefone {renderSortIcon('phone')}
+                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary">
+                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                      status {renderSortIcon('status')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('omnilink_score_registration_date')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Reg. Omnilink {renderSortIcon('omnilink_score_registration_date')}
-                    </div>
+                  <TableHead className="text-right w-[80px]">
+                    <span className="text-xs lowercase first-letter:uppercase">ações</span>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('omnilink_score_expiry_date')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Venc. Omnilink {renderSortIcon('omnilink_score_expiry_date')}
-                    </div>
-                  </TableHead>
-                  <TableHead onClick={() => handleSort('omnilink_score_status')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Status Omnilink {renderSortIcon('omnilink_score_status')}
-                    </div>
-                  </TableHead>
-                  <TableHead onClick={() => handleSort('status_indicacao')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Status Indicação {renderSortIcon('status_indicacao')}
-                    </div>
-                  </TableHead>
-                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary whitespace-nowrap">
-                    <div className="flex items-center">
-                      Status {renderSortIcon('status')}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1301,8 +1287,15 @@ const DriverManagement = () => {
                   filteredAndSortedList.map((item) => (
                     <TableRow
                       key={item.id}
+                      onClick={(e) => {
+                        // Don't open drawer if clicking on checkbox or action buttons
+                        if ((e.target as HTMLElement).closest('button, input[type="checkbox"]')) {
+                          return;
+                        }
+                        handleRowClick(item);
+                      }}
                       className={cn(
-                        'hover:bg-muted/50',
+                        'hover:bg-muted/50 cursor-pointer transition-colors',
 
                         ((item._itemType === 'registered' && pendingDriversWithDuplicateInfo.some(p => p.original_driver_id === item.id)) ||
                         item._itemType.startsWith('pending'))
@@ -1317,7 +1310,7 @@ const DriverManagement = () => {
                           'bg-yellow-50/50 dark:bg-yellow-950/30'
                       )}
                     >
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {item._itemType === 'registered' ? (
                           <Checkbox
                             checked={selectedRegisteredDriverIds.includes(item.id)}
@@ -1332,101 +1325,44 @@ const DriverManagement = () => {
                           />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium max-w-[150px] truncate">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              {item._itemType === 'pending_duplicate' && <span className="ml-4">↳ </span>}
-                              {item.full_name}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {item.full_name}
-                          </TooltipContent>
-                        </Tooltip>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-1">
+                          {item._itemType === 'pending_duplicate' && <span className="text-muted-foreground">↳</span>}
+                          <span className="truncate max-w-[200px]">{item.full_name}</span>
+                        </div>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{item.cpf || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{item.type || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{item.cnh || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatDate(item.cnh_expiry)}</TableCell>
-                      <TableCell className="whitespace-nowrap">{item.phone || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatDate(item.omnilink_score_registration_date)}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatDate(item.omnilink_score_expiry_date)}</TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="text-sm">{item.cpf || '-'}</TableCell>
+                      <TableCell className="text-sm">{formatDate(item.cnh_expiry)}</TableCell>
+                      <TableCell>
                         {item.omnilink_score_registration_date ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge {...getOmnilinkBadgeProps(item)}>
-                                {getOmnilinkBadgeProps(item).label}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs p-2">
-                              <p className="text-sm font-medium mb-1">Status Omnilink:</p>
-                              <p className="text-xs text-muted-foreground">{getOmnilinkBadgeProps(item).message}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : '-'}
+                          <Badge variant={getOmnilinkBadgeProps(item).variant} className="text-xs">
+                            {getOmnilinkBadgeProps(item).label}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">N/A</Badge>
+                        )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell>
                         {item.status_indicacao ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge
-                                variant={getIndicacaoStatusBadgeVariant(item.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado')}
-                                className="cursor-pointer"
-                              >
-                                {item.status_indicacao === 'indicado' ? 'Indicado' : item.status_indicacao === 'retificado' ? 'Retificado' : 'Não Indicado'}
-                              </Badge>
-                            </TooltipTrigger>
-                            {item.status_indicacao === 'nao_indicado' && item.reason_nao_indicacao && (
-                              <TooltipContent className="max-w-xs p-2">
-                                <p className="text-sm font-medium mb-1">Motivo de Não Indicação:</p>
-                                <p className="text-xs text-muted-foreground">{item.reason_nao_indicacao}</p>
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
+                          <Badge
+                            variant={getIndicacaoStatusBadgeVariant(item.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado')}
+                            className="text-xs"
+                          >
+                            {item.status_indicacao === 'indicado' ? 'Indicado' :
+                             item.status_indicacao === 'retificado' ? 'Retificado' : 'Não Ind.'}
+                          </Badge>
                         ) : (
-                          <Badge variant="secondary">N/A</Badge>
+                          <Badge variant="secondary" className="text-xs">N/A</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell>
                         {item._itemType === 'registered' ? (
-                          <Badge variant="success">Ativo</Badge>
+                          <Badge variant="success" className="text-xs">Ativo</Badge>
                         ) : (
-                          item.duplicateDriverInfo || item.reason ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant={getReasonBadgeVariant(item.reason || '')}
-                                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={() => handleFilterByDuplication(item)}
-                                >
-                                  {item.reason?.replace(/_/g, ' ').replace('duplicate', 'duplicado') || 'Revisão Admin'}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs p-2">
-                                <p className="text-sm font-medium mb-1">Duplicação Detectada:</p>
-                                {item.duplicateDriverInfo && (
-                                  <p className="text-xs text-muted-foreground">
-                                    <span className="font-semibold">Existente:</span> {item.duplicateDriverInfo.full_name} ({item.duplicateDriverInfo.cpf})
-                                  </p>
-                                )}
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  <span className="font-semibold">Pendente:</span> {item.full_name} ({item.cpf})
-                                </p>
-                                {item.reason && (
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    <span className="font-semibold">Motivo:</span> {item.reason.replace(/_/g, ' ').replace('duplicate', 'duplicado')}
-                                  </p>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <Badge variant="secondary">Pendente</Badge>
-                          )
+                          <Badge variant="warning" className="text-xs">Pendente</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -1481,7 +1417,7 @@ const DriverManagement = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       <CheckCircle className="h-10 w-10 mx-auto mb-3 text-success" />
                       <p>Nenhum motorista encontrado.</p>
                     </TableCell>
@@ -1509,6 +1445,18 @@ const DriverManagement = () => {
           }}
         />
       )}
+
+      <DriverDetailsDrawer
+        isOpen={isDetailsDrawerOpen}
+        onClose={() => {
+          setIsDetailsDrawerOpen(false);
+          setSelectedDriverForDetails(null);
+        }}
+        driver={selectedDriverForDetails}
+        isPending={selectedDriverForDetails?._itemType !== 'registered'}
+        reason={selectedDriverForDetails?._itemType !== 'registered' ? (selectedDriverForDetails as any).reason : undefined}
+        duplicateInfo={selectedDriverForDetails?._itemType !== 'registered' ? (selectedDriverForDetails as any).duplicateDriverInfo : undefined}
+      />
     </div>
   );
 };
