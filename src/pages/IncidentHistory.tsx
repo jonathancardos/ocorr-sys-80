@@ -59,11 +59,18 @@ export const IncidentHistory = () => {
   const { data: incidents, isLoading, error } = useQuery<Incident[], Error>({
     queryKey: ['incidents'],
     queryFn: async () => {
+      console.log("Fetching incidents...");
       const { data, error } = await supabase.from('incidents').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching incidents:", error);
+        throw error;
+      }
+      console.log("Incidents fetched successfully:", data);
       return data;
     },
   });
+
+  console.log("isLoading:", isLoading, "error:", error, "incidents:", incidents);
 
   const filteredAndSortedIncidents = useMemo(() => {
     let currentIncidents = [...(incidents || []), ...localDrafts]; // Combine incidents and local drafts
@@ -171,6 +178,8 @@ export const IncidentHistory = () => {
   };
 
   const navigate = useNavigate(); // Initialize useNavigate
+
+  console.log("IncidentHistory component rendered");
 
   if (isLoading) {
     return (

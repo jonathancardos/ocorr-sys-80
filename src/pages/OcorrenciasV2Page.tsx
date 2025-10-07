@@ -1,18 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Edit, Hammer, AlertTriangle, Heart, Palette, Upload, X, Paperclip, CheckCircle, Loader2, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../integrations/supabase/supabase';
+import { Database } from '../types/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { showMessage } from '../lib/utils';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Checkbox } from '../components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Switch } from '../components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { format } from 'date-fns';
+import { CalendarIcon, FileIcon, X, Edit, FileText, Paperclip, Upload, Save, CheckCircle, History } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+type Ocorrencia = Database['public']['Tables']['ocorrencias']['Row'];
+type InsertOcorrencia = Database['public']['Tables']['ocorrencias']['Insert'];
+type UpdateOcorrencia = Database['public']['Tables']['ocorrencias']['Update'];
 
 const SINISTRO_CONFIG = {
   danos_materiais: {
@@ -79,12 +90,27 @@ const OcorrenciasV2Page: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate(); // Adicionar useNavigate
+
+  // Helper function to flatten the form_data structure
+  const flattenFormData = (nestedData: Record<string, any>) => {
+    let flattened: Record<string, any> = {};
+    for (const key in nestedData) {
+      if (typeof nestedData[key] === 'object' && nestedData[key] !== null && !Array.isArray(nestedData[key])) {
+        flattened = { ...flattened, ...nestedData[key] };
+      } else {
+        flattened[key] = nestedData[key];
+      }
+    }
+    return flattened;
+  };
 
   useEffect(() => {
+    console.log("ID da URL (useParams): ", id);
     if (id) {
       const fetchIncident = async () => {
         const { data, error } = await supabase
-          .from('ocorrencias')
+          .from<'ocorrencias'>('ocorrencias')
           .select('*')
           .eq('id', id)
           .single();
@@ -93,8 +119,10 @@ const OcorrenciasV2Page: React.FC = () => {
           console.error('Erro ao buscar ocorrência:', error.message);
           showMessage(`Erro ao carregar ocorrência: ${error.message}`, 'error');
         } else if (data) {
-          setFormData(data.form_data);
-          setSelectedTypes(data.selected_types);
+          console.log("Dados da ocorrência carregados do Supabase:", data);
+          // Flatten the incoming form_data before setting it
+          setFormData(flattenFormData(data.form_data || {})); // Adicionado || {}
+          setSelectedTypes(data.selected_types || []);
           // TODO: Handle attached_files if needed
         }
       };
@@ -122,6 +150,7 @@ const OcorrenciasV2Page: React.FC = () => {
 
   const submitToSupabase = async (status: 'draft' | 'open' | 'canceled') => {
     setIsSubmitting(true);
+    console.log("submitToSupabase - formData no início:", formData);
     try {
       // 1. Upload files to Supabase Storage
       const filePaths: string[] = [];
@@ -139,8 +168,10 @@ const OcorrenciasV2Page: React.FC = () => {
       // Get authenticated user ID
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error("Erro de autenticação: Usuário não autenticado.", userError);
       throw new Error('Usuário não autenticado.');
     }
+    console.log("Usuário autenticado:", user.id);
 
     // 2. Prepare form data for insertion or update
     const dataToSave = {
@@ -151,35 +182,40 @@ const OcorrenciasV2Page: React.FC = () => {
       status: status, // Add the status here
       user_id: user.id, // Add the user_id here for RLS
     };
+    console.log("Dados a serem salvos no Supabase:", dataToSave);
 
       let error: any = null;
 
       if (status === 'canceled' && formData.id) {
         const { error: deleteError } = await supabase
-          .from('ocorrencias')
+          .from<'ocorrencias'>('ocorrencias')
           .delete()
           .eq('id', formData.id);
         error = deleteError;
         if (!error) {
           setFormData({ id: null }); // Reset form after cancellation
         }
+        console.log("Resultado da operação de cancelamento (delete):");
       } else if (formData.id) {
         // Update existing incident/draft
         const { error: updateError } = await supabase
-          .from('ocorrencias')
+          .from<'ocorrencias'>('ocorrencias')
           .update(dataToSave)
           .eq('id', formData.id);
         error = updateError;
+        console.log("Resultado da operação de atualização (update):");
       } else {
         // Insert new incident/draft
         const { data, error: insertError } = await supabase
-          .from('ocorrencias')
+          .from<'ocorrencias'>('ocorrencias')
           .insert([dataToSave])
           .select(); // Select the inserted data to get the new ID
         error = insertError;
         if (data && data.length > 0) {
           setFormData(prev => ({ ...prev, id: data[0].id })); // Update formData with the new ID
         }
+        console.log("Resultado da operação de inserção (insert):");
+        console.log("Data:", data, "Error:", error);
       }
 
       if (error) {
@@ -214,10 +250,10 @@ const OcorrenciasV2Page: React.FC = () => {
       selectedTypes.forEach(typeKey => {
         const config = SINISTRO_CONFIG[typeKey as keyof typeof SINISTRO_CONFIG];
         config.perguntas.forEach((question: any) => {
-          const isVisible = !question.dependeDe || (formData[typeKey]?.[question.dependeDe.id] === question.dependeDe.valor);
+          const isVisible = !question.dependeDe || (formData[question.dependeDe.id] === question.dependeDe.valor);
 
           if (question.required && isVisible) {
-            if (!formData[typeKey] || !formData[typeKey][question.id] || String(formData[typeKey][question.id]).trim() === '') {
+            if (!formData[question.id] || String(formData[question.id]).trim() === '') {
               valid = false;
             }
           }
@@ -230,29 +266,16 @@ const OcorrenciasV2Page: React.FC = () => {
   const handleSelectionChange = (event: boolean, value: string) => {
     setSelectedTypes(prevSelectedTypes => {
       const newSelectedTypes = event ? [...prevSelectedTypes, value] : prevSelectedTypes.filter(type => type !== value);
-      // Initialize or clear form data for the selected/deselected type
-      if (event) {
-        setFormData(prevData => ({ ...prevData, [value]: {} }));
-      } else {
-        setFormData(prevData => {
-          const newData = { ...prevData };
-          delete newData[value];
-          return newData;
-        });
-      }
+      // A manipulação direta de formData foi removida daqui para manter a estrutura "achatada".
+      // O formData será atualizado apenas por handleInputChange.
       return newSelectedTypes;
     });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, incidentType: string, fieldName: string) => {
-    const { value, type, checked } = e.target;
-
+  const handleInputChange = (fieldName: string, newValue: any) => {
     setFormData(prevData => ({
       ...prevData,
-      [incidentType]: {
-        ...prevData[incidentType],
-        [fieldName]: type === 'checkbox' ? checked : value,
-      },
+      [fieldName]: newValue,
     }));
   };
 
@@ -261,8 +284,7 @@ const OcorrenciasV2Page: React.FC = () => {
     const commonProps = {
       id: fieldId,
       name: fieldId,
-      value: formData[incidentType]?.[question.id] || '',
-      onChange: (e: any) => handleInputChange(e, incidentType, question.id),
+      value: formData[question.id] || '',
       required: question.required,
       className: "h-11",
     };
@@ -273,14 +295,14 @@ const OcorrenciasV2Page: React.FC = () => {
       case "text":
       case "number":
       case "datetime-local":
-        inputElement = <Input type={question.type} placeholder={question.placeholder} {...commonProps} />;
+        inputElement = <Input type={question.type} placeholder={question.placeholder} onChange={(e) => handleInputChange(question.id, e.target.value)} {...commonProps} />;
         break;
       case "textarea":
-        inputElement = <Textarea rows={3} placeholder={question.placeholder} {...commonProps}></Textarea>;
+        inputElement = <Textarea rows={3} placeholder={question.placeholder} onChange={(e) => handleInputChange(question.id, e.target.value)} {...commonProps}></Textarea>;
         break;
       case "select":
         inputElement = (
-          <Select onValueChange={(value) => handleInputChange({ target: { value, type: 'select', name: fieldId } } as React.ChangeEvent<HTMLSelectElement>, incidentType, question.id)} value={formData[incidentType]?.[question.id] || ''}>
+          <Select onValueChange={(value) => handleInputChange(question.id, value)} value={formData[question.id] || ''}>
             <SelectTrigger className="h-11">
               <SelectValue placeholder={question.placeholder || "Selecione uma opção"} />
             </SelectTrigger>
@@ -296,7 +318,7 @@ const OcorrenciasV2Page: React.FC = () => {
         inputElement = <Input type="text" {...commonProps} />;
     }
 
-    const isVisible = !question.dependeDe || (formData[incidentType]?.[question.dependeDe.id] === question.dependeDe.valor);
+    const isVisible = !question.dependeDe || (formData[question.dependeDe.id] === question.dependeDe.valor);
 
     return isVisible ? (
       <div key={fieldId} className={cn("space-y-2", question.colSpan && "md:col-span-2")}>
@@ -309,6 +331,8 @@ const OcorrenciasV2Page: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("Estado de selectedTypes:", selectedTypes);
+    console.log("Estado de isFormValid:", isFormValid);
     checkFormValidity();
   }, [selectedTypes, formData]);
 
@@ -458,6 +482,15 @@ const OcorrenciasV2Page: React.FC = () => {
               Cancelar Ocorrência
             </Button>
           )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/history')} // Navegar para a página de histórico
+            disabled={isSubmitting}
+          >
+            <History className="mr-2 h-4 w-4" />
+            Ver Histórico
+          </Button>
           <Button
             type="button"
             variant="outline"

@@ -19,6 +19,7 @@ import { ReportsPage } from "./pages/ReportsPage"; // NEW: Import ReportsPage
 import { BarChart3 } from "lucide-react"; // Import BarChart3
 import React, { useState, useEffect } from 'react';
 import OcorrenciasV2Page from "./pages/OcorrenciasV2Page"; // Import the new component
+import IncidentViewPage from "./pages/IncidentViewPage";
 // REMOVIDO: import AnimatedStars from "./components/AnimatedStars"; // REMOVIDO: Import AnimatedStars
 
 const queryClient = new QueryClient();
@@ -109,6 +110,7 @@ const App = () => {
                 <Route path="settings/:tab" element={<SettingsPageWrapper />} />
                 <Route path="driver-omnilink-status" element={<DriverOmnilinkStatusDetails />} /> {/* New route */}
                 <Route path="ocorrencias-v2" element={<OcorrenciasV2Page />} /> {/* New route for OcorrenciasV2Page */}
+                <Route path="incident-view" element={<IncidentViewPage />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

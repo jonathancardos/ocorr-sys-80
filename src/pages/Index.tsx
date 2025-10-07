@@ -20,11 +20,13 @@ import {
   Activity,
   LogOut,
   User as UserIcon,
+  Eye,
 } from "lucide-react";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { NewIncidentForm } from "@/components/incidents/NewIncidentForm";
 import { IncidentHistory } from "@/pages/IncidentHistory";
 import { SettingsPage } from "@/pages/SettingsPage";
+import IncidentViewPage from "@/pages/IncidentViewPage";
 import UserManagement from "@/components/admin/UserManagement";
 import DriverManagement from "@/components/admin/DriverManagement";
 import { VehicleManagement } from "@/components/admin/VehicleManagement";
@@ -52,11 +54,12 @@ const defaultNavigationItems = [
   { id: "drivers", label: "Gerenciamento de Motoristas", icon: Truck, path: "/drivers" },
   { id: "vehicles", label: "Gerenciamento de Veículos", icon: Car, path: "/vehicles" },
   { id: "driver-omnilink-status", label: "Status Omnilink", icon: ShieldCheck, path: "/driver-omnilink-status" }, // New navigation item
-  { id: "ocorrencias-v2", label: "Ocorrências V2", icon: FileText, path: "/ocorrencias-v2" },
+  { id: "ocorrencias-v2", label: "Gerenciamento de Incidentes", icon: FileText, path: "/ocorrencias-v2" },
+  { id: "incident-view", label: "Visualização de Ocorrências", icon: Eye, path: "/incident-view" },
   { id: "settings", label: "Configurações", icon: Settings, path: "/settings" },
 ];
 
-const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges: boolean; setHasUnsavedChanges: (hasChanges: boolean) => void }) => {
+const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageView>("dashboard");
   const isMobile = useIsMobile();
@@ -66,6 +69,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   const [showConfirmationModal, setShowConfirmationModal] = useState(false); // Novo estado para o modal
   const [pendingNavigationPath, setPendingNavigationPath] = useState<string | undefined>(undefined); // Novo estado para o caminho de navegação pendente
   const [drafts, setDrafts] = useState<any[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Adicionado o estado hasUnsavedChanges aqui
 
   const [saveDraftCallback, setSaveDraftCallback] = useState<(() => void) | undefined>(undefined); // New state for draft save callback
 
@@ -100,17 +104,22 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
   useEffect(() => {
     const storedDrafts = localStorage.getItem('incidentDrafts');
     if (storedDrafts) {
+      console.log("Loading drafts from localStorage:", JSON.parse(storedDrafts));
       setDrafts(JSON.parse(storedDrafts));
     }
   }, []);
 
   const handleSaveIncident = useCallback((formData: any, isDraft?: boolean) => {
     if (isDraft) {
+      console.log("Current drafts before saving:", drafts);
       const draftId = `draft-${Date.now()}`;
       const newDraft = { id: draftId, ...formData };
+      console.log("New draft to be saved:", newDraft);
       const updatedDrafts = [...drafts, newDraft];
+      console.log("Updated drafts array:", updatedDrafts);
       setDrafts(updatedDrafts);
       localStorage.setItem('incidentDrafts', JSON.stringify(updatedDrafts));
+      console.log("localStorage after saving draft:", localStorage.getItem('incidentDrafts'));
       toast.success("Rascunho salvo!", {
         description: "A ocorrência foi salva como rascunho e pode ser editada mais tarde.",
       });
