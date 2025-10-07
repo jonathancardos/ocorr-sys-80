@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/supabase';
 import { Database } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { showMessage } from '../lib/utils';
+
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -17,8 +17,9 @@ import { Switch } from '../components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Badge } from '../components/ui/badge';
 import { format } from 'date-fns';
-import { CalendarIcon, FileIcon, X, Edit, FileText, Paperclip, Upload, Save, CheckCircle, History } from 'lucide-react';
+import { CalendarIcon, FileIcon, X, Edit, FileText, Paperclip, Upload, Save, CheckCircle, History, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 type Ocorrencia = Database['public']['Tables']['ocorrencias']['Row'];
@@ -117,7 +118,7 @@ const OcorrenciasV2Page: React.FC = () => {
 
         if (error) {
           console.error('Erro ao buscar ocorrência:', error.message);
-          showMessage(`Erro ao carregar ocorrência: ${error.message}`, 'error');
+          setMessage({ text: `Erro ao carregar ocorrência: ${error.message}`, type: 'error' });
         } else if (data) {
           console.log("Dados da ocorrência carregados do Supabase:", data);
           // Flatten the incoming form_data before setting it
@@ -223,11 +224,11 @@ const OcorrenciasV2Page: React.FC = () => {
       }
 
       if (status === 'draft') {
-        showMessage('Rascunho salvo com sucesso!', 'success');
+        setMessage({ text: 'Rascunho salvo com sucesso!', type: 'success' });
       } else if (status === 'open') {
-        showMessage('Ocorrência finalizada com sucesso!', 'success');
+        setMessage({ text: 'Ocorrência finalizada com sucesso!', type: 'success' });
       } else if (status === 'canceled') {
-        showMessage('Ocorrência cancelada com sucesso!', 'success');
+        setMessage({ text: 'Ocorrência cancelada com sucesso!', type: 'success' });
       }
       // Optionally, clear form and selected files after successful submission
       setSelectedTypes([]);
@@ -236,7 +237,7 @@ const OcorrenciasV2Page: React.FC = () => {
 
     } catch (error: any) {
       console.error('Erro ao enviar relatório:', error.message);
-      showMessage(`Erro ao enviar relatório: ${error.message}`, 'error');
+      setMessage({ text: `Erro ao enviar relatório: ${error.message}`, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
