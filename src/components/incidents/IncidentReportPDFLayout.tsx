@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"; // Import cn for conditional classNames
 import { AlertTriangle, Paperclip, Lock, Info } from "lucide-react"; // Import icons for better visual
 import { PdfConfig } from './ReportCustomizationTab'; // Import PdfConfig type
 import { getCnhStatus as getCnhStatusUtil, CnhStatus, OmnilinkDetailedStatus, formatDate, formatTime } from '@/lib/driver-utils'; // Import from new utility
+import { errorService } from '@/services/errorService';
 
 interface AttachmentItem {
   name: string;
@@ -115,7 +116,7 @@ export const IncidentReportPDFLayout: React.FC<IncidentReportPDFLayoutProps> = (
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error("Failed to load image:", e.currentTarget.src);
+    errorService.log("Failed to load image:", e.currentTarget.src);
     e.currentTarget.src = '/placeholder.svg'; // Fallback to a generic placeholder image
     e.currentTarget.alt = 'Imagem não carregada';
     e.currentTarget.classList.add('bg-gray-200', 'p-2'); // Add some styling for placeholder

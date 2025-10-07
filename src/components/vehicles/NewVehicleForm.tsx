@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Loader2, PlusCircle, X, Info, Truck, Settings, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -167,7 +168,7 @@ export const NewVehicleForm: React.FC<NewVehicleFormProps> = ({ onVehicleCreated
       onClose(); // Close the dialog
     },
     onError: (err: any) => {
-      console.error('Error creating vehicle:', err);
+      errorService.log('Error creating vehicle:', err);
       toast.error("Erro ao cadastrar veículo", {
         description: err.message || "Não foi possível cadastrar o veículo.",
       });

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { UserPlus, Edit2, Trash2, Loader2, Shield, User, UserX, MailCheck, MailWarning } from 'lucide-react'; // Adicionado MailCheck, MailWarning
 import { Tables, TablesUpdate } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -143,7 +144,7 @@ const UserManagement = () => {
       resetEditForm();
     },
     onError: (error: any) => {
-      console.error('Error updating user:', error);
+      errorService.log('Error updating user:', error);
       toast.error("Erro ao atualizar usuário", {
         description: error.message || "Não foi possível atualizar o usuário",
       });
@@ -172,7 +173,7 @@ const UserManagement = () => {
       });
     },
     onError: (error: any) => {
-      console.error('Error toggling user status:', error);
+      errorService.log('Error toggling user status:', error);
       toast.error("Erro ao alterar status", {
         description: error.message || "Não foi possível alterar o status do usuário",
       });
@@ -212,7 +213,7 @@ const UserManagement = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao excluir usuário:', err);
+      errorService.log('Erro ao excluir usuário:', err);
       toast.error("Erro ao excluir usuário", {
         description: err.message || "Não foi possível excluir o usuário.",
       });

@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { createRoot } from 'react-dom/client';
+import { errorService } from '@/services/errorService';
 import { DriverReportPDFLayout } from './DriverReportPDFLayout';
 import { VehicleReportPDFLayout } from './VehicleReportPDFLayout'; // NEW IMPORT
 import { Tables } from '@/integrations/supabase/types';
@@ -102,7 +103,7 @@ export const PdfPreviewPanel: React.FC<PdfPreviewPanelProps> = ({
       );
     } else {
       // Handle case where neither drivers nor vehicles are provided
-      console.error("No data provided for PDF generation.");
+      errorService.log("No data provided for PDF generation.");
       resolveRenderPromise(); // Resolve to prevent hanging
     }
 

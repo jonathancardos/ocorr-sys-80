@@ -7,6 +7,7 @@ import { Loader2, UserCheck, UserX, Shield, Users as UsersIcon, CheckCircle, Mai
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { Tables } from "@/integrations/supabase/types";
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -120,7 +121,7 @@ export const UserApprovalTab = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao aprovar usuário:', err);
+      errorService.log('Erro ao aprovar usuário:', err);
       toast.error("Erro ao aprovar usuário", {
         description: err.message || "Não foi possível aprovar o usuário.",
       });
@@ -148,7 +149,7 @@ export const UserApprovalTab = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao rejeitar usuário:', err);
+      errorService.log('Erro ao rejeitar usuário:', err);
       toast.error("Erro ao rejeitar usuário", {
         description: err.message || "Não foi possível rejeitar o usuário.",
       });

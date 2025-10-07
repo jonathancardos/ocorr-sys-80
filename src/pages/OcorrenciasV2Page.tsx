@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/supabase';
 import { Database } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -111,7 +112,7 @@ const OcorrenciasV2Page: React.FC = () => {
     if (id) {
       const fetchIncident = async () => {
         const { data, error } = await supabase
-          .from<'ocorrencias'>('ocorrencias')
+          .from<'ocorrencias', PostgrestError>('ocorrencias')
           .select('*')
           .eq('id', id)
           .single();
@@ -189,7 +190,7 @@ const OcorrenciasV2Page: React.FC = () => {
 
       if (status === 'canceled' && formData.id) {
         const { error: deleteError } = await supabase
-          .from<'ocorrencias'>('ocorrencias')
+          .from<'ocorrencias', PostgrestError>('ocorrencias')
           .delete()
           .eq('id', formData.id);
         error = deleteError;
@@ -200,7 +201,7 @@ const OcorrenciasV2Page: React.FC = () => {
       } else if (formData.id) {
         // Update existing incident/draft
         const { error: updateError } = await supabase
-          .from<'ocorrencias'>('ocorrencias')
+          .from<'ocorrencias', PostgrestError>('ocorrencias')
           .update(dataToSave)
           .eq('id', formData.id);
         error = updateError;
@@ -208,7 +209,7 @@ const OcorrenciasV2Page: React.FC = () => {
       } else {
         // Insert new incident/draft
         const { data, error: insertError } = await supabase
-          .from<'ocorrencias'>('ocorrencias')
+          .from<'ocorrencias', PostgrestError>('ocorrencias')
           .insert([dataToSave])
           .select(); // Select the inserted data to get the new ID
         error = insertError;

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -200,7 +201,7 @@ const DriverManagement = () => {
         console.warn(`DriverManagement: Original driver ID ${pending.original_driver_id} not found in originalDriversDetails for pending driver ${pending.id}. This might indicate a data inconsistency.`);
       }
       if (duplicateDriver && !duplicateDriver.id) {
-        console.error(`DriverManagement: Found duplicate driver but its ID is missing!`, duplicateDriver);
+        errorService.log(`DriverManagement: Found duplicate driver but its ID is missing!`, duplicateDriver);
       }
 
       return {
@@ -372,7 +373,7 @@ const DriverManagement = () => {
       resetForm();
     },
     onError: (err: any) => {
-      console.error('Error upserting driver:', err);
+      errorService.log('Error upserting driver:', err);
       toast.error("Erro ao salvar motorista", {
         description: err.message || "Não foi possível salvar os dados do motorista.",
       });
@@ -395,7 +396,7 @@ const DriverManagement = () => {
       setSelectedRegisteredDriverIds(prev => prev.filter(driverId => driverId !== deletedId));
     },
     onError: (err: any) => {
-      console.error('Error deleting driver:', err);
+      errorService.log('Error deleting driver:', err);
       toast.error("Erro ao excluir motorista", {
         description: err.message || "Não foi possível excluir o motorista.",
       });
@@ -415,7 +416,7 @@ const DriverManagement = () => {
       setSelectedRegisteredDriverIds([]);
     },
     onError: (err: any) => {
-      console.error('Error bulk deleting drivers:', err);
+      errorService.log('Error bulk deleting drivers:', err);
       toast.error("Erro ao excluir motoristas", {
         description: err.message || "Não foi possível excluir os motoristas selecionados.",
       });
@@ -436,7 +437,7 @@ const DriverManagement = () => {
           .delete()
           .eq('id', pendingDriverId);
         if (deletePendingError) {
-          console.error('resolveDuplicationMutation: Erro ao excluir entrada pendente (Manter Existente):', deletePendingError);
+          errorService.log('resolveDuplicationMutation: Erro ao excluir entrada pendente (Manter Existente):', deletePendingError);
           throw new Error(`Falha ao remover entrada pendente: ${deletePendingError.message}`);
         }
         console.log('resolveDuplicationMutation: Entrada pendente excluída com sucesso:', pendingDriverId);
@@ -447,7 +448,7 @@ const DriverManagement = () => {
 
         if (!existingDriverId || typeof existingDriverId !== 'string' || existingDriverId.length !== 36) {
           const errorMessage = `ID do motorista existente inválido para atualização: "${existingDriverId}". Esperado um UUID válido.`;
-          console.error('resolveDuplicationMutation:', errorMessage);
+          errorService.log('resolveDuplicationMutation:', errorMessage);
           throw new Error(errorMessage);
         }
 
@@ -471,7 +472,7 @@ const DriverManagement = () => {
           .update(driverToUpdate)
           .eq('id', existingDriverId);
         if (updateExistingError) {
-          console.error('resolveDuplicationMutation: Erro ao atualizar motorista existente:', updateExistingError);
+          errorService.log('resolveDuplicationMutation: Erro ao atualizar motorista existente:', updateExistingError);
           throw new Error(`Falha ao atualizar motorista existente: ${updateExistingError.message}`);
         }
         console.log('resolveDuplicationMutation: Motorista existente atualizado com sucesso:', existingDriverId);
@@ -482,7 +483,7 @@ const DriverManagement = () => {
           .delete()
           .eq('id', pendingDriverId);
         if (deletePendingError) {
-          console.error('resolveDuplicationMutation: Erro ao excluir entrada pendente (Manter Novo):', deletePendingError);
+          errorService.log('resolveDuplicationMutation: Erro ao excluir entrada pendente (Manter Novo):', deletePendingError);
           throw new Error(`Falha ao remover entrada pendente: ${deletePendingError.message}`);
         }
         console.log('resolveDuplicationMutation: Entrada pendente excluída com sucesso:', pendingDriverId);
@@ -499,7 +500,7 @@ const DriverManagement = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao resolver duplicação:', err);
+      errorService.log('Erro ao resolver duplicação:', err);
       toast.error("Erro ao resolver duplicação", {
         description: err.message || "Não foi possível resolver a duplicação.",
       });
@@ -528,7 +529,7 @@ const DriverManagement = () => {
           .from('drivers')
           .insert(driverData);
         if (insertError) {
-          console.error('DriverManagement: Erro ao inserir novo motorista:', insertError);
+          errorService.log('DriverManagement: Erro ao inserir novo motorista:', insertError);
           throw new Error(`Falha ao inserir novo motorista: ${insertError.message}`);
         }
 
@@ -537,7 +538,7 @@ const DriverManagement = () => {
           .delete()
           .eq('id', driverToApprove.id);
         if (deletePendingError) {
-          console.error('DriverManagement: Erro ao excluir entrada pendente após inserção:', deletePendingError);
+          errorService.log('DriverManagement: Erro ao excluir entrada pendente após inserção:', deletePendingError);
           throw new Error(`Falha ao remover entrada pendente: ${deletePendingError.message}`);
         }
         return { message: 'Motorista aprovado e adicionado ao sistema.' };
@@ -553,7 +554,7 @@ const DriverManagement = () => {
         return Promise.reject(new Error("Duplicação detectada. Ação requerida no diálogo."));
       }
       else {
-        console.error('DriverManagement: Inconsistência de dados: original_driver_id existe, mas o motorista original não foi encontrado ou está inválido na tabela drivers.', driverToApprove);
+        errorService.log('DriverManagement: Inconsistência de dados: original_driver_id existe, mas o motorista original não foi encontrado ou está inválido na tabela drivers.', driverToApprove);
         throw new Error("Inconsistência de dados: O motorista original referenciado não foi encontrado ou está inválido. Por favor, rejeite esta entrada pendente ou verifique a integridade dos dados.");
       }
     },
@@ -567,7 +568,7 @@ const DriverManagement = () => {
     },
     onError: (err: any) => {
       if (err.message !== "Duplicação detectada. Ação requerida no diálogo.") {
-        console.error('Erro ao aprovar motorista:', err);
+        errorService.log('Erro ao aprovar motorista:', err);
         toast.error("Erro ao aprovar motorista", {
           description: err.message || "Não foi possível aprovar o motorista.",
         });
@@ -636,7 +637,7 @@ const DriverManagement = () => {
       }
     },
     onError: (err: any) => {
-      console.error('Erro na aprovação em massa:', err);
+      errorService.log('Erro na aprovação em massa:', err);
       toast.error("Erro na aprovação em massa", {
         description: err.message || "Não foi possível aprovar os motoristas selecionados.",
       });
@@ -659,7 +660,7 @@ const DriverManagement = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao rejeitar motorista:', err);
+      errorService.log('Erro ao rejeitar motorista:', err);
       toast.error("Erro ao rejeitar motorista", {
         description: err.message || "Não foi possível rejeitar o motorista.",
       });
@@ -680,7 +681,7 @@ const DriverManagement = () => {
       setSelectedPendingDriverIds([]);
     },
     onError: (err: any) => {
-      console.error('Erro na rejeição em massa:', err);
+      errorService.log('Erro na rejeição em massa:', err);
       toast.error("Erro na rejeição em massa", {
         description: err.message || "Não foi possível rejeitar os motoristas selecionados.",
       });

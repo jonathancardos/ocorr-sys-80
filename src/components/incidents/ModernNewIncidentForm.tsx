@@ -17,6 +17,7 @@ import {
   Paperclip,
   Download,
 } from "lucide-react";
+import { errorService } from '@/services/errorService';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -264,7 +265,7 @@ const sectionFields = {
         description: `Arquivo(s) para ${field} enviado(s) com sucesso.`,
       });
     } catch (error) {
-      console.error("Erro ao fazer upload:", error);
+      errorService.log("Erro ao fazer upload:", error);
       toast.error("Erro no upload", {
         description: "Não foi possível enviar o(s) arquivo(s).",
       });

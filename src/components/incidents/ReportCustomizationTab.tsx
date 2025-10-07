@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Eye, Save, FileText, ZoomIn, ZoomOut } from 'lucide-react'; // Adicionado ZoomIn, ZoomOut
+import { errorService } from '@/services/errorService';
 import { IncidentReportPDFLayout } from './IncidentReportPDFLayout';
 import { toast } from 'sonner'; // Importar toast do sonner
 import { getCnhStatus, getDetailedOmnilinkStatus } from '@/lib/driver-utils'; // Import getCnhStatus from new utility
@@ -420,7 +421,7 @@ export const ReportCustomizationTab: React.FC<ReportCustomizationTabProps> = ({ 
       setPdfBlobUrl(url);
       console.log("renderPdfPreview: URL do Blob do PDF criada e definida:", url); // Novo log
     } catch (error) {
-      console.error("renderPdfPreview: Erro durante a geração do PDF:", error);
+      errorService.log("renderPdfPreview: Erro durante a geração do PDF:", error);
       setPdfBlobUrl(null);
     } finally {
       if (root) {

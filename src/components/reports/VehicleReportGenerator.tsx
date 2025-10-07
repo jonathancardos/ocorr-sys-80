@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TablesInsert } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { format } from 'date-fns';
 import { Vehicle } from '@/types/vehicles';
 import { VehiclePdfPreviewDialog } from '../vehicles/VehiclePdfPreviewDialog';
@@ -81,7 +82,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
       queryClient.invalidateQueries({ queryKey: ['generatedReports'] });
     },
     onError: (err: any) => {
-      console.error('Error logging report:', err);
+      errorService.log('Error logging report:', err);
       toast.error("Erro ao registrar relatório", {
         description: err.message || "Não foi possível registrar o relatório gerado.",
       });
@@ -158,7 +159,7 @@ export const VehicleReportGenerator: React.FC<VehicleReportGeneratorProps> = ({ 
       });
 
     } catch (error) {
-      console.error("Error sharing via WhatsApp:", error);
+      errorService.log("Error sharing via WhatsApp:", error);
       toast.error("Erro ao compartilhar", {
         description: "Não foi possível gerar o link para o WhatsApp.",
       });

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Car, Edit2, Trash2, Loader2, Shield, Plus, PlusCircle, X, Upload, CheckCircle, RefreshCw, ArrowUp, ArrowDown, FilterX, ListFilter, Search, MoreVertical, Info, Wrench, XCircle as NoWrenchIcon, Lock, Download } from 'lucide-react';
@@ -324,7 +325,7 @@ export const VehicleManagement = () => {
       resetForm();
     },
     onError: (err: any) => {
-      console.error('upsertVehicleMutation: Error response:', err);
+      errorService.log('upsertVehicleMutation: Error response:', err);
       toast.error("Erro ao salvar veículo", {
         description: err.message || "Não foi possível salvar os dados do veículo.",
       });
@@ -410,7 +411,7 @@ export const VehicleManagement = () => {
       setSelectedRegisteredVehicleIds(prev => prev.filter(vehicleId => vehicleId !== deletedId));
     },
     onError: (err: any) => {
-      console.error('Error deleting vehicle:', err);
+      errorService.log('Error deleting vehicle:', err);
       toast.error("Erro ao excluir veículo", {
         description: err.message || "Não foi possível excluir o veículo.",
       });
@@ -430,7 +431,7 @@ export const VehicleManagement = () => {
       setSelectedRegisteredVehicleIds([]);
     },
     onError: (err: any) => {
-      console.error('Error bulk deleting vehicles:', err);
+      errorService.log('Error bulk deleting vehicles:', err);
       toast.error("Erro ao excluir veículos", {
         description: err.message || "Não foi possível excluir os veículos selecionados.",
       });
@@ -489,7 +490,7 @@ export const VehicleManagement = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao aprovar veículo:', err);
+      errorService.log('Erro ao aprovar veículo:', err);
       toast.error("Erro ao aprovar veículo", {
         description: err.message || "Não foi possível aprovar o veículo.",
       });
@@ -566,7 +567,7 @@ export const VehicleManagement = () => {
       }
     },
     onError: (err: any) => {
-      console.error('Erro na aprovação em massa:', err);
+      errorService.log('Erro na aprovação em massa:', err);
       toast.error("Erro na aprovação em massa", {
         description: err.message || "Não foi possível aprovar os veículos selecionados.",
       });
@@ -589,7 +590,7 @@ export const VehicleManagement = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Erro ao rejeitar veículo:', err);
+      errorService.log('Erro ao rejeitar veículo:', err);
       toast.error("Erro ao rejeitar veículo", {
         description: err.message || "Não foi possível rejeitar o veículo.",
       });
@@ -610,7 +611,7 @@ export const VehicleManagement = () => {
       setSelectedPendingVehicleIds([]);
     },
     onError: (err: any) => {
-      console.error('Erro na rejeição em massa:', err);
+      errorService.log('Erro na rejeição em massa:', err);
       toast.error("Erro na rejeição em massa", {
         description: err.message || "Não foi possível rejeitar os veículos selecionados.",
       });

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Importar Tabs
+import { errorService } from '@/services/errorService';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Shield, Eye, EyeOff, UserPlus, Truck } from 'lucide-react'; // Adicionado Truck
@@ -85,7 +86,7 @@ const Login = () => {
         // For now, just ensure isLoading is set to false.
       }
     } catch (error) {
-      console.error('Login error:', error);
+      errorService.log('Login error:', error);
       // This catch block might not be hit if signIn handles its own errors with toast
       // but it's good practice to have it.
       toast.error("Erro inesperado no login", {
@@ -119,7 +120,7 @@ const Login = () => {
         setCurrentTab('login'); // Switch back to login tab
       }
     } catch (error) {
-      console.error('Sign Up error:', error);
+      errorService.log('Sign Up error:', error);
     } finally {
       setIsLoading(false);
     }

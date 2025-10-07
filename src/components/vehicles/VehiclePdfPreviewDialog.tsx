@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { createRoot } from 'react-dom/client';
+import { errorService } from '@/services/errorService';
 import { VehicleReportPDFLayout } from '../reports/VehicleReportPDFLayout';
 import { Vehicle } from '@/types/vehicles';
 import { toast } from 'sonner';
@@ -98,7 +99,7 @@ export const VehiclePdfPreviewDialog: React.FC<VehiclePdfPreviewDialogProps> = (
         setGeneratedPdfBlob(pdf.output('blob'));
 
       } catch (error) {
-        console.error("Error generating PDF blob:", error);
+        errorService.log("Error generating PDF blob:", error);
         toast.error("Erro na geração do PDF", {
           description: "Não foi possível gerar o arquivo PDF.",
         });
@@ -158,7 +159,7 @@ export const VehiclePdfPreviewDialog: React.FC<VehiclePdfPreviewDialogProps> = (
         onDownloadSuccess(fileUrl);
       }
     } catch (error) {
-      console.error("Error downloading or uploading PDF:", error);
+      errorService.log("Error downloading or uploading PDF:", error);
       toast.error("Erro ao baixar PDF", {
         description: "Ocorreu um erro ao baixar ou salvar o arquivo PDF.",
       });

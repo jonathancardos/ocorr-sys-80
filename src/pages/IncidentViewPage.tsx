@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../integrations/supabase/supabase';
+import { errorService } from '@/services/errorService';
 import { Database } from '../types/supabase';
 
 type Incident = Database['public']['Tables']['ocorrencias']['Row'];
@@ -27,6 +28,7 @@ const IncidentViewPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        errorService.log("Error fetching incidents:", error);
         setError(error.message);
         setLoading(false);
         return;

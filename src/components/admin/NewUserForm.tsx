@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner'; // Importar toast do sonner
+import { errorService } from '@/services/errorService';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
@@ -109,7 +110,7 @@ const NewUserForm: React.FC<NewUserFormProps> = ({ onUserCreated, onClose }) => 
         onClose(); // Close the dialog
       }
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      errorService.log('Error creating user:', error);
       toast.error("Erro ao criar usuário", {
         description: error.message || "Não foi possível criar o usuário",
       });

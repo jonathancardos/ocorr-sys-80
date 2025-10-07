@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Tables } from '@/integrations/supabase/types';
 import { useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
+import { errorService } from '@/services/errorService'; // Import errorService
 
 interface Profile {
   id: string;
@@ -61,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (profileError) {
-        console.error('AuthContext: Error fetching profile:', profileError);
+        errorService.log('Error fetching profile:', { profileError });
         setProfile(null);
         return null; // Return null to indicate profile not found or error
       }
@@ -72,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId);
 
       if (permissionsError) {
-        console.error('AuthContext: Error fetching user page permissions:', permissionsError);
+        errorService.log('Error fetching user page permissions:', { permissionsError });
       }
 
       const fetchedProfile: Profile = {
@@ -84,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       queryClient.invalidateQueries({ queryKey: ['profile', userId] }); // Invalidate specific profile query
       return fetchedProfile; // Return the fetched profile
     } catch (error: any) {
-      console.error('AuthContext: Exception fetching profile:', error);
+      errorService.log('Exception fetching profile:', { error });
       setProfile(null);
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
         toast.error("Erro de Conexão", {
@@ -110,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: refreshSessionAndUser called.');
     const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) {
-      console.error("AuthContext: Error refreshing session:", sessionError);
+      errorService.log("Error refreshing session:", { sessionError });
       setSession(null);
       setUser(null);
       setProfile(null);
@@ -235,13 +236,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (edgeFunctionError) {
-          console.error('AuthContext: Error creating admin via Edge Function:', edgeFunctionError);
+          errorService.log('Error creating admin via Edge Function:', { edgeFunctionError });
           toast.error("Erro ao criar administrador", {
             description: edgeFunctionError.message,
           });
           return { error: edgeFunctionError };
         } else if (edgeFunctionResponse && (edgeFunctionResponse as any).error) {
-          console.error('AuthContext: Edge Function returned application error:', (edgeFunctionResponse as any).error);
+          errorService.log('Edge Function returned application error:', { error: (edgeFunctionResponse as any).error });
           toast.error("Erro ao criar administrador", {
             description: (edgeFunctionResponse as any).error,
           });
@@ -260,7 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password: '123456',
         });
         if (finalSignInError) {
-          console.error('AuthContext: Final signIn attempt failed:', finalSignInError);
+          errorService.log('Final signIn attempt failed:', { finalSignInError });
           toast.error("Erro no login após criação", {
             description: finalSignInError.message,
           });
@@ -298,7 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (profileError || !profileData?.email) {
-        console.error('AuthContext: Profile not found or email missing for username:', emailOrUsername, profileError);
+        errorService.log('Profile not found or email missing for username:', { emailOrUsername, profileError });
         toast.error("Erro no login", {
           description: "Usuário não encontrado ou email associado ausente.",
         });
@@ -315,7 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) {
-      console.error('AuthContext: Regular signIn failed:', error);
+      errorService.log('Regular signIn failed:', { error });
       toast.error("Erro no login", {
         description: error.message,
       });
@@ -325,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (loggedInUser) {
         const userProfile = await fetchProfile(loggedInUser.id);
         if (userProfile && !userProfile.is_active) {
-          console.warn('AuthContext: User account is inactive. Signing out.');
+          errorService.log('AuthContext: User account is inactive. Signing out.');
           await supabase.auth.signOut();
           toast.error("Acesso Negado", {
             description: "Sua conta está inativa. Por favor, aguarde a aprovação de um administrador.",
@@ -361,7 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('AuthContext: signUp failed:', error);
+        errorService.log('signUp failed:', { error });
         toast.error("Erro no cadastro", {
           description: error.message,
         });
@@ -373,7 +374,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: null };
       }
     } catch (error: any) {
-      console.error('AuthContext: Exception during signUp:', error);
+      errorService.log('Exception during signUp:', { error });
       toast.error("Erro no cadastro", {
         description: error.message || "Ocorreu um erro inesperado durante o cadastro.",
       });
@@ -400,7 +401,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('AuthContext: Error signing out from Supabase:', error);
+        errorService.log('Error signing out from Supabase:', { error });
         toast.error("Erro ao sair", {
           description: error.message,
         });
@@ -413,7 +414,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
       }
     } catch (error: any) {
-      console.error('AuthContext: Unexpected error during signOut:', error);
+      errorService.log('Unexpected error during signOut:', { error });
       toast.error("Erro inesperado ao sair", {
         description: error.message,
       });

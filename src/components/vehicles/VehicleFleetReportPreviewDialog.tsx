@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { createRoot } from 'react-dom/client';
+import { errorService } from '@/services/errorService';
 import { VehicleFleetReportPDFLayout } from './VehicleFleetReportPDFLayout';
 import { Vehicle } from '@/types/vehicles';
 import { toast } from 'sonner';
@@ -50,7 +51,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       queryClient.invalidateQueries({ queryKey: ['generatedReports'] });
     },
     onError: (err: any) => {
-      console.error('Error logging report:', err);
+      errorService.log('Error logging report:', err);
       toast.error("Erro ao registrar relatório", {
         description: err.message || "Não foi possível registrar o relatório gerado.",
       });
@@ -121,7 +122,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
         setGeneratedPdfBlob(pdf.output('blob'));
 
       } catch (error) {
-        console.error("Error generating PDF blob:", error);
+        errorService.log("Error generating PDF blob:", error);
         toast.error("Erro na geração do PDF", {
           description: "Não foi possível gerar o arquivo PDF.",
         });
@@ -190,7 +191,7 @@ export const VehicleFleetReportPreviewDialog: React.FC<VehicleFleetReportPreview
       });
 
     } catch (error) {
-      console.error("Error downloading or uploading PDF:", error);
+      errorService.log("Error downloading or uploading PDF:", error);
       toast.error("Erro ao baixar PDF", {
         description: "Ocorreu um erro ao baixar ou salvar o arquivo PDF.",
       });

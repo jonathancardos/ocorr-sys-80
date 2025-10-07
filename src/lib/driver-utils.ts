@@ -1,5 +1,6 @@
 import { format, isPast, differenceInMonths, differenceInDays, startOfDay, differenceInYears, addMonths, parseISO, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { errorService } from '@/services/errorService';
 
 export interface CnhStatus {
   status: 'valid' | 'expiring_soon' | 'expired' | 'unknown';
@@ -31,7 +32,7 @@ export const formatDate = (dateValue: Date | string | null): string => {
     }
     return format(dateObj, 'dd/MM/yyyy', { locale: ptBR });
   } catch (e) {
-    console.error("Error formatting date:", dateValue, e);
+    errorService.log("Error formatting date:", dateValue, e);
     return 'Erro de Formatação';
   }
 };
@@ -62,7 +63,7 @@ export const formatTime = (timeValue: Date | string | null): string => {
     }
     return format(dateObj, 'HH:mm', { locale: ptBR });
   } catch (e) {
-    console.error("Error formatting time:", timeValue, e);
+    errorService.log("Error formatting time:", timeValue, e);
     return 'Erro de Formatação';
   }
 };

@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner'; // Importar toast do sonner
+import { errorService } from '@/services/errorService';
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Users, CheckCircle, XCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,7 +54,7 @@ export const UserPagePermissionsTab = () => {
           .eq('user_id', user.id);
 
         if (permissionsError) {
-          console.error(`Error fetching permissions for user ${user.id}:`, permissionsError);
+          errorService.log(`Error fetching permissions for user ${user.id}:`, permissionsError);
           return { ...user, page_permissions: [] };
         }
 
@@ -120,7 +121,7 @@ export const UserPagePermissionsTab = () => {
       });
     },
     onError: (err: any) => {
-      console.error('Error updating permission:', err);
+      errorService.log('Error updating permission:', err);
       toast.error("Erro ao atualizar permissão", {
         description: err.message || "Não foi possível salvar a permissão.",
       });

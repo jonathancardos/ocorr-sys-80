@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { errorService } from '@/services/errorService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload, FileText, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { TablesInsert, Tables } from '@/integrations/supabase/types';
@@ -361,7 +362,7 @@ const BulkDriverUpload: React.FC<BulkDriverUploadProps> = ({ onUploadComplete, o
       onClose();
     },
     onError: (err: any) => {
-      console.error('Error during bulk upload:', err);
+      errorService.log('Error during bulk upload:', err);
       toast.error("Erro no upload em massa", {
         description: err.message || "Não foi possível cadastrar os motoristas.",
       });

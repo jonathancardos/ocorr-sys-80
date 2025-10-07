@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { errorService } from '@/services/errorService';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, User, FileText, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -164,7 +165,7 @@ export const NewDriverForm: React.FC<NewDriverFormProps> = ({ onDriverCreated, o
       onClose();
     },
     onError: (err: any) => {
-      console.error('Error creating/updating driver:', err);
+      errorService.log('Error creating/updating driver:', err);
       toast.error("Erro ao salvar motorista", {
         description: err.message || "Não foi possível salvar os dados do motorista.",
       });

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Paperclip, Upload, Loader2, X, FileText, Image } from "lucide-react"; // Adicionado Image e FileText para ícones
 import { toast } from 'sonner'; // Import toast for error messages
+import { errorService } from '@/services/errorService';
 import InteractiveImageViewer from './InteractiveImageViewer';
 
 export interface AttachmentItem {
@@ -42,7 +43,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
   // console.log('IncidentAttachmentsSection (inside component): Type of handleFileUpload prop:', typeof handleFileUpload);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error("Failed to load image in preview:", e.currentTarget.src);
+    errorService.log("Failed to load image in preview:", e.currentTarget.src);
     e.currentTarget.src = '/placeholder.svg'; // Fallback to a generic placeholder image
     e.currentTarget.alt = 'Imagem não carregada';
     e.currentTarget.classList.add('bg-gray-200', 'p-2'); // Add some styling for placeholder
@@ -137,7 +138,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("boFiles", e.target.files);
                 } else {
-                  console.error("handleFileUpload is not a function when trying to upload boFiles:", handleFileUpload);
+                  errorService.log("handleFileUpload is not a function when trying to upload boFiles:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
                 }
               }}
@@ -165,7 +166,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("sapScreenshots", e.target.files);
                 } else {
-                  console.error("handleFileUpload is not a function when trying to upload sapScreenshots:", handleFileUpload);
+                  errorService.log("handleFileUpload is not a function when trying to upload sapScreenshots:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
                 }
               }}
@@ -193,7 +194,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("riskReports", e.target.files);
                 } else {
-                  console.error("handleFileUpload is not a function when trying to upload riskReports:", handleFileUpload);
+                  errorService.log("handleFileUpload is not a function when trying to upload riskReports:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
                 }
               }}
@@ -215,7 +216,7 @@ export const IncidentAttachmentsSection: React.FC<IncidentAttachmentsSectionProp
                 if (typeof handleFileUpload === 'function') {
                   await handleFileUpload("omnilinkPhoto", e.target.files?.[0] || null);
                 } else {
-                  console.error("handleFileUpload is not a function when trying to upload omnilinkPhoto:", handleFileUpload);
+                  errorService.log("handleFileUpload is not a function when trying to upload omnilinkPhoto:", handleFileUpload);
                   toast.error("Erro interno", { description: "A função de upload de arquivos não está disponível." });
                 }
               }}
