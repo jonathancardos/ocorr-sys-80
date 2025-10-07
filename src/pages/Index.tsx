@@ -343,7 +343,7 @@ const Index = ({ hasUnsavedChanges, setHasUnsavedChanges }: { hasUnsavedChanges:
 
         {/* Main Content - Render nested routes here */}
         <main className="flex-1 bg-gradient-to-br from-background to-muted/20 p-4 sm:p-8">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-full">
             <Outlet context={{ handleSaveIncident, setSaveDraftCallback, onCancelConfirm: handleCancelConfirmation }} /> {/* This is where the content of the nested routes will be rendered */}
           </div>
         </main>

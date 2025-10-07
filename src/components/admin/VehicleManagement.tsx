@@ -1321,7 +1321,7 @@ export const VehicleManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]">
+                  <TableHead className="w-[40px] text-xs sm:text-sm">
                     <Checkbox
                       checked={allPendingVehiclesSelected && allRegisteredVehiclesSelected}
                       indeterminate={(somePendingVehiclesSelected || someRegisteredVehiclesSelected) ? true : undefined}
@@ -1332,30 +1332,22 @@ export const VehicleManagement = () => {
                       aria-label="Selecionar todos os veículos"
                     />
                   </TableHead>
-                  <TableHead onClick={() => handleSort('plate')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold">
-                    <div className="flex items-center">
-                      Placa {renderSortIcon('plate')}
-                    </div>
+                  <TableHead onClick={() => handleSort('plate')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold text-xs sm:text-sm min-w-[80px]">
+                    <div className="flex items-center">Placa {renderSortIcon('plate')}</div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('model')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold">
-                    <div className="flex items-center">
-                      Modelo {renderSortIcon('model')}
-                    </div>
+                  <TableHead onClick={() => handleSort('model')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold text-xs sm:text-sm min-w-[100px]">
+                    <div className="flex items-center">Modelo {renderSortIcon('model')}</div>
                   </TableHead>
-                  <TableHead className="font-semibold">Tecnologias</TableHead>
-                  <TableHead onClick={() => handleSort('has_workshop')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold">
-                    <div className="flex items-center">
-                      Oficina {renderSortIcon('has_workshop')}
-                    </div>
+                  <TableHead className="font-semibold text-xs sm:text-sm min-w-[120px]">Tecnologias</TableHead>
+                  <TableHead onClick={() => handleSort('has_workshop')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold text-xs sm:text-sm min-w-[60px]">
+                    <div className="flex items-center">Oficina {renderSortIcon('has_workshop')}</div>
                   </TableHead>
-                  <TableHead className="font-semibold">Prioridade</TableHead> {/* Simplified label */}
-                  <TableHead className="font-semibold">Bloqueador</TableHead> {/* Simplified label */}
-                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold">
-                    <div className="flex items-center">
-                      Status {renderSortIcon('status')}
-                    </div>
+                  <TableHead className="font-semibold text-xs sm:text-sm min-w-[70px]">Prioridade</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm min-w-[70px]">Bloqueador</TableHead>
+                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary whitespace-nowrap font-semibold text-xs sm:text-sm min-w-[70px]">
+                    <div className="flex items-center">Status {renderSortIcon('status')}</div>
                   </TableHead>
-                  <TableHead className="text-right whitespace-nowrap font-semibold">Ações</TableHead>
+                  <TableHead className="text-right whitespace-nowrap font-semibold text-xs sm:text-sm min-w-[50px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1376,7 +1368,7 @@ export const VehicleManagement = () => {
                           'bg-yellow-50/50 dark:bg-yellow-950/30'
                       )}
                     >
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm">
                         {item._itemType === 'registered' ? (
                           <Checkbox
                             checked={selectedRegisteredVehicleIds.includes(item.id)}
@@ -1391,7 +1383,7 @@ export const VehicleManagement = () => {
                           />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium max-w-[150px] truncate">
+                      <TableCell className="font-medium max-w-[150px] truncate text-xs sm:text-sm min-w-[80px] whitespace-nowrap">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <span>
@@ -1400,20 +1392,29 @@ export const VehicleManagement = () => {
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {item.plate}
+                            <p>{item.plate}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{item.model || '-'}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>{item.model}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.model}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm min-w-[90px] whitespace-nowrap">
                         <div className="flex flex-wrap gap-1">
                           {(item.technology || []).map(tech => (
-                            <Badge key={tech} variant="outline">{tech}</Badge>
+                            <Badge key={tech} variant="outline" className="text-xs">{tech}</Badge>
                           ))}
-                          {(item.technology || []).length === 0 && '-'}
+                          {(item.technology || []).length === 0 && <span className="text-muted-foreground text-xs">N/A</span>}
                         </div>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap">
                         {item._itemType === 'registered' ? (
                           <EditableBadge
                             currentValue={item.has_workshop}
@@ -1429,15 +1430,15 @@ export const VehicleManagement = () => {
                           />
                         ) : (
                           (item as any).has_workshop === true ? (
-                            <Badge variant="success">Sim</Badge>
+                            <Badge variant="success" className="text-xs">Sim</Badge>
                           ) : (item as any).has_workshop === false ? (
-                            <Badge variant="destructive">Não</Badge>
+                            <Badge variant="destructive" className="text-xs">Não</Badge>
                           ) : (
-                            <Badge variant="secondary">N/A</Badge>
+                            <Badge variant="secondary" className="text-xs">N/A</Badge>
                           )
                         )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap">
                         {item._itemType === 'registered' ? (
                           <EditableBadge
                             currentValue={item.priority}
@@ -1453,12 +1454,12 @@ export const VehicleManagement = () => {
                             badgeVariant={getPriorityBadgeVariant(item.priority)}
                           />
                         ) : (
-                          <Badge variant={getPriorityBadgeVariant(item.priority)}>
+                          <Badge variant={getPriorityBadgeVariant(item.priority)} className="text-xs">
                             {(item as any).raw_priority_text || `Prioridade ${item.priority || 'N/A'}`}
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="text-xs sm:text-sm min-w-[80px] whitespace-nowrap">
                         {item._itemType === 'registered' ? (
                           <EditableBadge
                             currentValue={item.blocker_installed}
@@ -1479,21 +1480,21 @@ export const VehicleManagement = () => {
                             icon={item.blocker_installed === true ? Lock : item.blocker_installed === false ? X : Info}
                           />
                         ) : (
-                          <Badge variant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)}>
+                          <Badge variant={getBlockerBadgeVariant(item.blocker_installed, (item as any).raw_blocker_installed_text)} className="text-xs">
                             {getBlockerStatusLabel(item.blocker_installed, (item as any).raw_blocker_installed_text)}
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="text-xs sm:text-sm min-w-[100px] whitespace-nowrap">
                         {item._itemType === 'registered' ? (
-                          <Badge variant="success">Ativo</Badge>
+                          <Badge variant="success" className="text-xs">Ativo</Badge>
                         ) : (
                           item.duplicateVehicleInfo || item.reason ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
                                   variant={getReasonBadgeVariant(item.reason || '')}
-                                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                                  className="cursor-pointer hover:opacity-80 transition-opacity text-xs"
                                   onClick={() => handleFilterByDuplication(item)}
                                 >
                                   {item.reason?.replace(/_/g, ' ').replace('duplicate', 'duplicado') || 'Revisão Admin'}
@@ -1517,11 +1518,11 @@ export const VehicleManagement = () => {
                               </TooltipContent>
                             </Tooltip>
                           ) : (
-                            <Badge variant="secondary">Pendente</Badge>
+                            <Badge variant="secondary" className="text-xs">Pendente</Badge>
                           )
                         )}
                       </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
+                      <TableCell className="text-right whitespace-nowrap text-xs sm:text-sm min-w-[60px]">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
