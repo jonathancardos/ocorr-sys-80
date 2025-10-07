@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Edit, Hammer, AlertTriangle, Heart, Palette, Upload, X, Paperclip, CheckCircle, Loader2 } from 'lucide-react';
+import { FileText, Edit, Hammer, AlertTriangle, Heart, Palette, Upload, X, Paperclip, CheckCircle, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SINISTRO_CONFIG = {
@@ -73,9 +74,33 @@ const OcorrenciasV2Page: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' | '' }>({ text: '', type: '' });
   const [isFormValid, setIsFormValid] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({ id: null });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { id } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    if (id) {
+      const fetchIncident = async () => {
+        const { data, error } = await supabase
+          .from('ocorrencias')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao buscar ocorrência:', error.message);
+          showMessage(`Erro ao carregar ocorrência: ${error.message}`, 'error');
+        } else if (data) {
+          setFormData(data.form_data);
+          setSelectedTypes(data.selected_types);
+          // TODO: Handle attached_files if needed
+        }
+      };
+      fetchIncident();
+    }
+  }, [id]);
 
   const showMessage = (text: string, type: 'error' | 'success') => {
     setMessage({ text, type });
@@ -95,7 +120,7 @@ const OcorrenciasV2Page: React.FC = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file.name !== fileName));
   };
 
-  const submitToSupabase = async () => {
+  const submitToSupabase = async (status: 'draft' | 'open' | 'canceled') => {
     setIsSubmitting(true);
     try {
       // 1. Upload files to Supabase Storage
@@ -111,25 +136,63 @@ const OcorrenciasV2Page: React.FC = () => {
         filePaths.push(data.path);
       }
 
-      // 2. Prepare form data for insertion
-      const dataToInsert = {
-        selected_types: selectedTypes, // Array of selected incident types
-        form_data: formData, // JSON object of dynamic form data
-        attached_files: filePaths, // Array of uploaded file paths
-        created_at: new Date().toISOString(),
-        // Add any other static fields you might have, e.g., user_id
-      };
+      // Get authenticated user ID
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Usuário não autenticado.');
+    }
 
-      // 3. Insert data into Supabase table
-      const { error: insertError } = await supabase
-        .from('ocorrencias') // Replace with your table name
-        .insert([dataToInsert]);
+    // 2. Prepare form data for insertion or update
+    const dataToSave = {
+      selected_types: selectedTypes, // Array of selected incident types
+      form_data: formData, // JSON object of dynamic form data
+      attached_files: filePaths, // Array of uploaded file paths
+      created_at: new Date().toISOString(),
+      status: status, // Add the status here
+      user_id: user.id, // Add the user_id here for RLS
+    };
 
-      if (insertError) {
-        throw insertError;
+      let error: any = null;
+
+      if (status === 'canceled' && formData.id) {
+        const { error: deleteError } = await supabase
+          .from('ocorrencias')
+          .delete()
+          .eq('id', formData.id);
+        error = deleteError;
+        if (!error) {
+          setFormData({ id: null }); // Reset form after cancellation
+        }
+      } else if (formData.id) {
+        // Update existing incident/draft
+        const { error: updateError } = await supabase
+          .from('ocorrencias')
+          .update(dataToSave)
+          .eq('id', formData.id);
+        error = updateError;
+      } else {
+        // Insert new incident/draft
+        const { data, error: insertError } = await supabase
+          .from('ocorrencias')
+          .insert([dataToSave])
+          .select(); // Select the inserted data to get the new ID
+        error = insertError;
+        if (data && data.length > 0) {
+          setFormData(prev => ({ ...prev, id: data[0].id })); // Update formData with the new ID
+        }
       }
 
-      showMessage('Relatório enviado com sucesso!', 'success');
+      if (error) {
+        throw error;
+      }
+
+      if (status === 'draft') {
+        showMessage('Rascunho salvo com sucesso!', 'success');
+      } else if (status === 'open') {
+        showMessage('Ocorrência finalizada com sucesso!', 'success');
+      } else if (status === 'canceled') {
+        showMessage('Ocorrência cancelada com sucesso!', 'success');
+      }
       // Optionally, clear form and selected files after successful submission
       setSelectedTypes([]);
       setFormData({});
@@ -382,24 +445,37 @@ const OcorrenciasV2Page: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Passo 4: Geração do Relatório */}
-        <div className="mt-8 pt-6 border-t border-border text-center">
-            <Button onClick={submitToSupabase} id="submit-to-supabase-btn" disabled={!isFormValid || isSubmitting} className="px-8 py-3 bg-gradient-corporate text-primary-foreground font-bold rounded-xl shadow-corporate transition duration-300 ease-in-out hover:shadow-elevated disabled:opacity-50 disabled:cursor-not-allowed">
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Gerando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Gerar Relatório em PDF
-                </>
-              )}
+        {/* Botões de Ação */}
+        <div className="flex justify-end gap-4 mt-8">
+          {formData.id && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => submitToSupabase('canceled')}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+              Cancelar Ocorrência
             </Button>
-          <p className="mt-2 text-sm text-muted-foreground">Preencha o formulário para habilitar o botão.</p>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => submitToSupabase('draft')}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Salvar como Rascunho
+          </Button>
+          <Button
+            type="button"
+            onClick={() => submitToSupabase('open')}
+            disabled={isSubmitting || !isFormValid}
+          >
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+            Finalizar Ocorrência
+          </Button>
         </div>
-
       </div>
     </div>
   );
