@@ -1453,9 +1453,9 @@ const DriverManagement = () => {
           setSelectedDriverForDetails(null);
         }}
         driver={selectedDriverForDetails}
-        isPending={selectedDriverForDetails?._itemType !== 'registered'}
-        reason={selectedDriverForDetails?._itemType !== 'registered' ? (selectedDriverForDetails as any).reason : undefined}
-        duplicateInfo={selectedDriverForDetails?._itemType !== 'registered' ? (selectedDriverForDetails as any).duplicateDriverInfo : undefined}
+        isPending={selectedDriverForDetails && selectedDriverForDetails._itemType !== 'registered'}
+        reason={selectedDriverForDetails && selectedDriverForDetails._itemType !== 'registered' ? (selectedDriverForDetails as any).reason : undefined}
+        duplicateInfo={selectedDriverForDetails && selectedDriverForDetails._itemType !== 'registered' ? (selectedDriverForDetails as any).duplicateDriverInfo : undefined}
       />
     </div>
   );
