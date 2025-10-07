@@ -1247,38 +1247,38 @@ const DriverManagement = () => {
                       aria-label="Selecionar todos os motoristas"
                     />
                   </TableHead>
-                  <TableHead onClick={() => handleSort('full_name')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                  <TableHead onClick={() => handleSort('full_name')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase">
                       nome {renderSortIcon('full_name')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('cpf')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                  <TableHead onClick={() => handleSort('cpf')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase">
                       cpf {renderSortIcon('cpf')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('cnh_expiry')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
-                      validade cnh {renderSortIcon('cnh_expiry')}
+                  <TableHead onClick={() => handleSort('cnh_expiry')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase whitespace-nowrap">
+                      val. cnh {renderSortIcon('cnh_expiry')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('omnilink_score_status')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                  <TableHead onClick={() => handleSort('omnilink_score_status')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase">
                       omnilink {renderSortIcon('omnilink_score_status')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('status_indicacao')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                  <TableHead onClick={() => handleSort('status_indicacao')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase">
                       indicação {renderSortIcon('status_indicacao')}
                     </div>
                   </TableHead>
-                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary">
-                    <div className="flex items-center text-xs lowercase first-letter:uppercase">
+                  <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:text-primary px-3">
+                    <div className="flex items-center text-[10px] sm:text-xs lowercase first-letter:uppercase">
                       status {renderSortIcon('status')}
                     </div>
                   </TableHead>
-                  <TableHead className="text-right w-[80px]">
-                    <span className="text-xs lowercase first-letter:uppercase">ações</span>
+                  <TableHead className="text-right w-[60px] px-2">
+                    <span className="text-[10px] sm:text-xs lowercase first-letter:uppercase">ações</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -1325,41 +1325,41 @@ const DriverManagement = () => {
                           />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium px-3">
                         <div className="flex items-center gap-1">
-                          {item._itemType === 'pending_duplicate' && <span className="text-muted-foreground">↳</span>}
-                          <span className="truncate max-w-[200px]">{item.full_name}</span>
+                          {item._itemType === 'pending_duplicate' && <span className="text-muted-foreground text-[10px] sm:text-xs">↳</span>}
+                          <span className="text-[10px] sm:text-xs whitespace-normal break-words min-w-[80px]">{item.full_name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{item.cpf || '-'}</TableCell>
-                      <TableCell className="text-sm">{formatDate(item.cnh_expiry)}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-[10px] sm:text-xs px-3 whitespace-normal">{item.cpf || '-'}</TableCell>
+                      <TableCell className="text-[10px] sm:text-xs px-3 whitespace-nowrap">{formatDate(item.cnh_expiry)}</TableCell>
+                      <TableCell className="px-3">
                         {item.omnilink_score_registration_date ? (
-                          <Badge variant={getOmnilinkBadgeProps(item).variant} className="text-xs">
+                          <Badge variant={getOmnilinkBadgeProps(item).variant} className="text-[9px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap">
                             {getOmnilinkBadgeProps(item).label}
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-xs">N/A</Badge>
+                          <Badge variant="secondary" className="text-[9px] sm:text-xs px-1.5 py-0.5">N/A</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-3">
                         {item.status_indicacao ? (
                           <Badge
                             variant={getIndicacaoStatusBadgeVariant(item.status_indicacao as 'indicado' | 'retificado' | 'nao_indicado')}
-                            className="text-xs"
+                            className="text-[9px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap"
                           >
                             {item.status_indicacao === 'indicado' ? 'Indicado' :
                              item.status_indicacao === 'retificado' ? 'Retificado' : 'Não Ind.'}
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-xs">N/A</Badge>
+                          <Badge variant="secondary" className="text-[9px] sm:text-xs px-1.5 py-0.5">N/A</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-3">
                         {item._itemType === 'registered' ? (
-                          <Badge variant="success" className="text-xs">Ativo</Badge>
+                          <Badge variant="success" className="text-[9px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap">Ativo</Badge>
                         ) : (
-                          <Badge variant="warning" className="text-xs">Pendente</Badge>
+                          <Badge variant="warning" className="text-[9px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap">Pendente</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
