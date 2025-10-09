@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -69,6 +69,9 @@ export const Header = ({ navigationItems, currentPage, onToggleSidebar, isSideba
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Navegação Principal</SheetTitle>
+                </SheetHeader>
                 <div className="flex items-center space-x-4 p-6 border-b">
                   <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center"> {/* Ajustado para h-10 w-10 */}
                     <Activity className="h-5 w-5 text-primary-foreground" /> {/* Ajustado para h-5 w-5 */}
